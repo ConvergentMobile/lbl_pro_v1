@@ -1,0 +1,57 @@
+input.text {
+	min-width: 140px;
+}
+select {
+}
+textarea {
+	min-width: 140px;
+	min-height: 60px;
+}
+table td {
+	padding: 3px 5px;
+	line-height: 25px;
+}
+
+.step1, .step2, .step3, .step4, .step5, .step6, .step7, .step8, .step9 {
+	padding: 10px 0 0 80px;
+	*padding: 0 0 0 80px;
+}
+.step1 {
+	background: url(../images/step1.gif) no-repeat 0 0;
+}
+.step2 {
+	background: url(../images/step2.gif) no-repeat 0 0;
+}
+.step3 {
+	background: url(../images/step3.gif) no-repeat 0 0;
+}
+.step4 {
+	background: url(../images/step4.gif) no-repeat 0 0;
+}
+.step5 {
+	background: url(../images/step5.gif) no-repeat 0 0;
+}
+.step6 {
+	background: url(../images/step6.gif) no-repeat 0 0;
+}
+.step7 {
+	background: url(../images/step7.gif) no-repeat 0 0;
+}
+.step8 {
+	background: url(../images/step8.gif) no-repeat 0 0;
+}
+.step9 {
+	background: url(../images/step9.gif) no-repeat 0 0;
+}
+
+.box1 lable,
+.step2 label {
+	display: block;
+	padding-bottom: 5px;
+}
+.box1 input.text,
+.step2 input.text {
+	display: block;
+	margin-bottom: 15px;
+	width: 210px;
+}

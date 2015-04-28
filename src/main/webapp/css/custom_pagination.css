@@ -1,0 +1,11 @@
+div#business_listings_id{
+	padding-top: 1%;
+	padding-bottom: 2%;
+	font-size: x-large;
+	
+}
+
+span>a:HOVER{
+	/* color: #fff; */
+	background-color: #fff;
+}
