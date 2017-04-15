@@ -24,7 +24,8 @@
 <script src="js/jquery.bpopup.min.js"></script>
 <script src="js/jquery.jsort.0.4.min.js"></script>
 <script src="js/jquery.session.js"></script>
-
+<link rel="stylesheet" href="js/jquery.mCustomScrollbar.css">
+<script src="js/jquery.mCustomScrollbar.js"></script>
 <style type="text/css">
 #passcss
  { 
@@ -391,7 +392,7 @@ function validateExtension(v)
 	<div class="pp-body">
 		<div class="export">
 			<select name="service" id="serviceName">
-				<option value="">Choose Tempate</option>
+				<option value="">Choose Template</option>
 				
 				<option value="MasterTemplate">Master Template</option>
 				
@@ -518,7 +519,7 @@ function validateExtension(v)
 			<!-- <li class="si_business_listings"><a href="clientbusinesslisting.htm">Business Listings</a></li> -->
 			<li class="si_error_listings selected"><a href="listingClient-error.htm">Listing Errors</a></li>
 			<li class="si_reports"><a href="client-reports.htm">Reports</a></li>
-			<li class="si_toolbox"><a href="clntToolbox.htm">Convergent Toolbox</a></li>
+			<!-- <li class="si_toolbox"><a href="clntToolbox.htm">Convergent Toolbox</a></li> -->
 		</ul>
 		<!-- // left side navigation --> 
 		<!-- content area -->
@@ -547,7 +548,7 @@ function validateExtension(v)
 					<!-- <a href="#" class="btn_dark_blue_2">Apply FIlter</a> -->
 					<input type="submit" value="Apply FIlter" onclick="search()" class="btn_dark_blue_2">
 					<a href="clientListing-error.htm"  class="btn_dark_blue_2">CLEAR FIlter</a>
-					<a href="#" class="btn_grey_3 plus"><span>Add/Remove Fields</span></a>
+				<!-- 	<a href="#" class="btn_grey_3 plus"><span>Add/Remove Fields</span></a> -->
 						
 				</div>
 				</spring:form>
@@ -555,7 +556,7 @@ function validateExtension(v)
 				<div class="box box_red_title business-listings"> 
 					<!-- title -->
 					<div class="box_title">
-						<h2><span style="font-size: 10px">ATTENTION:The location(s) displayed below have not passed the verfication process </span></h2>						
+						<h2><span style="font-size: 10px">ATTENTION:The location(s) displayed below have not passed the Verification process </span></h2>						
 						<div class="box_title_right"> <span>Locations With Errors: ${errorListSize}</span></div>
 					</div>
 					<spring:form name="box" id="businessListform" action="" method="POST">
@@ -640,13 +641,15 @@ function validateExtension(v)
 				</div>
 				<div class="buttons-center">
 				
-						<%	Boolean isViewOnly = (Boolean) session.getAttribute("isViewOnly");
-							if(!isViewOnly) { %>
-								<a href="#" onclick="ErrorDeletePopup();" class="btn_dark_blue_2" >Delete</a>
-							<% }%>
+						
 				
 						<a href="#" onclick="sendEditResult()"   class="btn_dark_blue_2">Edit</a>
 			    		<a href="#" onclick="showExportPopup();" class="btn_dark_blue_2" >Export</a> 
+
+			    		<%	Boolean isViewOnly = (Boolean) session.getAttribute("isViewOnly");
+							if(!isViewOnly) { %>
+								<a href="#" onclick="ErrorDeletePopup();" class="btn_dark_blue_2" >Delete</a>
+							<% }%>
 			  
 			   			 		 
 				</div>

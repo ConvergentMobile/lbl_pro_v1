@@ -24,9 +24,39 @@ public class BrandInfoDTO {
 	private Date activeDate;
 	private String partnerActive;	 
 	private Integer clientId;
-	  
+	private String count;
+	private String locationCotracted;
+	private String email; 
+	private String inactive;
 	
-	 public Integer getId() {
+	
+	public String getInactive() {
+		return inactive;
+	}
+
+	public void setInactive(String inactive) {
+		this.inactive = inactive;
+	}
+
+	 public String getLocationCotracted() {
+		return locationCotracted;
+	}
+	public void setLocationCotracted(String locationCotracted) {
+		this.locationCotracted = locationCotracted;
+	}
+	public String getEmail() {
+		return email;
+	}
+	public void setEmail(String email) {
+		this.email = email;
+	}
+	public String getCount() {
+		return count;
+	}
+	public void setCount(String count) {
+		this.count = count;
+	}
+	public Integer getId() {
 		return id;
 	}
 	public void setId(Integer id) {

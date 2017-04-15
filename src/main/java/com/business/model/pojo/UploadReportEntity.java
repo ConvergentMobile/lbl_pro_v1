@@ -18,11 +18,11 @@ import javax.persistence.Table;
  */
 
 @Entity
-@Table(name = "UploadInfo")
+@Table(name = "uploadinfo")
 public class UploadReportEntity {
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue	
 	@Column(name = "id")
 	private Integer id;
 	@Column(name = "username")

@@ -17,8 +17,12 @@ import javax.persistence.Table;
  * 
  */
 
+/**
+ * @author Administrator
+ *
+ */
 @Entity
-@Table(name = "ExportInfo")
+@Table(name = "exportinfo")
 public class ExportReportEntity {
 
 	@Id
@@ -35,7 +39,16 @@ public class ExportReportEntity {
 	private String channelName;
 	@Column(name="numberofrecords")
 	private Long numberOfRecords;
+	private String userName;
 	
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
 	public Long getNumberOfRecords() {
 		return numberOfRecords;
 	}

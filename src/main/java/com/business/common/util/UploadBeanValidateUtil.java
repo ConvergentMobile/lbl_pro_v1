@@ -1,13 +1,17 @@
 package com.business.common.util;
 
+import java.text.NumberFormat;
+import java.text.ParsePosition;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 
+import com.business.model.dataaccess.impl.BusinessDaoImpl;
 import com.business.service.BusinessService;
 import com.business.web.bean.BussinessData;
 import com.business.web.bean.LblErrorBean;
@@ -20,6 +24,7 @@ import com.business.web.bean.UploadBusinessBean;
  */
 
 public class UploadBeanValidateUtil {
+	Logger logger = Logger.getLogger(UploadBeanValidateUtil.class);
 
 	/**
 	 * validate upload Business information
@@ -32,6 +37,14 @@ public class UploadBeanValidateUtil {
 			List<UploadBusinessBean> listDataFromXLS) {
 		List<UploadBusinessBean> validBusinessList = new ArrayList<UploadBusinessBean>();
 		List<LblErrorBean> erroredBusinessList = new ArrayList<LblErrorBean>();
+		
+	/*	try {
+			ValidationExecutorService.executeService(service, listDataFromXLS);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		*/
 		for (int i = 0; i < listDataFromXLS.size(); i++) {
 			UploadBusinessBean uploadBean = listDataFromXLS.get(i);
 			StringBuffer errorMsg = validateUploadBean(service, uploadBean);
@@ -150,27 +163,42 @@ public class UploadBeanValidateUtil {
 			String locationAddress = uploadBean.getLocationAddress();
 			errorMsg.append(validate(locationAddress, 68, null,
 					"LocationAddress", LBLConstants.FIELD_TYPE_ALPHA_NUMERIC));
-			if (!containsValidData(locationAddress,
+			if (!conatinsString(locationAddress,
 					LBLConstants.NON_LOCATION_ADDRESS_DATA)) {
-				errorMsg.append("LocationAddress Cannot contain PO Box or P.O. Box or P O Box , ");
+				errorMsg.append("LocationAddress Cannot contain PO Box or P.O. Box or P O Box or P. O. Box or P.O.BOX or PO BOX, ");
 			}
-			if (!isValidLocationAdress(locationAddress) && !locationState.equalsIgnoreCase("MI")) {
-				errorMsg.append("LocationAddress Must begin with street number (or) N or S or E or W followed by number, ");
+			if (containsParenthesis(locationAddress)) {
+				errorMsg.append("LocationAddress cannot conatins Parenthesis, ");
 			}
-			if(locationState.equalsIgnoreCase("MI")) {
-				if(!isValidMIAddress(locationAddress)){
-					errorMsg.append("LocationAddress Must begin with street number (or) G, ");
+			if (!isValidLocationAdress(locationAddress)
+					&& !locationState.equalsIgnoreCase("MI")) {
+				errorMsg.append("LocationAddress Must begin with street number (or) <br/> N or S or E or W followed by number, ");
+			}
+			if (locationState.equalsIgnoreCase("MI")) {
+				if (!isValidMIAddress(locationAddress)) {
+					errorMsg.append("LocationAddress Must begin with street number (or) <br/> G, ");
 				}
+			}
+
+			if (containsNumeric(locationAddress)) {
+				errorMsg.append("LocationAddress cannot be only number.<br/> Please resubmit valid address, ");
+			}
+			if (locationAddress.contains("&")) {
+				errorMsg.append("Invalid LocationAddress, ");
+			}
+			if (locationAddress.contains("()")) {
+				errorMsg.append("Invalid LocationAddress, ");
 			}
 		} else {
 			errorMsg.append(fieldRequired("LocationAddress"));
 		}
+
 		if (uploadBean.getSuite() != null && uploadBean.getSuite().length() > 0) {
 			String suite = uploadBean.getSuite();
 			errorMsg.append(validate(suite, 20, null, "Suite",
 					LBLConstants.FIELD_TYPE_ALPHA_NUMERIC));
 			if (!containsValidData(suite, LBLConstants.NON_SUITE_DATA)) {
-				errorMsg.append("Enter Suite Without Fl,Ste,Rm,#,Floor,Suite,Room,Unit,Bldg,PO Box,P.O. Box or P O Box  , ");
+				errorMsg.append("Enter Suite Without Fl Ste Rm # <br/> Floor Suite Room Unit Bldg <br/> PO Box P.O. Box or P O Box , ");
 			}
 		}
 
@@ -181,11 +209,12 @@ public class UploadBeanValidateUtil {
 		} else {
 			errorMsg.append(fieldRequired("LocationCity"));
 		}
-		if (locationState != null
-				&& locationState.length() > 0) {
-			String state = locationState;
-			if (!service.isValidState(state)) {
-				errorMsg.append("Invalid State/Not exist in DB , ");
+		if (uploadBean.getLocationState() != null
+				&& uploadBean.getLocationState().length() > 0) {
+			String state = uploadBean.getLocationState();
+			String countyCode = uploadBean.getCountryCode();
+			if (!service.isValidState(state, countyCode)) {
+				errorMsg.append("Invalid LocationState For the entered Country , ");
 			}
 			errorMsg.append(validate(state, 2, "equal", "LocationState",
 					LBLConstants.FIELD_TYPE_ALPHA));
@@ -215,6 +244,19 @@ public class UploadBeanValidateUtil {
 			String locationPhone = uploadBean.getLocationPhone();
 			errorMsg.append(validate(locationPhone, 10, "equal",
 					"LocationPhone", LBLConstants.FIELD_TYPE_NUMERIC));
+		}
+		if (uploadBean.getLocationPhone() != null
+				&& (uploadBean.getLocationPhone().length() == 10)) {
+			String locationphone = uploadBean.getLocationPhone();
+
+			String substring = locationphone.substring(0, 3);
+			String phone = locationphone.substring(3, 6);
+			if (substring.equals("555")) {
+				errorMsg.append("Invalid LocationPhone, ");
+			}
+			if (phone.equals("555")) {
+				errorMsg.append("Invalid LocationPhone, ");
+			}
 		} else {
 			errorMsg.append(fieldRequired("LocationPhone"));
 		}
@@ -258,8 +300,9 @@ public class UploadBeanValidateUtil {
 		if (uploadBean.getShortWebAddress() != null
 				&& uploadBean.getShortWebAddress().length() > 0) {
 			String sWebAddress = uploadBean.getShortWebAddress();
-			if (sWebAddress.startsWith("http://")) {
-				errorMsg.append("ShortWebAddress should not starts with http:// , ");
+			if (sWebAddress.startsWith("http://")
+					|| sWebAddress.startsWith("https://")) {
+				errorMsg.append("ShortWebAddress should not start with http:// or https:// , ");
 			}
 			/*
 			 * if (!endsWith(sWebAddress,LBLConstants.WEB_ADDRESS_ENDS_WITH)) {
@@ -273,15 +316,15 @@ public class UploadBeanValidateUtil {
 		if (uploadBean.getWebAddress() != null
 				&& uploadBean.getWebAddress().length() > 0) {
 			String webAddress = uploadBean.getWebAddress();
-			if (webAddress.startsWith("http://")) {
-				errorMsg.append("WebAddress should not starts with http:// , ");
+			if (!webAddress.startsWith("http")) {
+				errorMsg.append("longWebAddress should starts with http:// or https://, ");
 			}
 			/*
 			 * if (!endsWith(webAddress,LBLConstants.WEB_ADDRESS_ENDS_WITH)) {
 			 * errorMsg
 			 * .append("WebAddress must ends with .com, .net or .org , "); }
 			 */
-			errorMsg.append(validate(webAddress, 256, null, "WebAddress",
+			errorMsg.append(validate(webAddress, 256, null, "longWebAddress",
 					LBLConstants.FIELD_TYPE_ALPHA_NUMERIC));
 		}
 
@@ -404,17 +447,10 @@ public class UploadBeanValidateUtil {
 		if (uploadBean.getProfessionalAssociations() != null
 				&& uploadBean.getProfessionalAssociations().length() > 0) {
 			String pAssociations = uploadBean.getProfessionalAssociations();
-			if (!pAssociations.contains(",")) {
-				errorMsg.append("Professional Associations should contain comma separated Associatins, ");
-			} else {
-				if (pAssociations.length() > 256) {
-					errorMsg.append("Professional Associations should be less than 256 characterss or same, ");
-				}
-				/*
-				 * errorMsg.append(validate(pAssociations, 256, null,
-				 * "ProfessionalAssociations", LBLConstants.FIELD_TYPE_ALPHA));
-				 */
+			if (pAssociations.length() > 256) {
+				errorMsg.append("Professional Associations should be less than 256 characterss or same, ");
 			}
+
 		}
 
 		if (uploadBean.getMondayOpen() != null
@@ -792,6 +828,7 @@ public class UploadBeanValidateUtil {
 					LBLConstants.FIELD_TYPE_ALPHA_NUMERIC));
 			errorMsg.append(socialLinkValidation(facebookLink, "facebook"));
 		}
+
 		if (uploadBean.getAlternateSocialLink() != null
 				&& uploadBean.getAlternateSocialLink().length() > 0) {
 			String alternateSocialLink = uploadBean.getAlternateSocialLink();
@@ -828,6 +865,14 @@ public class UploadBeanValidateUtil {
 			errorMsg.append(validate(pinteristLink, 256, null, "PinteristLink",
 					LBLConstants.FIELD_TYPE_ALPHA_NUMERIC));
 			errorMsg.append(socialLinkValidation(pinteristLink, "pinterest"));
+		}
+
+		if (uploadBean.getHelpLink() != null
+				&& uploadBean.getHelpLink().length() > 0) {
+			String helpLink = uploadBean.getHelpLink();
+			errorMsg.append(validate(helpLink, 256, null, "helpLink",
+					LBLConstants.FIELD_TYPE_ALPHA_NUMERIC));
+			errorMsg.append(socialLinkValidation(helpLink, "help"));
 		}
 
 		if (uploadBean.getProducts() != null
@@ -871,6 +916,7 @@ public class UploadBeanValidateUtil {
 				errorMsg.append("Brands are not valid , ");
 			}
 		}
+
 		if (uploadBean.getKeywords() != null
 				&& uploadBean.getKeywords().length() > 0) {
 			String keywords = uploadBean.getKeywords();
@@ -884,13 +930,18 @@ public class UploadBeanValidateUtil {
 			errorMsg.append(lengthValidation(languages, 256, null, "Languages"));
 			errorMsg.append(validate(languages.split(","), 256, null,
 					"Languages", LBLConstants.FIELD_TYPE_ALPHA));
+			if(languages!=null && languages.length()>255){
+				uploadBean.setLanguages(languages.substring(0,255));
+			}
 		}
 		String yearEstablished = uploadBean.getYearEstablished();
 		if (yearEstablished != null && yearEstablished.length() > 0) {
 			errorMsg.append(validate(yearEstablished, 4, "equal",
 					"YearEstablished", LBLConstants.FIELD_TYPE_NUMERIC));
-			if (!validateYear(yearEstablished)) {
-				errorMsg.append("year must be after 1492 , ");
+			if(!errorMsg.toString().contains("YearEstablished")){
+				if (!validateYear(yearEstablished)) {
+					errorMsg.append("year must be after 1492 , ");
+				}
 			}
 
 		}
@@ -911,6 +962,18 @@ public class UploadBeanValidateUtil {
 		} else {
 			errorMsg.append(fieldRequired("BusinessDescription"));
 		}
+		String businessDescriptionShort = uploadBean
+				.getBusinessDescriptionShort();
+		if (businessDescriptionShort != null
+				&& businessDescriptionShort.length() > 0) {
+			errorMsg.append(validate(businessDescriptionShort, 1, "minimum",
+					"ShortDescription", LBLConstants.FIELD_TYPE_ALPHA_NUMERIC));
+			errorMsg.append(lengthValidation(businessDescriptionShort, 200,
+					null, "ShortDescription"));
+		} else {
+			errorMsg.append(fieldRequired("ShortDescription"));
+		}
+
 		String addressprivacyflag = uploadBean.getADDRESSPRIVACYFLAG();
 		if (addressprivacyflag != null && addressprivacyflag != ""
 				&& addressprivacyflag.length() > 0) {
@@ -921,16 +984,31 @@ public class UploadBeanValidateUtil {
 			}
 		}
 
+		/*
+		 * if (LBLConstants.SMARTYSTREETS_CHECK.equals("true")) { boolean
+		 * isAddressValid = AddressValidationUtill
+		 * .validateAddressWithSS(uploadBean);
+		 * 
+		 * if (!isAddressValid) { errorMsg.append(
+		 * "LocationAddress Verification is failed. Kindly verify the address info, "
+		 * ); } }
+		 */
+
 		return errorMsg;
 	}
 
 	public boolean validateYear(String yearEstablished) {
-
-		Integer year = Integer.valueOf(yearEstablished);
-		if (year <= LBLConstants.YEAR_ESTABLISHED) {
+		try {
+			Integer year = Integer.valueOf(yearEstablished);
+			if (year <= LBLConstants.YEAR_ESTABLISHED) {
+				return false;
+			}
+			return true;
+		} catch (Exception e) {
+			logger.error("There was error while validating Year: ",e);
 			return false;
 		}
-		return true;
+		
 	}
 
 	/**
@@ -989,6 +1067,9 @@ public class UploadBeanValidateUtil {
 					time = mOpen + "AM";
 				}
 			}
+		}
+		if(time.length()==4){
+			time = "0"+time;
 		}
 		return time;
 	}
@@ -1071,49 +1152,6 @@ public class UploadBeanValidateUtil {
 		return length;
 	}
 
-	public boolean isValidLocationAdress(String locationAddress) {
-
-		boolean startsWithNumber = isStartsWithNumber(locationAddress);
-
-		if (!startsWithNumber) {
-			boolean startsEWNS = isStartsEWNS(locationAddress);
-			return startsEWNS;
-		}
-		return true;
-	}
-	public boolean isValidMIAddress(String locationAddress) {
-
-		boolean startsWithNumber = isStartsWithNumber(locationAddress);
-
-		if (!startsWithNumber) {
-			boolean startsEWNS = isStartsWithG(locationAddress);
-			return startsEWNS;
-		}
-		return true;
-	}
-	
-	public boolean isStartsWithG(String locationAddress) {
-		locationAddress = locationAddress.toUpperCase();
-		if (locationAddress.startsWith("G")) {
-				return true;
-		}
-		return false;
-	}
-	
-	public boolean isStartsEWNS(String locationAddress) {
-		locationAddress = locationAddress.toUpperCase();
-		if (locationAddress.startsWith("E") || locationAddress.startsWith("W")
-				|| locationAddress.startsWith("N")
-				|| locationAddress.startsWith("S")) {
-			char digit = locationAddress.charAt(1);
-			boolean isDigit = Character.isDigit(digit);
-			if (isDigit) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	public boolean isStartsWithNumber(String locationAddress) {
 		return Character.isDigit(locationAddress.charAt(0));
 	}
@@ -1125,7 +1163,7 @@ public class UploadBeanValidateUtil {
 	 * @param bean
 	 * @return
 	 */
-	private LblErrorBean copyBeanDetailsToErrorBean(String errorMsg,
+	public LblErrorBean copyBeanDetailsToErrorBean(String errorMsg,
 			UploadBusinessBean bean) {
 		LblErrorBean errorBean = new LblErrorBean();
 		// add logic to set all properties
@@ -1196,7 +1234,7 @@ public class UploadBeanValidateUtil {
 		if (!verifyLength(value, validLength, lengthType)) {
 			if (lengthType == null) {
 				errorMsg += fieldName
-						+ " Length must be less than or equal to "
+						+ " Length must be <br/> less than or equal to "
 						+ validLength + " , ";
 			} else if (lengthType.equalsIgnoreCase("equal")) {
 				errorMsg += fieldName + " Length must be " + validLength
@@ -1240,6 +1278,7 @@ public class UploadBeanValidateUtil {
 			List<String> nonLocationAddressData) {
 		int count = 0;
 		for (String str : nonLocationAddressData) {
+			str=str.trim();
 			if (data.indexOf(str) > -1)
 				++count;
 		}
@@ -1248,7 +1287,19 @@ public class UploadBeanValidateUtil {
 		}
 		return true;
 	}
-
+	public boolean conatinsString(String data,
+			List<String> nonLocationAddressData) {
+		int count = 0;
+		for (String str : nonLocationAddressData) {
+			str=str.trim();
+			if (data.contains(str))
+				++count;
+		}
+		if (count > 0) {
+			return false;
+		}
+		return true;
+	}
 	/**
 	 * validateUploadBean
 	 * 
@@ -1342,27 +1393,43 @@ public class UploadBeanValidateUtil {
 			String locationAddress = uploadBean.getLocationAddress();
 			errorMsg.append(validate(locationAddress, 68, null,
 					"LocationAddress", LBLConstants.FIELD_TYPE_ALPHA_NUMERIC));
-			if (!containsValidData(locationAddress,
+			if (!conatinsString(locationAddress,
 					LBLConstants.NON_LOCATION_ADDRESS_DATA)) {
-				errorMsg.append("LocationAddress Cannot contain PO Box or P.O. Box or P O Box , ");
+				errorMsg.append("LocationAddress Cannot contain PO Box or P.O. Box or P O Box or P. O. Box or P.O.BOX or PO BOX, ");
 			}
-			if (!isValidLocationAdress(locationAddress) && !locationState.equalsIgnoreCase("MI")) {
-				errorMsg.append("LocationAddress Must begin with street number (or) N or S or E or W followed by number, ");
+			if (containsParenthesis(locationAddress)) {
+				errorMsg.append("LocationAddress cannot conatins Parenthesis, ");
 			}
-			if(locationState.equalsIgnoreCase("MI")) {
-				if(!isValidMIAddress(locationAddress)){
-					errorMsg.append("LocationAddress Must begin with street number (or) G, ");
+			if (!isValidLocationAdress(locationAddress)
+					&& !locationState.equalsIgnoreCase("MI")) {
+				errorMsg.append("LocationAddress Must begin with street number (or) <br/> N or S or E or W followed by number, ");
+			}
+			if (locationState.equalsIgnoreCase("MI")) {
+				if (!isValidMIAddress(locationAddress)) {
+					errorMsg.append("LocationAddress Must begin with street number (or) <br/> G, ");
 				}
 			}
+			if (containsNumeric(locationAddress)) {
+				errorMsg.append("LocationAddress cannot be only number.<br/> Please resubmit valid address, ");
+			}
+			
+			if (locationAddress.contains("&")) {
+				errorMsg.append("Invalid LocationAddress, ");
+			}
+			if (locationAddress.contains("()")) {
+				errorMsg.append("Invalid LocationAddress, ");
+			}
+
 		} else {
 			errorMsg.append(fieldRequired("LocationAddress"));
 		}
+
 		if (uploadBean.getSuite() != null && uploadBean.getSuite().length() > 0) {
 			String suite = uploadBean.getSuite();
 			errorMsg.append(validate(suite, 20, null, "Suite",
 					LBLConstants.FIELD_TYPE_ALPHA_NUMERIC));
 			if (!containsValidData(suite, LBLConstants.NON_SUITE_DATA)) {
-				errorMsg.append("Enter Suite Without Fl,Ste,Rm,#,Floor,Suite,Room,Unit,Bldg,PO Box,P.O. Box or P O Box  , ");
+				errorMsg.append("Enter Suite Without Fl,Ste,Rm,#, <br/> Floor,Suite,Room,Unit,Bldg,<br/> PO Box,P.O. Box or P O Box  , ");
 			}
 		}
 
@@ -1373,11 +1440,12 @@ public class UploadBeanValidateUtil {
 		} else {
 			errorMsg.append(fieldRequired("LocationCity"));
 		}
-		if (locationState != null
-				&& locationState.length() > 0) {
-			String state = locationState;
-			if (!service.isValidState(state)) {
-				errorMsg.append("Invalid State/Not exist in DB , ");
+		if (uploadBean.getLocationState() != null
+				&& uploadBean.getLocationState().length() > 0) {
+			String state = uploadBean.getLocationState();
+			String countryCode = uploadBean.getCountryCode();
+			if (!service.isValidState(state, countryCode)) {
+				errorMsg.append("Invalid LocationState For the entered Country , ");
 			}
 			errorMsg.append(validate(state, 2, "equal", "LocationState",
 					LBLConstants.FIELD_TYPE_ALPHA));
@@ -1407,6 +1475,19 @@ public class UploadBeanValidateUtil {
 			String locationPhone = uploadBean.getLocationPhone();
 			errorMsg.append(validate(locationPhone, 10, "equal",
 					"LocationPhone", LBLConstants.FIELD_TYPE_NUMERIC));
+		}
+		if (uploadBean.getLocationPhone() != null
+				&& (uploadBean.getLocationPhone().length() == 10)) {
+			String locationphone = uploadBean.getLocationPhone();
+
+			String substring = locationphone.substring(0, 3);
+			String phone = locationphone.substring(3, 6);
+			if (substring.equals("555")) {
+				errorMsg.append("Invalid LocationPhone, ");
+			}
+			if (phone.equals("555")) {
+				errorMsg.append("Invalid LocationPhone, ");
+			}
 		} else {
 			errorMsg.append(fieldRequired("LocationPhone"));
 		}
@@ -1450,8 +1531,9 @@ public class UploadBeanValidateUtil {
 		if (uploadBean.getShortWebAddress() != null
 				&& uploadBean.getShortWebAddress().length() > 0) {
 			String sWebAddress = uploadBean.getShortWebAddress();
-			if (sWebAddress.startsWith("http://")) {
-				errorMsg.append("ShortWebAddress should not starts with http:// , ");
+			if (sWebAddress.startsWith("http://")
+					|| sWebAddress.startsWith("https://")) {
+				errorMsg.append("ShortWebAddress should not starts with http:// or https:// , ");
 			}
 			/*
 			 * if (!endsWith(sWebAddress,LBLConstants.WEB_ADDRESS_ENDS_WITH)) {
@@ -1465,15 +1547,15 @@ public class UploadBeanValidateUtil {
 		if (uploadBean.getWebAddress() != null
 				&& uploadBean.getWebAddress().length() > 0) {
 			String webAddress = uploadBean.getWebAddress();
-			if (webAddress.startsWith("http://")) {
-				errorMsg.append("WebAddress should not starts with http:// , ");
+			if (!webAddress.startsWith("http")){
+				errorMsg.append("longWebAddress should starts with http:// or https:// , ");
 			}
 			/*
 			 * if (!endsWith(webAddress,LBLConstants.WEB_ADDRESS_ENDS_WITH)) {
 			 * errorMsg
 			 * .append("WebAddress must ends with .com, .net or .org , "); }
 			 */
-			errorMsg.append(validate(webAddress, 256, null, "WebAddress",
+			errorMsg.append(validate(webAddress, 256, null, "longWebAddress",
 					LBLConstants.FIELD_TYPE_ALPHA_NUMERIC));
 		}
 
@@ -1538,7 +1620,7 @@ public class UploadBeanValidateUtil {
 				&& uploadBean.getServiceArea().length() > 0) {
 			String sArea = uploadBean.getServiceArea();
 			errorMsg.append(validate(sArea, 256, null, "ServiceArea",
-					LBLConstants.FIELD_TYPE_ALPHA));
+					LBLConstants.FIELD_TYPE_ALPHA_NUMERIC));
 		}
 		if (uploadBean.getPrimaryContactFirstName() != null
 				&& uploadBean.getPrimaryContactFirstName().length() > 0) {
@@ -1596,16 +1678,9 @@ public class UploadBeanValidateUtil {
 		if (uploadBean.getProfessionalAssociations() != null
 				&& uploadBean.getProfessionalAssociations().length() > 0) {
 			String pAssociations = uploadBean.getProfessionalAssociations();
-			if (!pAssociations.contains(",")) {
-				errorMsg.append("Professional Associations should contain comma separated Associatins,");
-			} else {
-				if (pAssociations.length() > 256) {
-					errorMsg.append("Professional Associations should be less than 256 characterss or same, ");
-				}
-				/*
-				 * errorMsg.append(validate(pAssociations, 256, null,
-				 * "ProfessionalAssociations", LBLConstants.FIELD_TYPE_ALPHA));
-				 */
+
+			if (pAssociations.length() > 256) {
+				errorMsg.append("Professional Associations should be less than 256 characterss or same, ");
 			}
 		}
 
@@ -1983,6 +2058,27 @@ public class UploadBeanValidateUtil {
 					LBLConstants.FIELD_TYPE_ALPHA_NUMERIC));
 			errorMsg.append(socialLinkValidation(facebookLink, "facebook"));
 		}
+		if (uploadBean.getInstagramLink() != null
+				&& uploadBean.getInstagramLink().length() > 0) {
+			String instagramLink = uploadBean.getInstagramLink();
+			errorMsg.append(validate(instagramLink, 256, null, "InstagramLink",
+					LBLConstants.FIELD_TYPE_ALPHA_NUMERIC));
+			errorMsg.append(socialLinkValidation(instagramLink, "instagram"));
+		}
+		if (uploadBean.getMenuLink() != null
+				&& uploadBean.getMenuLink().length() > 0) {
+			String menuLink = uploadBean.getMenuLink();
+			errorMsg.append(validate(menuLink, 256, null, "MenuLink",
+					LBLConstants.FIELD_TYPE_ALPHA_NUMERIC));
+			errorMsg.append(socialLinkValidation(menuLink, "menu"));
+		}
+		if (uploadBean.getFoursquareLink() != null
+				&& uploadBean.getFoursquareLink().length() > 0) {
+			String foursquareLink = uploadBean.getFoursquareLink();
+			errorMsg.append(validate(foursquareLink, 256, null,
+					"FoursquareLink", LBLConstants.FIELD_TYPE_ALPHA_NUMERIC));
+			errorMsg.append(socialLinkValidation(foursquareLink, "foursquare"));
+		}
 		if (uploadBean.getAlternateSocialLink() != null
 				&& uploadBean.getAlternateSocialLink().length() > 0) {
 			String alternateSocialLink = uploadBean.getAlternateSocialLink();
@@ -2019,6 +2115,14 @@ public class UploadBeanValidateUtil {
 			errorMsg.append(validate(pinteristLink, 256, null, "PinteristLink",
 					LBLConstants.FIELD_TYPE_ALPHA_NUMERIC));
 			errorMsg.append(socialLinkValidation(pinteristLink, "pinterest"));
+		}
+
+		if (uploadBean.getHelpLink() != null
+				&& uploadBean.getHelpLink().length() > 0) {
+			String helpLink = uploadBean.getHelpLink();
+			errorMsg.append(validate(helpLink, 256, null, "helpLink",
+					LBLConstants.FIELD_TYPE_ALPHA_NUMERIC));
+			errorMsg.append(socialLinkValidation(helpLink, "help"));
 		}
 
 		if (uploadBean.getProducts() != null
@@ -2075,14 +2179,20 @@ public class UploadBeanValidateUtil {
 			errorMsg.append(lengthValidation(languages, 256, null, "Languages"));
 			errorMsg.append(validate(languages.split(","), 256, null,
 					"Languages", LBLConstants.FIELD_TYPE_ALPHA));
+			if(languages!=null && languages.length()>255){
+				uploadBean.setLanguages(languages.substring(0,255));
+			}
 		}
 		String yearEstablished = uploadBean.getYearEstablished();
 		if (yearEstablished != null && yearEstablished.length() > 0) {
 			errorMsg.append(validate(yearEstablished, 4, "equal",
 					"YearEstablished", LBLConstants.FIELD_TYPE_NUMERIC));
-			if (!validateYear(yearEstablished)) {
-				errorMsg.append("year must be after 1492 , ");
+			if(!errorMsg.toString().contains("YearEstablished")){
+				if (!validateYear(yearEstablished)) {
+					errorMsg.append("year must be after 1492 , ");
+				}
 			}
+			
 		}
 
 		if (uploadBean.getTagline() != null
@@ -2101,6 +2211,17 @@ public class UploadBeanValidateUtil {
 		} else {
 			errorMsg.append(fieldRequired("BusinessDescription"));
 		}
+		String businessDescriptionShort = uploadBean
+				.getBusinessDescriptionShort();
+		if (businessDescriptionShort != null
+				&& businessDescriptionShort.length() > 0) {
+			errorMsg.append(validate(businessDescriptionShort, 1, "minimum",
+					"ShortDescription", LBLConstants.FIELD_TYPE_ALPHA_NUMERIC));
+			errorMsg.append(lengthValidation(businessDescriptionShort, 200,
+					null, "ShortDescription"));
+		} else {
+			errorMsg.append(fieldRequired("ShortDescription"));
+		}
 		String addressprivacyflag = uploadBean.getADDRESSPRIVACYFLAG();
 		if (addressprivacyflag != null && addressprivacyflag != ""
 				&& addressprivacyflag.length() > 0) {
@@ -2111,7 +2232,30 @@ public class UploadBeanValidateUtil {
 			}
 		}
 
+		/*
+		 * if (LBLConstants.SMARTYSTREETS_CHECK.equals("true")) { boolean
+		 * isAddressValid = AddressValidationUtill
+		 * .validateAddressWithSS(uploadBean);
+		 * 
+		 * if (!isAddressValid) { errorMsg.append(
+		 * "LocationAddress Verification is failed. Kindly verify the address info, "
+		 * ); } }
+		 */
 		return errorMsg;
+	}
+
+	private boolean containsParenthesis(String locationAddress) {
+		 if(locationAddress.contains("(") || locationAddress.contains(")") || locationAddress.contains("()")){
+			return true; 
+		 }
+		return false;
+	}
+
+	private boolean containsNumeric(String locationAddress) {
+		NumberFormat formatter = NumberFormat.getInstance();
+		ParsePosition pos = new ParsePosition(0);
+		formatter.parse(locationAddress, pos);
+		return locationAddress.length() == pos.getIndex();
 	}
 
 	public Map<String, String> getErrorsMap(List<String> errors) {
@@ -2124,6 +2268,10 @@ public class UploadBeanValidateUtil {
 			if (StringUtils.containsIgnoreCase(errorMessage,
 					"businessDescription")) {
 				errorMap.put("businessDescription", errorMessage);
+			}
+			if (StringUtils
+					.containsIgnoreCase(errorMessage, "ShortDescription")) {
+				errorMap.put("businessDescriptionShort", errorMessage);
 			}
 			if (StringUtils.containsIgnoreCase(errorMessage, "store")) {
 				errorMap.put("store", errorMessage);
@@ -2147,8 +2295,7 @@ public class UploadBeanValidateUtil {
 			if (StringUtils.containsIgnoreCase(errorMessage, "locationCity")) {
 				errorMap.put("locationCity", errorMessage);
 			}
-			if (StringUtils.containsIgnoreCase(errorMessage,
-					"Invalid State/Not exist")) {
+			if (StringUtils.containsIgnoreCase(errorMessage, "LocationState")) {
 				errorMap.put("locationState", errorMessage);
 			}
 			if (StringUtils.containsIgnoreCase(errorMessage, "locationZipCode")) {
@@ -2220,8 +2367,9 @@ public class UploadBeanValidateUtil {
 			if (StringUtils.containsIgnoreCase(errorMessage, "shortWebAddress")) {
 				errorMap.put("shortWebAddress", errorMessage);
 			}
-			if (StringUtils.containsIgnoreCase(errorMessage, "webAddress")) {
-				errorMap.put("webAddress", errorMessage);
+			if (StringUtils.containsIgnoreCase(errorMessage, "longWebAddress")) {
+				errorMap.put("webAddress",
+						errorMessage.replace("longWebAddress", "webAddress"));
 			}
 			if (StringUtils.containsIgnoreCase(errorMessage, "aMEX")) {
 				errorMap.put("aMEX", errorMessage);
@@ -2286,6 +2434,9 @@ public class UploadBeanValidateUtil {
 			if (StringUtils.containsIgnoreCase(errorMessage, "youtube")) {
 				errorMap.put("youTubeOrVideoLink", errorMessage);
 			}
+			if (StringUtils.containsIgnoreCase(errorMessage, "menu")) {
+				errorMap.put("menuLink", errorMessage);
+			}
 			if (StringUtils.containsIgnoreCase(errorMessage, "plus.google")) {
 				errorMap.put("googlePlusLink", errorMessage);
 			}
@@ -2297,6 +2448,9 @@ public class UploadBeanValidateUtil {
 			}
 			if (StringUtils.containsIgnoreCase(errorMessage, "pinterest")) {
 				errorMap.put("pinteristLink", errorMessage);
+			}
+			if (StringUtils.containsIgnoreCase(errorMessage, "help")) {
+				errorMap.put("helpLink", errorMessage);
 			}
 			if (StringUtils.containsIgnoreCase(errorMessage, "products")) {
 				errorMap.put("products", errorMessage);
@@ -2473,7 +2627,9 @@ public class UploadBeanValidateUtil {
 					|| errorMap.get("myspaceLink") != null
 					|| errorMap.get("logoLink") != null
 					|| errorMap.get("pinteristLink") != null
-					|| errorMap.get("twitterLink") != null) {
+					|| errorMap.get("twitterLink") != null
+					|| errorMap.get("helpLink") != null
+					|| errorMap.get("menuLink") != null){
 				errorMap.put("SocialLinks", "true");
 			} else {
 				errorMap.put("SocialLinks", "false");
@@ -2487,13 +2643,58 @@ public class UploadBeanValidateUtil {
 					|| errorMap.get("ADDRESSPRIVACYFLAG") != null
 					|| errorMap.get("yearEstablished") != null
 					|| errorMap.get("tagline") != null
-					|| errorMap.get("businessDescription") != null) {
+					|| errorMap.get("businessDescription") != null
+					|| errorMap.get("businessDescriptionShort") != null) {
 				errorMap.put("EnhancedContent", "true");
 			} else {
 				errorMap.put("EnhancedContent", "false");
 			}
 		}
 		return errorMap;
+	}
+
+	public boolean isValidLocationAdress(String locationAddress) {
+
+		boolean startsWithNumber = isStartsWithNumber(locationAddress);
+
+		if (!startsWithNumber) {
+			boolean startsEWNS = isStartsEWNS(locationAddress);
+			return startsEWNS;
+		}
+		return true;
+	}
+
+	public boolean isValidMIAddress(String locationAddress) {
+
+		boolean startsWithNumber = isStartsWithNumber(locationAddress);
+
+		if (!startsWithNumber) {
+			boolean startsEWNS = isStartsWithG(locationAddress);
+			return startsEWNS;
+		}
+		return true;
+	}
+
+	public boolean isStartsWithG(String locationAddress) {
+		locationAddress = locationAddress.toUpperCase();
+		if (locationAddress.startsWith("G")) {
+			return true;
+		}
+		return false;
+	}
+
+	public boolean isStartsEWNS(String locationAddress) {
+		locationAddress = locationAddress.toUpperCase();
+		if (locationAddress.startsWith("E") || locationAddress.startsWith("W")
+				|| locationAddress.startsWith("N")
+				|| locationAddress.startsWith("S")) {
+			char digit = locationAddress.charAt(1);
+			boolean isDigit = Character.isDigit(digit);
+			if (isDigit) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }

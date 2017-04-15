@@ -66,7 +66,10 @@ public class LocalBusinessValidator implements Validator {
 
 		ValidationUtils.rejectIfEmpty(errors, "businessDescription",
 				"businessApp.lable.validation.businessDescription.required");
-
+		
+		
+		ValidationUtils.rejectIfEmpty(errors, "businessDescriptionShort",
+				"businessApp.lable.validation.businessDescriptionShort.required");
 	
 	}
 

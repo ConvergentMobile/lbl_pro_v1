@@ -1,6 +1,7 @@
 package com.business.common.dto;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * 
@@ -9,8 +10,7 @@ import java.io.Serializable;
  * @author Vasanth
  * 
  */
-public class LocalBusinessDTO implements Serializable{
-
+public class LocalBusinessDTO implements Serializable {
 
 	/**
 	 * 
@@ -19,7 +19,7 @@ public class LocalBusinessDTO implements Serializable{
 	private String inCorrectValues;
 	private String isCorrectFormat;
 	private Long brandsCount;
-	private Integer id;	
+	private Integer id;
 	private String store;
 	private String actionCode;
 	private String companyName;
@@ -29,7 +29,7 @@ public class LocalBusinessDTO implements Serializable{
 	private String suite;
 	private String locationCity;
 	private String locationState;
-	private String locationZipCode;	
+	private String locationZipCode;
 	private String locationPhone;
 	private String fax;
 	private String tollFree;
@@ -50,7 +50,7 @@ public class LocalBusinessDTO implements Serializable{
 	private String professionalTitle;
 	private String professionalAssociations;
 	private String shortWebAddress;
-	private String webAddress;	
+	private String webAddress;
 	private String aMEX;
 	private String discover;
 	private String visa;
@@ -71,11 +71,13 @@ public class LocalBusinessDTO implements Serializable{
 	private String linkedInLink;
 	private String facebookLink;
 	private String alternateSocialLink;
+
 	private String youTubeOrVideoLink;
 	private String googlePlusLink;
 	private String myspaceLink;
 	private String logoLink;
 	private String pinteristLink;
+	private String yelpLink;
 	private String products;
 	private String services;
 	private String productsOrServices_combined;
@@ -91,14 +93,15 @@ public class LocalBusinessDTO implements Serializable{
 	private String multiUpdateString;
 	private String dateRange;
 	private String uploadJobId;
+	private Date uploadedTime;
 	private String countryCode;
 	private String locationEmail;
 	private String serviceArea;
 	private String mondayOpen;
 	private String mondayClose;
 	private String tuesdayOpen;
-	private String tuesdayClose;	
-	private String wednesdayOpen;	
+	private String tuesdayClose;
+	private String wednesdayOpen;
 	private String wednesdayClose;
 	private String thursdayOpen;
 	private String thursdayClose;
@@ -110,14 +113,247 @@ public class LocalBusinessDTO implements Serializable{
 	private String sundayClose;
 	private String ADDRESSPRIVACYFLAG;
 	private Integer clientId;
-	  
+	private Integer locationCount;
+	private Integer locationCotracted;
+	private String foursquareLink;
+	private String instagramLink;
+	private String menuLink;
+	private String categorySyph;
+
+	private String ypInternetHeading;
+	private String businessDescriptionShort;
+
+	private String primaryCategory;
+	private String additionalCategories;
+	private String localezeCategory;
+	private String infoGroupCategory;
+	private String syph1;
+	private String syph2;
+	private String syph3;
+	private String syph4;
+	private String syph5;
+	private String syph6;
+	private String submissionType;
 	
-	 public Integer getClientId() {
+	private String appleCategory;
+	
+	private String googleAccountId;
+	private String googleLocationId;
+	
+	private String searchType;
+	private String searchValue;
+	
+	
+	
+
+	public String getSearchType() {
+		return searchType;
+	}
+
+	public void setSearchType(String searchType) {
+		this.searchType = searchType;
+	}
+
+	public String getSearchValue() {
+		return searchValue;
+	}
+
+	public void setSearchValue(String searchValue) {
+		this.searchValue = searchValue;
+	}
+
+	public String getGoogleAccountId() {
+		return googleAccountId;
+	}
+
+	public void setGoogleAccountId(String googleAccountId) {
+		this.googleAccountId = googleAccountId;
+	}
+
+	public String getGoogleLocationId() {
+		return googleLocationId;
+	}
+
+	public void setGoogleLocationId(String googleLocationId) {
+		this.googleLocationId = googleLocationId;
+	}
+
+	public String getAppleCategory() {
+		return appleCategory;
+	}
+
+	public void setAppleCategory(String appleCategory) {
+		this.appleCategory = appleCategory;
+	}
+
+	public String getSubmissionType() {
+		return submissionType;
+	}
+
+	public void setSubmissionType(String submissionType) {
+		this.submissionType = submissionType;
+	}
+
+	public String getSyph1() {
+		return syph1;
+	}
+
+	public void setSyph1(String syph1) {
+		this.syph1 = syph1;
+	}
+
+	public String getSyph2() {
+		return syph2;
+	}
+
+	public void setSyph2(String syph2) {
+		this.syph2 = syph2;
+	}
+
+	public String getSyph3() {
+		return syph3;
+	}
+
+	public void setSyph3(String syph3) {
+		this.syph3 = syph3;
+	}
+
+	public String getSyph4() {
+		return syph4;
+	}
+
+	public void setSyph4(String syph4) {
+		this.syph4 = syph4;
+	}
+
+	public String getSyph5() {
+		return syph5;
+	}
+
+	public void setSyph5(String syph5) {
+		this.syph5 = syph5;
+	}
+
+	public String getSyph6() {
+		return syph6;
+	}
+
+	public void setSyph6(String syph6) {
+		this.syph6 = syph6;
+	}
+
+	public String getInfoGroupCategory() {
+		return infoGroupCategory;
+	}
+
+	public void setInfoGroupCategory(String infoGroupCategory) {
+		this.infoGroupCategory = infoGroupCategory;
+	}
+
+	public String getLocalezeCategory() {
+		return localezeCategory;
+	}
+
+	public void setLocalezeCategory(String localezeCategory) {
+		this.localezeCategory = localezeCategory;
+	}
+
+	public Date getUploadedTime() {
+		return uploadedTime;
+	}
+
+	public void setUploadedTime(Date uploadedTime) {
+		this.uploadedTime = uploadedTime;
+	}
+
+	public String getPrimaryCategory() {
+		return primaryCategory;
+	}
+
+	public void setPrimaryCategory(String primaryCategory) {
+		this.primaryCategory = primaryCategory;
+	}
+
+	public String getAdditionalCategories() {
+		return additionalCategories;
+	}
+
+	public void setAdditionalCategories(String additionalCategories) {
+		this.additionalCategories = additionalCategories;
+	}
+
+	public String getBusinessDescriptionShort() {
+		return businessDescriptionShort;
+	}
+
+	public void setBusinessDescriptionShort(String businessDescriptionShort) {
+		this.businessDescriptionShort = businessDescriptionShort;
+	}
+
+	public String getYpInternetHeading() {
+		return ypInternetHeading;
+	}
+
+	public void setYpInternetHeading(String ypInternetHeading) {
+		this.ypInternetHeading = ypInternetHeading;
+	}
+
+	public String getCategorySyph() {
+		return categorySyph;
+	}
+
+	public void setCategorySyph(String categorySyph) {
+		this.categorySyph = categorySyph;
+	}
+
+	public String getFoursquareLink() {
+		return foursquareLink;
+	}
+
+	public void setFoursquareLink(String foursquareLink) {
+		this.foursquareLink = foursquareLink;
+	}
+
+	public String getInstagramLink() {
+		return instagramLink;
+	}
+
+	public void setInstagramLink(String instagramLink) {
+		this.instagramLink = instagramLink;
+	}
+
+	public String getMenuLink() {
+		return menuLink;
+	}
+
+	public void setMenuLink(String menuLink) {
+		this.menuLink = menuLink;
+	}
+
+	public Integer getLocationCount() {
+		return locationCount;
+	}
+
+	public void setLocationCount(Integer locationCount) {
+		this.locationCount = locationCount;
+	}
+
+	public Integer getLocationCotracted() {
+		return locationCotracted;
+	}
+
+	public void setLocationCotracted(Integer locationCotracted) {
+		this.locationCotracted = locationCotracted;
+	}
+
+	public Integer getClientId() {
 		return clientId;
 	}
+
 	public void setClientId(Integer clientId) {
 		this.clientId = clientId;
 	}
+
 	public String getDateRange() {
 		return dateRange;
 	}
@@ -127,64 +363,50 @@ public class LocalBusinessDTO implements Serializable{
 	}
 
 	public String getMultiUpdateString() {
-	  return multiUpdateString;
-	 }
+		return multiUpdateString;
+	}
 
-	 public void setMultiUpdateString(String multiUpdateString) {
-	  this.multiUpdateString = multiUpdateString;
-	 
-	 }
+	public void setMultiUpdateString(String multiUpdateString) {
+		this.multiUpdateString = multiUpdateString;
+
+	}
 
 	public String getInCorrectValues() {
 		return inCorrectValues;
 	}
 
-
 	public void setInCorrectValues(String inCorrectValues) {
 		this.inCorrectValues = inCorrectValues;
 	}
-
 
 	public String getIsCorrectFormat() {
 		return isCorrectFormat;
 	}
 
-
 	public void setIsCorrectFormat(String isCorrectFormat) {
 		this.isCorrectFormat = isCorrectFormat;
 	}
-
 
 	public Long getBrandsCount() {
 		return brandsCount;
 	}
 
-
 	public void setBrandsCount(Long brandsCount) {
 		this.brandsCount = brandsCount;
 	}
 
-
-	/*public int hashCode() {
-
-			return this.id.hashCode();
-		} 
-
-
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-
-		if (obj instanceof LocalBusinessDTO) {
-			LocalBusinessDTO dto = (LocalBusinessDTO) obj;
-			if (this.id == dto.id) {
-				return true;
-			}
-		}
-		return false;
-	}*/
-
+	/*
+	 * public int hashCode() {
+	 * 
+	 * return this.id.hashCode(); }
+	 * 
+	 * 
+	 * public boolean equals(Object obj) { if (this == obj) { return true; }
+	 * 
+	 * if (obj instanceof LocalBusinessDTO) { LocalBusinessDTO dto =
+	 * (LocalBusinessDTO) obj; if (this.id == dto.id) { return true; } } return
+	 * false; }
+	 */
 
 	public Integer getId() {
 		return id;
@@ -273,6 +495,7 @@ public class LocalBusinessDTO implements Serializable{
 	public void setLocationZipCode(String locationZipCode) {
 		this.locationZipCode = locationZipCode;
 	}
+
 	public String getLocationPhone() {
 		return locationPhone;
 	}
@@ -440,6 +663,7 @@ public class LocalBusinessDTO implements Serializable{
 	public void setWebAddress(String webAddress) {
 		this.webAddress = webAddress;
 	}
+
 	public String getaMEX() {
 		return aMEX;
 	}
@@ -713,21 +937,17 @@ public class LocalBusinessDTO implements Serializable{
 		this.businessDescription = businessDescription;
 	}
 
-
 	public String getSearchName() {
 		return searchName;
 	}
-
 
 	public void setSearchName(String searchName) {
 		this.searchName = searchName;
 	}
 
-
 	public String getLocationClosed() {
 		return locationClosed;
 	}
-
 
 	public void setLocationClosed(String locationClosed) {
 		this.locationClosed = locationClosed;
@@ -896,7 +1116,13 @@ public class LocalBusinessDTO implements Serializable{
 	public void setClient(String client) {
 		this.client = client;
 	}
-	
-	
+
+	public String getYelpLink() {
+		return yelpLink;
+	}
+
+	public void setYelpLink(String yelpLink) {
+		this.yelpLink = yelpLink;
+	}
 
 }

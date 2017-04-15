@@ -27,6 +27,13 @@ public class UsersDTO {
 	private String[] brandID;
 	private String viewOnly;
 	
+	
+	public String getViewOnly() {
+		return viewOnly;
+	}
+	public void setViewOnly(String viewOnly) {
+		this.viewOnly = viewOnly;
+	}
 	public String getFullName() {
 		return fullName;
 	}
@@ -111,12 +118,6 @@ public class UsersDTO {
 	}
 	public void setBrandID(String[] brandID) {
 		this.brandID = brandID;
-	}
-	public String getViewOnly() {
-		return viewOnly;
-	}
-	public void setViewOnly(String viewOnly) {
-		this.viewOnly = viewOnly;
 	}
 	
 	

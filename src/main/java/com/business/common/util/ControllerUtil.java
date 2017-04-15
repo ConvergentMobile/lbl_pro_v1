@@ -1,15 +1,29 @@
 package com.business.common.util;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Logger;
+
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
+
 import com.business.common.dto.BrandInfoDTO;
+import com.business.common.dto.CheckReportDTO;
 import com.business.common.dto.LblErrorDTO;
 import com.business.common.dto.LocalBusinessDTO;
+import com.business.common.dto.SearchDomainDTO;
 import com.business.common.dto.UsersDTO;
 import com.business.model.pojo.RoleEntity;
+import com.business.model.pojo.StatesListEntity;
 import com.business.service.BusinessService;
 import com.business.web.bean.UsersBean;
 
@@ -19,7 +33,11 @@ import com.business.web.bean.UsersBean;
  *
  */
 
+@Component
 public class ControllerUtil {
+	
+	@Autowired
+	private static BusinessService businessService;
 
 	/**
 	 * 
@@ -37,16 +55,38 @@ public class ControllerUtil {
 		List<BrandInfoDTO> clientNames = null;
 		if (role==LBLConstants.CONVERGENT_MOBILE_ADMIN) {
 			clientNames = service.getClientNames();
-			
-		} else if (role==LBLConstants.CHANNEL_ADMIN) {
+		} else if (role==LBLConstants.CHANNEL_ADMIN || role==LBLConstants.PURIST) {
 			String channelName = (String) session.getAttribute("channelName");
 			clientNames = service.getChannelBasedClients(channelName);
-			//getAllBrandNames()
 		}
-		List<LocalBusinessDTO> stateNames = service.getStates();
+		ObjectMapper mapper = new ObjectMapper();
+		/*List<LocalBusinessDTO> stateNames = service.getStates();*/
+		List<StatesListEntity> stateNames = service.getStateList();
 		List<LocalBusinessDTO> storeNames = service.getStore();
+		String stateNamesvalue = "";
+		try {
+			stateNamesvalue = mapper.writeValueAsString(stateNames);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		model.addAttribute("stateNamesInfor", stateNamesvalue);
 		model.addAttribute("stateNamesInfo", stateNames);
+		String storeNamesvalue = "";
+		try {
+			storeNamesvalue = mapper.writeValueAsString(storeNames);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		model.addAttribute("storeNamesInfor", storeNamesvalue);
 		model.addAttribute("storeNamesInfo", storeNames);
+		String clientNamesvalues = "";
+		try {
+			clientNamesvalues = mapper.writeValueAsString(clientNames);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+ 
+		model.addAttribute("clientNameInfor", clientNamesvalues);
 		model.addAttribute("clientNameInfo", clientNames);
 		model.addAttribute("usersListInfo", usersList);
 		model.addAttribute("adminUser", new UsersBean());
@@ -64,9 +104,12 @@ public class ControllerUtil {
 		List<BrandInfoDTO> clientNames = null;
 		if (role==LBLConstants.CONVERGENT_MOBILE_ADMIN) {
 			clientNames = service.getClientNames();
-		} else if (role==LBLConstants.CHANNEL_ADMIN) {
+		} else if (role==LBLConstants.CHANNEL_ADMIN || role==LBLConstants.PURIST) {
 			String channelName1 = (String) session.getAttribute("channelName");
 			clientNames = service.getChannelBasedClients(channelName1);
+		}else if (role == LBLConstants.CLIENT_ADMIN){
+			
+			clientNames = service.getClientbrnds();
 		}
 		model.addAttribute("clientNameInfo", clientNames);
 		
@@ -129,8 +172,10 @@ public class ControllerUtil {
 	public String saveOrUpdateBrand(UsersBean bean, String message,
 			Date startDateValue, Integer channelID,BusinessService service) {
 
+
 		String partnerActive = "Y";
 		String submissions = bean.getSubmisions();
+		System.out.println("submissions"+submissions );
 		Integer clientId = bean.getClientId();
 		if(bean.getSaveType()==null){
 			boolean clientExistis = service.isClientExistis(bean.getBrandName());
@@ -144,6 +189,8 @@ public class ControllerUtil {
 				.getBrandName());
 		if (submissions != null) {
 			BrandInfoDTO brandInfo = service.getBrandInfoByBrandName(bean.getBrandName());
+
+
 			int brandId = brandInfo!=null?brandInfo.getBrandID():0;
 			int maxBrandId = service.getMaxBrandId();
 			for (String submission : submissions.split(",")) {
@@ -159,17 +206,18 @@ public class ControllerUtil {
 					}
 					service.saveBrand(bean.getBrandName(), startDateValue,
 							bean.getLocationsInvoiced(), submission, channelID,
-							partnerActive,clientId,brandId);
+							partnerActive,clientId,brandId,bean.getEmail());
 					message = "New brand name is added successfully...";
+					
 				} else {
 					if (!brandAllSubmissions.isEmpty()
 							&& brandAllSubmissions.contains(submission)) {
 						brandAllSubmissions.remove(submission);
 					}
-					message = updateBrand(brandInfoDTO.getBrandID(),
+					message = updateBrand(brandInfoDTO.getBrandID(),brandInfoDTO.getInactive(),
 							bean.getBrandName(), brandInfoDTO.getStartDate(),
 							bean.getLocationsInvoiced(), channelID,
-							partnerActive, submission,service,clientId,brandInfoDTO.getId());
+							partnerActive, submission,service,clientId,brandInfoDTO.getId(),bean.getEmail());
 				}
 			}
 		}
@@ -179,15 +227,27 @@ public class ControllerUtil {
 					bean.getBrandName(), submission);
 			if (brandInfoDTO != null) {
 				partnerActive = "N";
-				message = updateBrand(brandInfoDTO.getBrandID(),
+				message = updateBrand(brandInfoDTO.getBrandID(),brandInfoDTO.getInactive(),
 						brandInfoDTO.getBrandName(),
 						brandInfoDTO.getStartDate(),
 						brandInfoDTO.getLocationsInvoiced(), channelID,
-						partnerActive, submission,service,clientId,brandInfoDTO.getId());
+						partnerActive, submission,service,clientId,brandInfoDTO.getId(),brandInfoDTO.getEmail());
 			}
 		}
 		return message;
 	}
+
+	private String updateBrand(Integer brandID, String inactive,
+			String brandName, Date startDate, String locationsInvoiced,
+			Integer channelID, String partnerActive, String submission,
+			BusinessService service, Integer clientId, Integer id, String email) {
+		String message;
+		service.updateBrand(brandID, brandName, startDate,inactive,
+				locationsInvoiced, submission, channelID, partnerActive,clientId,id,email);
+		message = "Old brand name updated successfully...";
+		return message;
+	}
+
 
 	/**
 	 * updateBrand
@@ -296,9 +356,11 @@ public class ControllerUtil {
 		model.addAttribute("numOfPages", numOfPages);
 		model.addAttribute("allBusinessInfo", getBusinessInfoSubList(listOfBusinessInfo,pageNum));
 		model.addAttribute("businessSearch", new LocalBusinessDTO());
+		model.addAttribute("checkreportSearch", new CheckReportDTO());
 		request.setAttribute("currentPage", pageNum);
 		request.setAttribute("numOfPages", numOfPages);
 	}
+	
 	
 	/**
 	 * listingsAddAttributes
@@ -317,5 +379,18 @@ public class ControllerUtil {
 		request.setAttribute("currentPage", pageNum);
 		request.setAttribute("numOfPages", numOfPages);
 	}
+	public void sendTemplate(String userName, String absolutePath,
+			HSSFWorkbook workbook,HttpServletRequest request,String reportName,String email) throws FileNotFoundException, IOException {
+		String toMail=LBLConstants.SUPPORT_MAIL;
+		MailTemplateUtil.sendMailWithReceipt("vasanth.odesk@gmail.com", absolutePath, workbook,reportName,toMail);
+		/*Test test=new Test();
+		test.emailsend(absolutePath);*/
+		
+	}
+
+	
+	
+	
+	
 
 }

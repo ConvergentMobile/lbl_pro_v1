@@ -113,7 +113,8 @@ public class AcxiomClient {
 		return listingId;
 	}
 
-	public static void uploadAcxiomFile(String acxiomDataFile, Integer vendorId) {
+	public static void uploadAcxiomFile(String acxiomDataFile, Integer vendorId)
+			throws Exception {
 		String apiKey = LBLConstants.ACXIOM_APIKEY;
 		try {
 			File file = new File(acxiomDataFile);
@@ -140,8 +141,10 @@ public class AcxiomClient {
 					+ resp.getReturnMessageCode());
 
 		} catch (Exception e) {
-			logger.error("There was a problem to while uploading the data file to acxiom service for the Vendor: "+vendorId + " Issue is: "+ e);
+			logger.error("There was a problem to while uploading the data file to acxiom service for the Vendor: "
+					+ vendorId + " Issue is: " + e);
 			e.printStackTrace();
+			throw new Exception();
 		}
 
 	}
@@ -156,7 +159,8 @@ public class AcxiomClient {
 			System.out.println("listingID: " + listingId);
 
 		} catch (Exception e) {
-			logger.error("There was a problem to while uploading the data file to acxiom service" + e);
+			logger.error("There was a problem to while uploading the data file to acxiom service"
+					+ e);
 			e.printStackTrace();
 		}
 	}

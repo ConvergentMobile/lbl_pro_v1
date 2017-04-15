@@ -25,6 +25,8 @@
 <script src="js/jquery.bpopup.min.js"></script>
 <script src="js/jquery.jsort.0.4.min.js"></script>
 <script src="js/jquery.session.js"></script>
+<link rel="stylesheet" href="js/jquery.mCustomScrollbar.css">
+<script src="js/jquery.mCustomScrollbar.js"></script>
 
 <style type="text/css">
 #passcss
@@ -61,6 +63,14 @@ $(document).ready(function() {
 	});
 	
 });
+
+function sortByCount(flag){
+	 document.location.href = "getClientCountSort.htm?flag="+flag;
+}
+
+
+
+
 $(document).ready(function() {
     $('#selecctall').click(function(event) {  //on click 
         if(this.checked) { // check select status
@@ -109,6 +119,144 @@ $(document).ready(function() {
             } 
         });
 });
+function getStores(flag){
+	 var checkedvalue='';
+	 // check select status
+			            $('.checkbox2').each(function() { //loop through each checkbox
+
+			            	checkedvalue=this.checked;
+			           //select all checkboxes with class "checkbox1"               
+			            });
+	 var businessname=$("#companyName").val();
+	 var brands=$("#brands").val();
+	 var locationAddress=$("#Addresslocation").val();
+	 //locationstore
+	 var locationstore=$("#locationstore").val();
+	 var ZipCodelocation=$("#ZipCodelocation").val();
+	 var Citylocation=$("#Citylocation").val();
+	 var Phonelocation=$("#Phonelocation").val();
+	 var Statelocation=$("#Statelocation").val();
+
+
+	document.location.href = "clientsortByStore.htm?flag="+flag+"&&page="+currentPage+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+
+
+}
+function getBusinessname(flag){
+	 var checkedvalue='';
+	 // check select status
+			            $('.checkbox2').each(function() { //loop through each checkbox
+
+			            	checkedvalue=this.checked;
+			           //select all checkboxes with class "checkbox1"               
+			            });
+			            var businessname=$("#companyName").val();
+			       	 var brands=$("#brands").val();
+			       	 var locationAddress=$("#Addresslocation").val();
+			       	 //locationstore
+			       	 var locationstore=$("#locationstore").val();
+			       	 var ZipCodelocation=$("#ZipCodelocation").val();
+			       	 var Citylocation=$("#Citylocation").val();
+			       	 var Phonelocation=$("#Phonelocation").val();
+			       	 var Statelocation=$("#Statelocation").val();
+	document.location.href = "clientsortByBName.htm?flag="+flag+"&&page="+currentPage+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+}
+function getAddress(flag){
+	 var checkedvalue='';
+	 // check select status
+			            $('.checkbox2').each(function() { //loop through each checkbox
+
+			            	checkedvalue=this.checked;
+			           //select all checkboxes with class "checkbox1"               
+			            });
+			            var businessname=$("#companyName").val();
+				       	 var brands=$("#brands").val();
+				       	 var locationAddress=$("#Addresslocation").val();
+				       	 //locationstore
+				       	 var locationstore=$("#locationstore").val();
+				       	 var ZipCodelocation=$("#ZipCodelocation").val();
+				       	 var Citylocation=$("#Citylocation").val();
+				       	 var Phonelocation=$("#Phonelocation").val();
+				       	 var Statelocation=$("#Statelocation").val();
+	document.location.href = "clientsortByAddress.htm?flag="+flag+"&&page="+currentPage+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+}
+function getCity(flag){
+	 var checkedvalue='';
+	 // check select status
+			            $('.checkbox2').each(function() { //loop through each checkbox
+
+			            	checkedvalue=this.checked;
+			           //select all checkboxes with class "checkbox1"               
+			            });
+			            var businessname=$("#companyName").val();
+				       	 var brands=$("#brands").val();
+				       	 var locationAddress=$("#Addresslocation").val();
+				       	 //locationstore
+				       	 var locationstore=$("#locationstore").val();
+				       	 var ZipCodelocation=$("#ZipCodelocation").val();
+				       	 var Citylocation=$("#Citylocation").val();
+				       	 var Phonelocation=$("#Phonelocation").val();
+				       	 var Statelocation=$("#Statelocation").val();
+	document.location.href = "clientsortByCity.htm?flag="+flag+"&&page="+currentPage+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+}
+function getState(flag){
+	 var checkedvalue='';
+	 // check select status
+			            $('.checkbox2').each(function() { //loop through each checkbox
+
+			            	checkedvalue=this.checked;
+			           //select all checkboxes with class "checkbox1"               
+			            });
+			            var businessname=$("#companyName").val();
+				       	 var brands=$("#brands").val();
+				       	 var locationAddress=$("#Addresslocation").val();
+				       	 //locationstore
+				       	 var locationstore=$("#locationstore").val();
+				       	 var ZipCodelocation=$("#ZipCodelocation").val();
+				       	 var Citylocation=$("#Citylocation").val();
+				       	 var Phonelocation=$("#Phonelocation").val();
+				       	 var Statelocation=$("#Statelocation").val();
+	document.location.href = "clientsortByState.htm?flag="+flag+"&&page="+currentPage+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+}
+
+function getZip(flag){
+	 var checkedvalue='';
+	 // check select status
+			            $('.checkbox2').each(function() { //loop through each checkbox
+
+			            	checkedvalue=this.checked;
+			           //select all checkboxes with class "checkbox1"               
+			            });
+			            var businessname=$("#companyName").val();
+				       	 var brands=$("#brands").val();
+				       	 var locationAddress=$("#Addresslocation").val();
+				       	 //locationstore
+				       	 var locationstore=$("#locationstore").val();
+				       	 var ZipCodelocation=$("#ZipCodelocation").val();
+				       	 var Citylocation=$("#Citylocation").val();
+				       	 var Phonelocation=$("#Phonelocation").val();
+				       	 var Statelocation=$("#Statelocation").val();
+	document.location.href = "clientsortByZip.htm?flag="+flag+"&&page="+currentPage+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+}
+function getPhone(flag){
+	 var checkedvalue='';
+	 // check select status
+			            $('.checkbox2').each(function() { //loop through each checkbox
+
+			            	checkedvalue=this.checked;
+			           //select all checkboxes with class "checkbox1"               
+			            });
+			            var businessname=$("#companyName").val();
+				       	 var brands=$("#brands").val();
+				       	 var locationAddress=$("#Addresslocation").val();
+				       	 //locationstore
+				       	 var locationstore=$("#locationstore").val();
+				       	 var ZipCodelocation=$("#ZipCodelocation").val();
+				       	 var Citylocation=$("#Citylocation").val();
+				       	 var Phonelocation=$("#Phonelocation").val();
+				       	 var Statelocation=$("#Statelocation").val();
+	document.location.href = "clientsortByPhone.htm?flag="+flag+"&&page="+currentPage+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+}
 
 function sendSubmitResult(){
 	 var form = document.getElementById('loginForm');
@@ -209,9 +357,11 @@ function validateExtension(v)
 		   $("#errorMessage").text("");
 		   var fileName =$("#UploadFileName").val();
 		   if(fileName.length == 0){
-		    $("#errorMessage").text("Please select any one file");
+		    $("#errorMessage").text("Please select a file to upload");
 		    return false;
 		   }else{
+			   $('#statusPopup').bPopup();
+			   $('#showuploadpopup').hide();
 		    return true;
 		   }
 		   
@@ -356,6 +506,13 @@ function validateExtension(v)
 
 	}
 	function sendExportSubmit() {
+		var checkedvalue='';
+
+        $('.checkbox2').each(function() { 
+
+        	checkedvalue=this.checked;
+        });
+       
 		var serviceName = document.getElementById('serviceName').value;
 		 if(serviceName.length == 0 || $(serviceName).val() == ""){
 			   alert("Please select  any one template");
@@ -364,15 +521,105 @@ function validateExtension(v)
 		document.getElementById('templateName').value = serviceName;
 
 		var form = document.getElementById('businessListform');
-		form.action = "exportClientBusinessInfo";
+		form.action = "exportClientBusinessInfo.htm?checkedvalue="+checkedvalue;
 		form.submit();
 		 }
 	}
 	
 	function listingsPagination(page) {
-		//alert("page :: "+page);
+
 		$.session.set("currentPage",page);
-		document.location.href="client-dashboard_page.htm?page="+page;	
+			var checkedvalue='';
+
+	            $('.checkbox2').each(function() { 
+
+	            	checkedvalue=this.checked;
+	            });
+	           
+	            $.session.set("currentPage",page);
+	    		var flag=$("#flagidvalue").val();
+	    		if(flag == 'ASC'){
+	    			flag="DESC";
+	    		}else{
+	    			flag = 'ASC';
+	    		}
+	    		  var businessname=$("#companyName").val();
+			       	 var brands=$("#brands").val();
+			       	 var locationAddress=$("#Addresslocation").val();
+			       	 //locationstore
+			       	 var locationstore=$("#locationstore").val();
+			       	 var ZipCodelocation=$("#ZipCodelocation").val();
+			       	 var Citylocation=$("#Citylocation").val();
+			       	 var Phonelocation=$("#Phonelocation").val();
+			       	 var Statelocation=$("#Statelocation").val();
+	            var selecttype=$("#selectType").val();
+	            //alert(selecttype);
+	            if(selecttype ==''){
+	            	document.location.href="client-dashboard_page.htm?page="+page+"&&checkedvalue="+checkedvalue ;	
+	            }
+	           if(selecttype=='store'){
+	        	   var checkedvalue='';
+	        		 // check select status
+	        				            $('.checkbox2').each(function() { //loop through each checkbox
+
+	        				            	checkedvalue=this.checked;
+	        				           //select all checkboxes with class "checkbox1"               
+	        				            });
+	        	   document.location.href = "clientsortByStore.htm?flag="+flag+"&&page="+page+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+	           }
+	           if(selecttype== 'businessname'){
+	        	   var checkedvalue='';
+	        				            $('.checkbox2').each(function() { //loop through each checkbox
+
+	        				            	checkedvalue=this.checked;
+	        				            });
+	        	   document.location.href = "clientsortByBName.htm?flag="+flag+"&&page="+page+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+	           }
+	           if(selecttype== 'address'){
+	        	   var checkedvalue='';
+	        		 // check select status
+	        				            $('.checkbox2').each(function() { //loop through each checkbox
+
+	        				            	checkedvalue=this.checked;
+	        				           //select all checkboxes with class "checkbox1"               
+	        				            });
+	        	   document.location.href = "clientsortByAddress.htm?flag="+flag+"&&page="+page+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+	           }
+	           if(selecttype== 'city'){
+	        	   var checkedvalue='';
+	        				            $('.checkbox2').each(function() { //loop through each checkbox
+
+	        				            	checkedvalue=this.checked;
+	        				            });
+	        	   document.location.href = "clientsortByCity.htm?flag="+flag+"&&page="+page+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+	           }
+	           if(selecttype== 'state'){
+	        	   var checkedvalue='';
+	        				            $('.checkbox2').each(function() { //loop through each checkbox
+
+	        				            	checkedvalue=this.checked;
+	        				            });
+	        	   document.location.href = "clientsortByState.htm?flag="+flag+"&&page="+page+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+	           }
+	           if(selecttype== 'zip'){
+	        	   var checkedvalue='';
+	        				            $('.checkbox2').each(function() { //loop through each checkbox
+
+	        				            	checkedvalue=this.checked;
+	        				            });
+	        	   document.location.href = "clientsortByZip.htm?flag="+flag+"&&page="+page+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+	           }
+	           if(selecttype== 'phone'){
+	        	   var checkedvalue='';
+	        				            $('.checkbox2').each(function() { 
+
+	        				            	checkedvalue=this.checked;
+	        				            });
+	        	   document.location.href = "clientsortByPhone.htm?flag="+flag+"&&page="+page+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+	           };
+		//alert("page :: "+page);
+		/* $.session.set("currentPage",page);
+		document.location.href="client-dashboard_page.htm?page="+page; */	
 	}
 	
 	function paginationPre() {
@@ -443,7 +690,16 @@ function validateExtension(v)
 		</div>
 	</div>
 </div>
-
+<div class="popup" id="statusPopup" style="display: none;">
+	<div class="pp-header">
+		<!-- <div class="close"></div> -->
+		<span class="buttonIndicator b-close"><span>X</span></span> <span >Message</span>
+	</div>
+	<div class="pp-subheader"></div>
+	<div class="pp-body">
+		<div class="buttons"><span style="color: green">Uploading is in progress. This process may take several minutes. Please wait for upload to complete...</span></div>
+	</div>
+</div>
 <div class="popup" id="cancelChanges" style="display: none;">
 	<div class="pp-header">
 		<!-- <div class="close"></div> -->
@@ -511,10 +767,10 @@ function validateExtension(v)
 	<div class="pp-body">
 		<div class="export">
 			<select name="service" id="serviceName">
-				<option value="">Choose Tempate</option>
-				<option value="Bing">Bing</option>
-				<option value="Google">Google</option>
-				<option value="Master_Template">Master Template</option>
+				<option value="">Choose Template</option>
+				<option value="BingTemplate">Bing</option>
+				<option value="GoogleTemplate">Google</option>
+				<option value="MasterTemplate">Master Template</option>
 				
 			</select> 
 			 <button onclick="sendExportSubmit();" class="btn_dark_blue_2">Export</button>
@@ -670,7 +926,7 @@ function validateExtension(v)
 			<!-- <li class="si_business_listings"><a href="clientbusinesslisting.htm">Business Listings</a></li> -->
 			<li class="si_error_listings"><a href="listingClient-error.htm">Listing Errors</a></li>
 			<li class="si_reports"><a href="client-reports.htm">Reports</a></li>
-			<li class="si_toolbox"><a href="clntToolbox.htm">Convergent Toolbox</a></li>
+			<!-- <li class="si_toolbox"><a href="clntToolbox.htm">Convergent Toolbox</a></li> -->
 		</ul>
 		<!-- // left side navigation --> 
 		<!-- content area -->
@@ -678,11 +934,21 @@ function validateExtension(v)
 			<div class="nav_pointer pos_01"></div>
 			<!-- subheader -->
 			<div class="subheader clearfix">
-				<h1>DASH BOARD</h1>
+				<h1>DASHBOARD</h1>
 				<p>${channelName}</p>
 			</div>
 			<!-- // subheader -->
 			<div class="inner_box"> 
+			<input type="hidden" value="${companyName }" id="companyName" /> <input
+						type="hidden" value="${locationstore }" id="locationstore" name="storeval"/> <input
+						type="hidden" value="${locationAddress }" id="Addresslocation" />
+					<input type="hidden" value="${locationState }" id="Statelocation" />
+					<input type="hidden" value="${locationCity }" id="Citylocation" />
+					<input type="hidden" value="${locationZipCode }"
+						id="ZipCodelocation" /> <input type="hidden" name="brandval" value="${brands }"
+						id="brands" /> <input type="hidden" value="${locationPhone }"
+						id="Phonelocation" />
+						
 				<spring:form method="post" commandName="businessSearch"  id="searchAndFilterForm">
 				<div class="filters-2">
 					<label>Brand Name&nbsp;<spring:input path="client"  style="width:140px"/></label>
@@ -699,7 +965,7 @@ function validateExtension(v)
 					<!-- <a href="#" class="btn_dark_blue_2">Apply FIlter</a> -->
 					<input type="submit" value="Apply FIlter" onclick="search()" class="btn_dark_blue_2">
 					<a href="dashboardClient.htm"  class="btn_dark_blue_2">CLEAR FIlter</a>
-					<a href="#" class="btn_grey_3 plus"><span>Add/Remove Fields</span></a>
+					<!-- <a href="#" class="btn_grey_3 plus"><span>Add/Remove Fields</span></a> -->
 						
 				</div>
 				</spring:form>
@@ -729,15 +995,53 @@ function validateExtension(v)
 						</colgroup>
 						<thead id="businessTableHeaders">
 							<tr>
-								<th class="th_01"><div><input type="checkbox" id="selecctall"></div></th>
+									<core:set value="${checked }" var="cheked" scope="page"></core:set>
+										<input type="hidden" value="${checked }" />
+										<input type="hidden" value="${flagvalue }" id="flagidvalue" />
+
+										<input type="hidden" value="${companyName }" id="companyName" />
+										<input type="hidden" value="${locationstore }"
+											id="locationstore" name="storeval" />
+										<input type="hidden" value="${locationAddress }"
+											id="Addresslocation" />
+										<input type="hidden" value="${locationState }"
+											id="Statelocation" />
+										<input type="hidden" value="${locationCity }"
+											id="Citylocation" />
+										<input type="hidden" value="${locationZipCode }"
+											id="ZipCodelocation" />
+										<input type="hidden" name="brandval" value="${brands }"
+											id="brands" />
+										<input type="hidden" value="${locationPhone }"
+											id="Phonelocation" />
+
+										<input type="hidden" value="${selectType }" id="selectType" />
+								<tr class="odd">
+									<core:choose>
+
+										<core:when
+											test="${cheked eq 'true' and checkedvalue eq 'true'}">
+											<th class="th_01"><div>
+													<input type="checkbox" id="selecctall" class="checkbox2"
+														checked="checked">
+												</div></th>
+
+										</core:when>
+										<core:otherwise>
+											<th class="th_01"><div>
+													<input type="checkbox" id="selecctall" class="checkbox2">
+												</div></th>
+
+										</core:otherwise>
+									</core:choose>
 								<th class="th_02"><div><img src="images/icon-!.png" align="!"></div></th>
-								<th class="th_03"><div >Store#</div></th>
-								<th class="th_04"><div>Business Name</div></th>
-								<th class="th_05"><div>Address</div></th>
-								<th class="th_06"><div>City</div></th>
-								<th class="th_07"><div>State</div></th>
-								<th class="th_08"><div>Zip</div></th>
-								<th class="th_09"><div>Phone</div></th>
+								<th class="th_03" onclick="getStores('${flagvalue}')"><div >Store#</div></th>
+								<th class="th_04" onclick="getBusinessname('${flagvalue}')"><div>Business Name</div></th>
+								<th class="th_05" onclick="getAddress('${flagvalue}')"><div>Address</div></th>
+								<th class="th_06" onclick="getCity('${flagvalue}')"><div>City</div></th>
+								<th class="th_07" onclick="getState('${flagvalue}')"><div>State</div></th>
+								<th class="th_08" onclick="getZip('${flagvalue}')"><div>Zip</div></th>
+								<th class="th_09" onclick="getPhone('${flagvalue}')"><div>Phone</div></th>
 							</tr>
 						</thead>
 					</table>
@@ -758,7 +1062,27 @@ function validateExtension(v)
 							<core:forEach items="${allBusinessInfo}" var="bean" varStatus="i">
 						
 								<tr class="odd">
-									<td class="td_01"><div><input type="checkbox" class="checkbox1"  value="${bean.id}" name="id"></div></td>
+									<input type="hidden" value="${checked }" />
+
+										<tr class="odd">
+											<core:choose>
+
+												<core:when
+													test="${cheked eq 'true' and checkedvalue eq 'true'}">
+													<td class="td_01"><div>
+															<input type="checkbox" class="checkbox1"
+																checked="checked" value="${bean.id}" name="id">
+														</div></td>
+
+												</core:when>
+												<core:otherwise>
+													<td class="td_01"><div>
+															<input type="checkbox" class="checkbox1"
+																value="${bean.id}" name="id">
+														</div></td>
+
+												</core:otherwise>
+											</core:choose>
 									<td class="td_02"><div><core:if test="${not empty bean.isCorrectFormat  }"><a href="#" style="color:red;font-size: 14px;"  onclick="showErrorMessage('${bean.inCorrectValues}','${bean.store}','${bean.id}');" ><img src="images/icon-!.png" align="!"></a></core:if></div></td>
 									<td class="td_03"><div ><core:out value="${bean.store}"></core:out></div></td>
 									<td class="td_04"><div><core:out value="${bean.companyName}"></core:out></div></td>
@@ -779,14 +1103,14 @@ function validateExtension(v)
 				<!-- // box --> 
 					<div id="business_listings_id" align="center">
 					 <core:if test="${numOfPages gt 1}">
-							<span id="page_first" class="next"><a href="#" onclick="listingsPagination(1);">first</a> </span>&nbsp;
-							<span id="page_prev"><a href="#" onclick="paginationPre();">prev</a> </span>&nbsp;
+							<span id="page_first" class="next"><a href="#" onclick="listingsPagination(1);" style="font-size: 14px ; font-weight: 600">first</a> </span>&nbsp;
+							<span id="page_prev"><a href="#" onclick="paginationPre();" style="font-size: 14px ; font-weight: 600">prev</a> </span>&nbsp;
 							
-							<span id="pageNums">
+							<span id="pageNums" style="font-size: 14px ; font-weight: 600">
 							
 							</span>
-							<span id="page_next"><a href="#" onclick="paginationNext(${numOfPages});">next</a> </span>&nbsp;
-							<span id="page_last"><a href="#" onclick="listingsPagination(${numOfPages});">last</a> </span>&nbsp;
+							<span id="page_next"><a href="#" onclick="paginationNext(${numOfPages});" style="font-size: 14px ; font-weight: 600">next</a> </span>&nbsp;
+							<span id="page_last"><a href="#" onclick="listingsPagination(${numOfPages});" style="font-size: 14px ; font-weight: 600">last</a> </span>&nbsp;
 					</core:if>
 				</div>
 				<div class="buttons-center">
@@ -850,7 +1174,7 @@ function validateExtension(v)
         <th class="th_02" id="th_02"><div>Date</div></th>
         <th class="th_02" id="th_03"><div>Brand Name</div></th>
         <th class="th_02" id="th_04"><div>Activity Description</div></th>
-        <th class="th_02" id="th_05"><div>Count</div></th>
+        <th class="th_02" id="th_05" onclick="sortByCount('${flagvalue}')"><div>Count</div></th>
        </tr>
       </thead>
      </table>
@@ -928,7 +1252,7 @@ function validateExtension(v)
 									<spring:hidden path="brandID"/>
 								</table>
 								
-								<div class="sb_buttons_center-2">
+								<div class="sb_buttons_center-2" >
 									<a href="#" id="edit" class="btn_dark_blue_2">Edit</a>
 									<a id="cancel" href="#" class="btn_dark_blue_2">Cancel</a>
 									<a href="#" onclick="saveConfirmation();" id="saveConfirmationId" class="btn_dark_blue_2">Save</a>

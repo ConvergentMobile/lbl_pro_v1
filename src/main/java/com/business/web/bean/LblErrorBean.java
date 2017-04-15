@@ -1,6 +1,7 @@
 package com.business.web.bean;
 
 import java.util.Date;
+
 /**
  * 
  * @author Vasanth
@@ -101,15 +102,80 @@ public class LblErrorBean {
 	private String errorMessage;
 	private String client;
 	private Integer clientId;
-	  
-	
-	 public Integer getClientId() {
+
+	private String foursquareLink;
+	private String instagramLink;
+	private String menuLink;
+	private String yelpLink;
+
+	private String businessDescriptionShort;
+	private String googleAccountId;
+	private String googleLocationId;
+
+	public String getGoogleAccountId() {
+		return googleAccountId;
+	}
+
+	public void setGoogleAccountId(String googleAccountId) {
+		this.googleAccountId = googleAccountId;
+	}
+
+	public String getGoogleLocationId() {
+		return googleLocationId;
+	}
+
+	public void setGoogleLocationId(String googleLocationId) {
+		this.googleLocationId = googleLocationId;
+	}
+
+	public String getBusinessDescriptionShort() {
+		return businessDescriptionShort;
+	}
+
+	public void setBusinessDescriptionShort(String businessDescriptionShort) {
+		this.businessDescriptionShort = businessDescriptionShort;
+	}
+
+	public String getFoursquareLink() {
+		return foursquareLink;
+	}
+
+	public void setFoursquareLink(String foursquareLink) {
+		this.foursquareLink = foursquareLink;
+	}
+
+	public String getInstagramLink() {
+		return instagramLink;
+	}
+
+	public void setInstagramLink(String instagramLink) {
+		this.instagramLink = instagramLink;
+	}
+
+	public String getMenuLink() {
+		return menuLink;
+	}
+
+	public void setMenuLink(String menuLink) {
+		this.menuLink = menuLink;
+	}
+
+	public String getYelpLink() {
+		return yelpLink;
+	}
+
+	public void setYelpLink(String yelpLink) {
+		this.yelpLink = yelpLink;
+	}
+
+	public Integer getClientId() {
 		return clientId;
 	}
+
 	public void setClientId(Integer clientId) {
 		this.clientId = clientId;
 	}
-	
+
 	public String getClient() {
 		return client;
 	}
@@ -594,8 +660,7 @@ public class LblErrorBean {
 		return productsOrServices_combined;
 	}
 
-	public void setProductsOrServices_combined(
-			String productsOrServices_combined) {
+	public void setProductsOrServices_combined(String productsOrServices_combined) {
 		this.productsOrServices_combined = productsOrServices_combined;
 	}
 
@@ -839,5 +904,4 @@ public class LblErrorBean {
 		this.dateRange = dateRange;
 	}
 
-	
 }

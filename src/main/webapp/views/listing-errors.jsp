@@ -1,3 +1,4 @@
+<%@page import="com.business.common.util.LBLConstants"%>
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles"%>
 <%@ taglib uri="http://www.springframework.org/tags/form" prefix="spring"%>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="tag"%>
@@ -26,8 +27,12 @@
 <script src="js/functions.js"></script>
 <script src="js/jquery.bpopup.min.js"></script>
 <script src="js/jquery.jsort.0.4.min.js"></script>
+<link rel="stylesheet" href="js/jquery.mCustomScrollbar.css">
+<script src="js/jquery.mCustomScrollbar.js"></script>
 <script src="js/jquery.session.js"></script>
+<!-- <script src="js/jquery.1.12.4-min.js"></script> -->
 <style type="text/css">
+
 h2 span{
 display: block;
 }
@@ -41,10 +46,19 @@ display: block;
 %>
 
 <script type="text/javascript">
+$(document).ready(function() {
+	var errorMessage=$('#validErrorMessage').val();
+	//alert(errorMessage);
+	if(errorMessage!=''){
+		$("#ErrorPopup").bPopup();
+	}
+});
 var currentPage = '<%=currentPage%>';
 var numOfPages = '<%=numOfPages%>';
 /* alert("numberOfPages :: "+numOfPages); */
 $(document).ready(function() {
+	
+		
 	$('#uploadfile').click(function(){
 	var value = $('#file').val();
 	alert(value);
@@ -64,7 +78,13 @@ $(document).ready(function() {
 	
 });
 $(document).ready(function() {
-    $('#selecctall').click(function(event) {  //on click 
+/* 	var errorMessage=$('#validErrorMessage').val();
+	//alert(errorMessage);
+	if(errorMessage!=''){
+		$("#ErrorPopup").bPopup();
+	} */
+    $('#selecctall').click(function(event) { 
+    	//alert("coming");//on click 
         if(this.checked) { // check select status
             $('.checkbox1').each(function() { //loop through each checkbox
                 this.checked = true;  //select all checkboxes with class "checkbox1"               
@@ -132,9 +152,191 @@ function validateExtension(v)
   }
  return false;
  }
- 
+function ClearFilter(){
+	 var businessname=$("#companyName").val();
+	 businessname="";
+	 var brands=$("#brands").val();
+	 brands="";
+	 var locationAddress=$("#Addresslocation").val();
+	 locationAddress="";
+	 var locationstore=$("#locationstore").val();
+	 locationstore="";
+	 var ZipCodelocation=$("#ZipCodelocation").val();
+	 ZipCodelocation="";
+	 var Citylocation=$("#Citylocation").val();
+	 Citylocation="";
+	 var flag="";
+	 var checkedvalue='';
+	 // check select status
+			            $('.checkbox2').each(function() { //loop through each checkbox
+
+			            	checkedvalue=this.checked;
+			           //select all checkboxes with class "checkbox1"               
+			            });
+	 var currentPage="1";
+	
+	 var Phonelocation=$("#Phonelocation").val();
+	 Phonelocation="";
+	 var Statelocation=$("#Statelocation").val();
+	 Statelocation="";
+	
+	 document.location.href = "businessErrorlistings.htm?flag="+flag+"&&page="+currentPage+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+}
+function getStores(flag){
+	//alert(flag);
+	 var checkedvalue='';
+	 // check select status
+			            $('.checkbox2').each(function() { //loop through each checkbox
+
+			            	checkedvalue=this.checked;
+			           //select all checkboxes with class "checkbox1"               
+			            });
+	 var businessname=$("#companyName").val();
+	 var brands=$("#brands").val();
+	 var locationAddress=$("#Addresslocation").val();
+	 //locationstore
+	 var locationstore=$("#locationstore").val();
+	 var ZipCodelocation=$("#ZipCodelocation").val();
+	 var Citylocation=$("#Citylocation").val();
+	 var Phonelocation=$("#Phonelocation").val();
+	 var Statelocation=$("#Statelocation").val();
+
+
+	document.location.href = "sortByErrorStore.htm?flag="+flag+"&&page="+currentPage+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+
+
+}
+function getBusinessname(flag){
+	 var checkedvalue='';
+	 // check select status
+			            $('.checkbox2').each(function() { //loop through each checkbox
+
+			            	checkedvalue=this.checked;
+			           //select all checkboxes with class "checkbox1"               
+			            });
+			            var businessname=$("#companyName").val();
+			       	 var brands=$("#brands").val();
+			       	 var locationAddress=$("#Addresslocation").val();
+			       	 //locationstore
+			       	 var locationstore=$("#locationstore").val();
+			       	 var ZipCodelocation=$("#ZipCodelocation").val();
+			       	 var Citylocation=$("#Citylocation").val();
+			       	 var Phonelocation=$("#Phonelocation").val();
+			       	 var Statelocation=$("#Statelocation").val();
+	document.location.href = "sortByErrorBName.htm?flag="+flag+"&&page="+currentPage+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+}
+function getAddress(flag){
+	 var checkedvalue='';
+	 // check select status
+			            $('.checkbox2').each(function() { //loop through each checkbox
+
+			            	checkedvalue=this.checked;
+			           //select all checkboxes with class "checkbox1"               
+			            });
+			            var businessname=$("#companyName").val();
+				       	 var brands=$("#brands").val();
+				       	 var locationAddress=$("#Addresslocation").val();
+				       	 //locationstore
+				       	 var locationstore=$("#locationstore").val();
+				       	 var ZipCodelocation=$("#ZipCodelocation").val();
+				       	 var Citylocation=$("#Citylocation").val();
+				       	 var Phonelocation=$("#Phonelocation").val();
+				       	 var Statelocation=$("#Statelocation").val();
+	document.location.href = "sortByErrorAddress.htm?flag="+flag+"&&page="+currentPage+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+}
+function getCity(flag){
+	 var checkedvalue='';
+	 // check select status
+			            $('.checkbox2').each(function() { //loop through each checkbox
+
+			            	checkedvalue=this.checked;
+			           //select all checkboxes with class "checkbox1"               
+			            });
+			            var businessname=$("#companyName").val();
+				       	 var brands=$("#brands").val();
+				       	 var locationAddress=$("#Addresslocation").val();
+				       	 //locationstore
+				       	 var locationstore=$("#locationstore").val();
+				       	 var ZipCodelocation=$("#ZipCodelocation").val();
+				       	 var Citylocation=$("#Citylocation").val();
+				       	 var Phonelocation=$("#Phonelocation").val();
+				       	 var Statelocation=$("#Statelocation").val();
+	document.location.href = "sortByErrorCity.htm?flag="+flag+"&&page="+currentPage+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+}
+function getState(flag){
+	 var checkedvalue='';
+	 // check select status
+			            $('.checkbox2').each(function() { //loop through each checkbox
+
+			            	checkedvalue=this.checked;
+			           //select all checkboxes with class "checkbox1"               
+			            });
+			            var businessname=$("#companyName").val();
+				       	 var brands=$("#brands").val();
+				       	 var locationAddress=$("#Addresslocation").val();
+				       	 //locationstore
+				       	 var locationstore=$("#locationstore").val();
+				       	 var ZipCodelocation=$("#ZipCodelocation").val();
+				       	 var Citylocation=$("#Citylocation").val();
+				       	 var Phonelocation=$("#Phonelocation").val();
+				       	 var Statelocation=$("#Statelocation").val();
+	document.location.href = "sortByErrorState.htm?flag="+flag+"&&page="+currentPage+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+}
+
+function getZip(flag){
+	 var checkedvalue='';
+	 // check select status
+			            $('.checkbox2').each(function() { //loop through each checkbox
+
+			            	checkedvalue=this.checked;
+			           //select all checkboxes with class "checkbox1"               
+			            });
+			            var businessname=$("#companyName").val();
+				       	 var brands=$("#brands").val();
+				       	 var locationAddress=$("#Addresslocation").val();
+				       	 //locationstore
+				       	 var locationstore=$("#locationstore").val();
+				       	 var ZipCodelocation=$("#ZipCodelocation").val();
+				       	 var Citylocation=$("#Citylocation").val();
+				       	 var Phonelocation=$("#Phonelocation").val();
+				       	 var Statelocation=$("#Statelocation").val();
+	document.location.href = "sortByErrorZip.htm?flag="+flag+"&&page="+currentPage+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+}
+function getPhone(flag){
+	 var checkedvalue='';
+	 // check select status
+			            $('.checkbox2').each(function() { //loop through each checkbox
+
+			            	checkedvalue=this.checked;
+			           //select all checkboxes with class "checkbox1"               
+			            });
+			            var businessname=$("#companyName").val();
+				       	 var brands=$("#brands").val();
+				       	 var locationAddress=$("#Addresslocation").val();
+				       	 //locationstore
+				       	 var locationstore=$("#locationstore").val();
+				       	 var ZipCodelocation=$("#ZipCodelocation").val();
+				       	 var Citylocation=$("#Citylocation").val();
+				       	 var Phonelocation=$("#Phonelocation").val();
+				       	 var Statelocation=$("#Statelocation").val();
+	document.location.href = "sortByErrorPhone.htm?flag="+flag+"&&page="+currentPage+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+}
+
  $(document).ready(function(){
-	 
+	 $('.checkbox2').each(function() { 
+
+     	 if(this.checked) { // check select status
+             $('.checkbox1').each(function() { //loop through each checkbox
+                 this.checked = true;  //select all checkboxes with class "checkbox1"               
+             });
+         }else{
+             $('.checkbox1').each(function() { //loop through each checkbox
+                 this.checked = false; //deselect all checkboxes with class "checkbox1"                       
+             });         
+         }
+     });
+	// alert(checkedvalue);
+	
 	var message =$("#uploadResultStatus").val();
 	if(message != null){
 		$('#displayUploadResultStatus').bPopup();
@@ -152,13 +354,13 @@ function validateExtension(v)
 		   }
 		   
 		  });
-	 
+	
 	/*  $("table#businessTable tbody#businessInfo").jSort({
 	        sort_by: 'td.td_03 div',
 	        item: 'tr',
 	        order: 'asc'
 	    }); */
-	 var isAsc = true;
+	 /* var isAsc = true;
 	$("thead#businessTableHeaders tr th").click(function(){
 		var currentClass = $(this).attr('class');
 		//alert(currentClass);
@@ -187,7 +389,7 @@ function validateExtension(v)
 			    });
 		}
 		 
-		}); 
+		});  */
 	
 	/* $('ul#business_listings_id').twbsPagination({
         totalPages: parseInt(numOfPages),
@@ -271,15 +473,51 @@ function validateExtension(v)
 		     form.action = "editErrorBusinessInfo";
 		     form.submit();
 		}
-	
+	function MoveToBusinessListings(){
+		var checkBoxCount = 0;
+		$('input[type=checkbox].checkbox1').each(function () {
+			if($(this).is(":checked")){
+				++checkBoxCount;
+			}
+		});
+		
+		/* var editType = "single";
+		if (checkBoxCount > 1) {
+			editType = "multiple";
+		}
+		$.session.set("editType",editType);
+		$.session.set("isSave",false);
+		$.session.set("editErrorInfo","editErrorInfo"); */
+		if( checkBoxCount ==0){
+			$("#ListingSelectPopup").bPopup();
+			
+		}else if(checkBoxCount >1 ){
+			$("#ListingPopup").bPopup();
+			
+		}else{
+			var form = document.getElementById('businessListform');
+			/* 	 for (var i = 0; i < form.elements.length; i++) {
+					    alert(form.elements[i].value);
+					    } */
+			     form.action = "movetoListings.htm";
+			     form.submit();
+		}
+		  
+		}
 
 	function sendExportSubmit(){
 		 var serviceName = document.getElementById('serviceName').value;
-		
+		 var checkedvalue='';
+
+	        $('.checkbox2').each(function() { 
+
+	        	checkedvalue=this.checked;
+	        });
+	       // alert(checkedvalue);
 		 document.getElementById('templateName').value=serviceName;
 		// $("#businessListform").attr("action", "downloadErrorBusiness");
 		  var form = document.getElementById('businessListform');
-		     form.action = "downloadErrorBusiness";
+		     form.action = "downloadErrorBusiness?checkedValue="+checkedvalue;
 		     form.submit(); 
 		}
 	
@@ -290,8 +528,98 @@ function validateExtension(v)
 	
 	function listingsPagination(page) {
 		//alert("page :: "+page);
+		var checkedvalue='';
+
+        $('.checkbox2').each(function() { 
+
+        	checkedvalue=this.checked;
+        });
+       
+        $.session.set("currentPage",page);
+		var flag=$("#flagidvalue").val();
+		//alert(flag);
+		if(flag == 'ASC'){
+			flag="DESC";
+		}else{
+			flag = 'ASC';
+		}
+		  var businessname=$("#companyName").val();
+	       	 var brands=$("#brands").val();
+	       	 var locationAddress=$("#Addresslocation").val();
+	       	 //locationstore
+	       	 var locationstore=$("#locationstore").val();
+	       	 var ZipCodelocation=$("#ZipCodelocation").val();
+	       	 var Citylocation=$("#Citylocation").val();
+	       	 var Phonelocation=$("#Phonelocation").val();
+	       	 var Statelocation=$("#Statelocation").val();
+        var selecttype=$("#selectType").val();
+        //alert(selecttype);
+        if(selecttype ==''){
+        	document.location.href="business-listingserror_page.htm?page="+page+"&&checkedvalue="+checkedvalue ;	
+        }
+       if(selecttype=='store'){
+    	   var checkedvalue='';
+    		 // check select status
+    				            $('.checkbox2').each(function() { //loop through each checkbox
+
+    				            	checkedvalue=this.checked;
+    				           //select all checkboxes with class "checkbox1"               
+    				            });
+    	   document.location.href = "sortByErrorStore.htm?flag="+flag+"&&page="+page+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+       }
+       if(selecttype== 'businessname'){
+    	   var checkedvalue='';
+    				            $('.checkbox2').each(function() { //loop through each checkbox
+
+    				            	checkedvalue=this.checked;
+    				            });
+    	   document.location.href = "sortByErrorBName.htm?flag="+flag+"&&page="+page+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+       }
+       if(selecttype== 'address'){
+    	   var checkedvalue='';
+    		 // check select status
+    				            $('.checkbox2').each(function() { //loop through each checkbox
+
+    				            	checkedvalue=this.checked;
+    				           //select all checkboxes with class "checkbox1"               
+    				            });
+    	   document.location.href = "sortByAddress.htm?flag="+flag+"&&page="+page+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+       }
+       if(selecttype== 'city'){
+    	   var checkedvalue='';
+    				            $('.checkbox2').each(function() { //loop through each checkbox
+
+    				            	checkedvalue=this.checked;
+    				            });
+    	   document.location.href = "sortByErrorCity.htm?flag="+flag+"&&page="+page+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+       }
+       if(selecttype== 'state'){
+    	   var checkedvalue='';
+    				            $('.checkbox2').each(function() { //loop through each checkbox
+
+    				            	checkedvalue=this.checked;
+    				            });
+    	   document.location.href = "sortByErrorState.htm?flag="+flag+"&&page="+page+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+       }
+       if(selecttype== 'zip'){
+    	   var checkedvalue='';
+    				            $('.checkbox2').each(function() { //loop through each checkbox
+
+    				            	checkedvalue=this.checked;
+    				            });
+    	   document.location.href = "sortByErrorZip.htm?flag="+flag+"&&page="+page+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+       }
+       if(selecttype== 'phone'){
+    	   var checkedvalue='';
+    				            $('.checkbox2').each(function() { 
+
+    				            	checkedvalue=this.checked;
+    				            });
+    	   document.location.href = "sortByErrorPhone.htm?flag="+flag+"&&page="+page+"&&cv="+checkedvalue+"&&bn="+businessname+"&&b="+brands+"&&la="+locationAddress+"&&s="+locationstore+"&&zl="+ZipCodelocation+"&&cl="+Citylocation+"&&pl="+Phonelocation+"&&sl="+Statelocation;
+       };
+/* 
 		$.session.set("currentPage",page);
-		document.location.href="business-listings_page.htm?page="+page;	
+		document.location.href="business-listingserror_page.htm?page="+page; */	
 	}
 	
 	function paginationPre() {
@@ -359,6 +687,35 @@ function validateExtension(v)
 		</div>
 	</div>
 </div>
+<div class="popup" id="ListingSelectPopup" style="display: none;">
+	<div class="pp-header">
+		<!-- <div class="close"></div> -->
+		 <span class="buttonIndicator b-close"><span>X</span></span>
+		<span>Warning!!</span>
+	</div>
+	<div class="pp-subheader"></div>
+	<div class="pp-body">
+		<div class="buttons">
+		Please select at least one record to override location validation.
+				
+		</div>
+	</div>
+</div>
+
+<div class="popup" id="ListingPopup" style="display: none;">
+	<div class="pp-header">
+		<!-- <div class="close"></div> -->
+		 <span class="buttonIndicator b-close"><span>X</span></span>
+		<span>Warning!!</span>
+	</div>
+	<div class="pp-subheader"></div>
+	<div class="pp-body">
+		<div class="buttons">
+		You may only override location validation for one listing at a time.
+				
+		</div>
+	</div>
+</div>
 
 <div class="popup" id="Deleterecordselectionpopup" style="display: none;">
 	<div class="pp-header">
@@ -390,6 +747,20 @@ function validateExtension(v)
 		</div>
 	</div>
 </div>
+<div class="popup" id="ErrorPopup" style="display: none;">
+	<div class="pp-header">
+		<!-- <div class="close"></div> -->
+		 <span class="buttonIndicator b-close"><span>X</span></span>
+		<span>Warning!!</span>
+	</div>
+	<div class="pp-subheader"></div>
+	<div class="pp-body">
+		<div class="buttons">
+		Selected listing does NOT have an issue related to address validation.
+				
+		</div>
+	</div>
+</div>
 
 
 <div class="popup" id="displayExportFilepopup" style="display: none">
@@ -401,7 +772,7 @@ function validateExtension(v)
 	<div class="pp-body">
 		<div class="export">
 			<select name="service" id="serviceName">
-				<option value="">Choose Tempate</option>				
+				<option value="">Choose Template</option>				
 				<option value="Master_Template">Master Template</option>
 				
 			</select> 
@@ -518,8 +889,17 @@ function validateExtension(v)
 			<li class="si_error_listings selected"><a href="listing-error.htm">Listing Errors</a></li>
 			<li class="si_upload_export"><a href="upload-export.htm">Upload/Export</a></li>
 			<li class="si_reports"><a href="reports.htm">Reports</a></li>
+				<%
+						Integer Role=(Integer)session.getAttribute("roleId");				
+							if(Role==LBLConstants.CONVERGENT_MOBILE_ADMIN){						
+						%>
+			<li class="si_admin"><a href="admin-listings.htm">CM admin</a></li>
 			<li class="si_mobile_profile "><a href="manage-account.htm">Manage Account</a></li>
-			<li class="si_toolbox"><a href="getConvergentToolbox.htm">Convergent Toolbox</a></li>
+			<%} %>
+			<!-- <li class="si_schduler"><a href="scheduler.htm">Schedule</a></li> -->
+			
+				
+			<!--<li class="si_toolbox"><a href="getConvergentToolbox.htm">Convergent Toolbox</a></li>-->
 		</ul>
 		<!-- // left side navigation --> 
 		<!-- content area -->
@@ -531,33 +911,71 @@ function validateExtension(v)
 				<p>${channelName}</p>
 			</div>
 			<!-- // subheader -->
+			
+				  <script>
+				$(document).ready(function(e) {
+                    $( ".advanced" ).click(function() {
+					  $( ".filters-2" ).toggle("slow");
+					});
+                });
+				</script>
+			
 			<div class="inner_box"> 
-			<spring:form method="post" commandName="businessSearch"  id="searchAndFilterForm">
+					<spring:form method="post" commandName="businessSearch"  id="searchAndFilterForm">
+				<div class="quick-form">
+                	<div class="styled-select">
+                        <spring:select name="menu-4562" class="searchby" path="searchType">
+                            <spring:option value="sbBR">Search by Brand Name</spring:option>
+                            <spring:option value="sbBN">Search by Business Name</spring:option>
+                            <spring:option value="sbS">Search by Store #</spring:option>
+                            <spring:option value="sbP">Search by Phone Number</spring:option>
+                        </spring:select>
+                       </div>
+                    <spring:input path="searchValue" class="search-field" placeholder="search text"/>
+                    <input type="image" src="images/search-icon.png"  value="Apply FIlter" onclick="search()"/>
+                    <a href="#" onclick="ClearFilter()" class="small">Clear</a>
+                    <div class="advanced">Advanced Search</div>
+                 
+                </div>
+                
+			<input type="hidden" value="${flagvalue }" id="flagidvalue" />
+			<input type="hidden" value="${companyName }" id="companyName" /> <input
+						type="hidden" value="${locationstore }" id="locationstore" name="storeval"/> <input
+						type="hidden" value="${locationAddress }" id="Addresslocation" />
+					<input type="hidden" value="${locationState }" id="Statelocation" />
+					<input type="hidden" value="${locationCity }" id="Citylocation" />
+					<input type="hidden" value="${locationZipCode }"
+						id="ZipCodelocation" /> <input type="hidden" name="brandval" value="${brands }"
+						id="brands" /> <input type="hidden" value="${locationPhone }"
+						id="Phonelocation" />
+						<input type="hidden" value="${selectType }" id="selectType" />
+	
 				<div class="filters-2">
-					<label>Brand Name&nbsp;<spring:input path="client"  style="width:140px"/></label>
-					<label>Business Name&nbsp;<spring:input path="companyName" style="width:140px"/></label>
-					<label>Store #&nbsp;<spring:input path="store" style="width:55px"/></label>
-					<label>Zip&nbsp;<spring:input path="locationZipCode" style="width:55px"/></label>
-					<label>Phone #&nbsp;<spring:input path="locationPhone" style="width:140px"/></label>
-					<label>Address&nbsp;<spring:input path="locationAddress" style="width:140px"/></label>
-					<label>City&nbsp;<spring:input path="locationCity" style="width:100px"/></label>
-					<label>State&nbsp;<!-- <select>
+					<label><spring:input path="client" placeholder="Brand Name" /></label>
+					<label><spring:input path="companyName" placeholder="Business Name" /></label>
+					<label><spring:input path="store" placeholder="Store #" /></label>
+					<label><spring:input path="locationPhone" placeholder="Phone" /></label>
+					<label><spring:input path="locationAddress" placeholder="Address" /></label>
+					<label><spring:input path="locationCity" placeholder="City" /></label>
+					<label><!-- <select>
 							<option></option>
-						</select> --><spring:input path="locationState" style="width:100px"/>
+						</select> --><spring:input path="locationState" placeholder="State" />
 					</label>
+					<label><spring:input path="locationZipCode" placeholder="Zip" /></label>
+					<input type="hidden" value="${errormessage }" id="validErrorMessage">
 					
+					<!-- <input type="submit" value="Apply FIlter" onclick="search()" class="btn_dark_blue_2">
+					<a href="#" onclick="ClearFilter()"  class="btn_dark_blue_2">CLEAR FIlter</a> -->
 					
-					<input type="submit" value="Apply FIlter" onclick="search()" class="btn_dark_blue_2">
-					<a href="listing-error.htm"   class="btn_dark_blue_2">CLEAR FIlter</a>
-					
-					<a href="#" class="btn_grey_3 plus"><span>Add/Remove Fields</span></a>
+					<!-- <a href="#" class="btn_grey_3 plus"><span>Add/Remove Fields</span></a> -->
+					</div>
 					</spring:form>
-				</div>
+				
 				<!-- box -->
 				<div class="box box_red_title business-listings"> 
 					<!-- title -->
 					<div class="box_title">
-					<h2><span style="font-size: 10px">ATTENTION:The location(s) displayed below have not passed the verfication process <span>\n</span> 
+					<h2><span style="font-size: 10px">ATTENTION:The location(s) displayed below have not passed the Verification process
 					</span></h2>						
 						<div class="box_title_right"> <span>Locations With Errors: ${errorListSize}</span></div>
 					</div>
@@ -569,26 +987,51 @@ function validateExtension(v)
 					<table width="100%" class="grid grid_13">
 						<colgroup>
 							<col width="5%"  />
-							<col width="10%" />
-							<col width="12%" />
-							<col width="15%" />
-							<col width="10%" />
-							<col width="12%" />
-							<col width="10%" />
-							<col width="10%" />
+							<col width="6%" />
+							<col width="9%" />
+							<col width="22%" />
+							<col width="18%" />
+							<col width="13%" />
+							<col width="7%" />
+							<col width="9%" />
 							<col width="11%" />
 						</colgroup>
 						<thead id="businessTableHeaders">
 							<tr>
-								<th class="th_01"><div><input type="checkbox" id="selecctall"></div></th>
-								<th class="th_02"><div>Error Count</div></th>
-								<th class="th_03"><div >Store#</div></th>
-								<th class="th_04"><div>Business Name</div></th>
-								<th class="th_05"><div>Address</div></th>
-								<th class="th_06"><div>City</div></th>
-								<th class="th_07"><div>State</div></th>
-								<th class="th_08"><div>Zip</div></th>
-								<th class="th_09"><div>Phone</div></th>
+																
+								<core:set value="${checkedvalue }" var="checkedvalue" scope="page"></core:set>								
+																
+					<core:set value="${checked }" var="cheked" scope="page"></core:set>
+							
+							<core:choose>
+
+										<core:when
+											test="${cheked eq 'true' and checkedvalue eq 'true'}">
+											<th class="th_01"><div>
+													<input type="checkbox" id="selecctall" class="checkbox2"
+														checked="checked">
+												</div></th>
+
+										</core:when>
+										<core:otherwise>
+											<th class="th_01"><div>
+													<input type="checkbox" id="selecctall" class="checkbox2">
+												</div></th>
+
+										</core:otherwise>
+									</core:choose>
+								<th class="th_02"><div>Errors</div></th>
+								<th class="th_03" id="store"
+										onclick="getStores('${flagvalue}')"><div>Store#</div></th>
+									<th class="th_04" id="businessname"
+										onclick="getBusinessname('${flagvalue}')"><div>Business
+											Name</div></th>
+									<th class="th_05" id="address"
+										onclick="getAddress('${flagvalue}')"><div>Address</div></th>
+									<th class="th_06" id="city" onclick="getCity('${flagvalue}')"><div>City</div></th>
+									<th class="th_07" id="state" onclick="getState('${flagvalue}')"><div>State</div></th>
+									<th class="th_08" id="zip" onclick="getZip('${flagvalue}')"><div>Zip</div></th>
+									<th class="th_09" id="phone" onclick="getPhone('${flagvalue}')"><div>Phone</div></th>
 							</tr>
 						</thead>
 					</table>
@@ -596,13 +1039,13 @@ function validateExtension(v)
 						<table  id="businessTable" width="100%" class="grid grid_13">
 							<colgroup>
 								<col width="5%"  />
-								<col width="10%" />
-								<col width="12%" />
-								<col width="15%" />
-								<col width="10%" />
-								<col width="12%" />
-								<col width="10%" />
-								<col width="10%" />
+								<col width="6%" />
+								<col width="9%" />
+								<col width="22%" />
+								<col width="18%" />
+								<col width="13%" />
+								<col width="7%" />
+								<col width="9%" />
 								<col width="11%" />
 							</colgroup>
 							<tbody id="businessInfo" class="listingsContent">
@@ -635,25 +1078,30 @@ function validateExtension(v)
 				<!-- // box --> 
 				<div id="business_listings_id" align="center">
 					 <core:if test="${numOfPages gt 1}">
-							<span id="page_first" class="next"><a href="#" onclick="listingsPagination(1);">first</a> </span>&nbsp;
-							<span id="page_prev"><a href="#" onclick="paginationPre();">prev</a> </span>&nbsp;							
-							<span id="pageNums">							
+							<span id="page_first" class="next"><a href="#" style="font-size: 14px; font-weight: 600" onclick="listingsPagination(1);">first</a> </span>&nbsp;
+							<span id="page_prev"><a href="#" style="font-size: 14px; font-weight: 600" onclick="paginationPre();">prev</a> </span>&nbsp;							
+							<span id="pageNums" style="font-size: 14px; font-weight: 600">							
 							</span>
-							<span id="page_next"><a href="#" onclick="paginationNext(${numOfPages});">next</a> </span>&nbsp;
-							<span id="page_last"><a href="#" onclick="listingsPagination(${numOfPages});">last</a> </span>&nbsp;
+							<span id="page_next"><a href="#" style="font-size: 14px; font-weight: 600" onclick="paginationNext(${numOfPages});">next</a> </span>&nbsp;
+							<span id="page_last"><a href="#"  style="font-size: 14px; font-weight: 600" onclick="listingsPagination(${numOfPages});">last</a> </span>&nbsp;
 					</core:if>
 				</div>
 				<div class="buttons-center">
 				
-						<%	Boolean isViewOnly = (Boolean) session.getAttribute("isViewOnly");
-							if(!isViewOnly) { %>
-									<a href="#" onclick="errorDeletePopup();" class="btn_dark_blue_2">Delete</a>
-							<% } %>
-							
-
+					
+						
 						<a href="#" onclick="sendEditResult()"   class="btn_dark_blue_2">Edit</a>
 			    		<a href="#" onclick="showExportPopup();" class="btn_dark_blue_2" >Export</a> 
-			    		
+			    			<%	Boolean isViewOnly = (Boolean) session.getAttribute("isViewOnly");
+							if(!isViewOnly) { %>
+									<a href="#" onclick="errorDeletePopup();" class="btn_dark_blue_2">Delete</a>
+							<% }
+							
+								if(Role==LBLConstants.CONVERGENT_MOBILE_ADMIN){						
+							%>
+								<a href="#" onclick="MoveToBusinessListings()" class="btn_dark_blue_2">Override Location</a>
+							<%} %>
+			    	
 			   			 		
 				</div>
 				</spring:form>

@@ -9,18 +9,20 @@ public class SubmissionThread extends Thread {
 	public Logger logger = Logger.getLogger(SubmissionThread.class);
 	
 	BusinessService service = null;
+
+	private String client = null;
 	
-	public SubmissionThread(BusinessService service) {
+	public SubmissionThread(BusinessService service,String client) {
 		this.service = service;
+		this.client =client;
 	}
 
 	public void run() {
 		logger.info("start ::  bulkExport method");
 		SubmissionUtil submissionUtil = new SubmissionUtil();
 		try {
-			submissionUtil.doSubmissions(service);
+			submissionUtil.doSubmissions(service,client);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		logger.info("end ::  bulkExport method");

@@ -37,8 +37,24 @@ public class UsersBean {
 	private String[] brandID;
 	private Integer clientId;
 	private String saveType;
+	private Integer channelID;
 	private String viewOnly;
 	
+	
+	
+	public String getViewOnly() {
+		return viewOnly;
+	}
+	public void setViewOnly(String viewOnly) {
+		this.viewOnly = viewOnly;
+	}
+	
+	public Integer getChannelID() {
+		return channelID;
+	}
+	public void setChannelID(Integer channelID) {
+		this.channelID = channelID;
+	}
 	public String getSaveType() {
 		return saveType;
 	}
@@ -179,12 +195,6 @@ public class UsersBean {
 	}
 	public void setBrandID(String[] brandID) {
 		this.brandID = brandID;
-	}
-	public String getViewOnly() {
-		return viewOnly;
-	}
-	public void setViewOnly(String viewOnly) {
-		this.viewOnly = viewOnly;
 	}
 	
 	

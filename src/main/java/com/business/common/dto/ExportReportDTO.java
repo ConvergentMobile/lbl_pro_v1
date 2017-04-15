@@ -22,6 +22,24 @@ public class ExportReportDTO implements Comparable{
 	private String activityDescription;
 	private String channelName;
 	private Integer count;
+	private Integer clientId;
+	private String userName;
+	
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+	public Integer getClientId() {
+		return clientId;
+	}
+
+	public void setClientId(Integer clientId) {
+		this.clientId = clientId;
+	}
+
 	private Map<String, Integer> exportActivity;
 
 	public Integer getExportID() {

@@ -10,21 +10,47 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.business.common.dto.AccuracyDTO;
+import com.business.common.dto.AccuracyGraphDTO;
 import com.business.common.dto.BrandInfoDTO;
+import com.business.common.dto.CategoryDTO;
+import com.business.common.dto.ChangeTrackingDTO;
 import com.business.common.dto.ChannelNameDTO;
+import com.business.common.dto.CheckReportDTO;
+import com.business.common.dto.CitationReportDTO;
+import com.business.common.dto.CustomSubmissionsDTO;
 import com.business.common.dto.ExportReportDTO;
 import com.business.common.dto.ForgotPasswordDto;
+import com.business.common.dto.InsightsGraphDTO;
+import com.business.common.dto.InsightsHistory;
 import com.business.common.dto.LblErrorDTO;
 import com.business.common.dto.LocalBusinessDTO;
+import com.business.common.dto.PartnerDTO;
+import com.business.common.dto.RenewalReportDTO;
+import com.business.common.dto.SchedulerDTO;
+import com.business.common.dto.SearchDomainDTO;
 import com.business.common.dto.UploadReportDTO;
 import com.business.common.dto.UsersDTO;
 import com.business.common.util.DateUtil;
 import com.business.model.dataaccess.BusinessDao;
-import com.business.model.pojo.CategorySyphcode;
+import com.business.model.pojo.AccuracyPercentageEntity;
+import com.business.model.pojo.AccuracyReportEntity;
+import com.business.model.pojo.AuditEntity;
+import com.business.model.pojo.ChangeTrackingEntity;
+import com.business.model.pojo.CitationGraphEntity;
+import com.business.model.pojo.CitationReportEntity;
 import com.business.model.pojo.ExportReportEntity;
+import com.business.model.pojo.FailedScrapingsEntity;
+import com.business.model.pojo.RenewalReportEntity;
 import com.business.model.pojo.RoleEntity;
+import com.business.model.pojo.StatesListEntity;
+import com.business.model.pojo.ValueObject;
 import com.business.service.BusinessService;
+import com.business.web.bean.CustomSubmissionsBean;
+import com.business.web.bean.UploadBusinessBean;
+/*import com.business.web.bean.CustomSubmissionsBean;*/
 import com.business.web.bean.UsersBean;
+import com.google.api.services.mybusiness.v3.model.Location;
 
 /**
  * 
@@ -66,8 +92,8 @@ public class BusinessServiceImpl implements BusinessService {
 		boolean isValid = true;
 		/*
 		 * for (LocalBusinessDTO localBusinessDTO : listOfBusinessInfo) { if
-		 * (localBusinessDTO.getId().equals(businessDTO.getId())) {
-		 * logger.info("Both ids are matched"); continue; } String name =
+		 * (localBusinessDTO.getId().equals(businessDTO.getId())) { logger.info(
+		 * "Both ids are matched"); continue; } String name =
 		 * localBusinessDTO.getName(); String address1 =
 		 * localBusinessDTO.getAddress1(); String phoneNumber =
 		 * localBusinessDTO.getPhoneNumber(); if
@@ -90,8 +116,9 @@ public class BusinessServiceImpl implements BusinessService {
 	}
 
 	@Transactional
-	public List<LocalBusinessDTO> getSpecificBusinessInfo(List<Integer> listIds) {
-		return businessDao.getSpecificBusinessInfo(listIds);
+	public List<LocalBusinessDTO> getSpecificBusinessInfo(
+			List<Integer> listIds, String services) {
+		return businessDao.getSpecificBusinessInfo(listIds, services);
 	}
 
 	@Transactional
@@ -424,11 +451,10 @@ public class BusinessServiceImpl implements BusinessService {
 
 	}
 
-	/*@Transactional
-	public BrandInfoDTO getClientNameById(Integer clientUserId) {
-		return businessDao.getClientNameById(clientUserId);
-	}
-*/
+	/*
+	 * @Transactional public BrandInfoDTO getClientNameById(Integer
+	 * clientUserId) { return businessDao.getClientNameById(clientUserId); }
+	 */
 	@Transactional
 	public LblErrorDTO getErrorBusinessInfo(Integer id) {
 		return businessDao.getErrorBusinessInfo(id);
@@ -440,8 +466,8 @@ public class BusinessServiceImpl implements BusinessService {
 	}
 
 	@Transactional
-	public boolean isValidState(String state) {
-		return businessDao.isValidState(state);
+	public boolean isValidState(String state, String countryCode) {
+		return businessDao.isValidState(state, countryCode);
 	}
 
 	@Transactional
@@ -513,9 +539,9 @@ public class BusinessServiceImpl implements BusinessService {
 	@Transactional
 	public void updateBusinessRecords(
 			List<LocalBusinessDTO> updateBusinessRecords, Date date,
-			String uploadJobId) {
+			String uploadJobId, String userName) {
 		businessDao.updateBusinessRecords(updateBusinessRecords, date,
-				uploadJobId);
+				uploadJobId, userName);
 	}
 
 	@Transactional
@@ -547,16 +573,18 @@ public class BusinessServiceImpl implements BusinessService {
 
 	}
 
-/*	@Transactional
-	public void updateErrorBusinessInfo(LblErrorDTO businessInfoDto,BusinessServiceImpl) {
-		businessDao.updateErrorBusinessInfo(businessInfoDto);
-	}*/
-	
+	/*
+	 * @Transactional public void updateErrorBusinessInfo(LblErrorDTO
+	 * businessInfoDto,BusinessServiceImpl) {
+	 * businessDao.updateErrorBusinessInfo(businessInfoDto); }
+	 */
+
 	@Transactional
 	public void updateErrorBusinessInfo(LblErrorDTO businessInfoDto,
 			Integer listingId) {
 		businessDao.updateErrorBusinessInfo(businessInfoDto, listingId);
 	}
+
 	@Transactional
 	public String getCategoryNameById(Integer categoryId) {
 		return businessDao.getCategoryNameById(categoryId);
@@ -567,4 +595,991 @@ public class BusinessServiceImpl implements BusinessService {
 			Integer clientId) {
 		return businessDao.getSyphCodeByClientAndCategoryID(category, clientId);
 	}
+
+	@Transactional
+	public List<ChannelNameDTO> getChannel() {
+		return businessDao.getChannel();
+	}
+
+	@Transactional
+	public List<BrandInfoDTO> getBrandsByChannelID(Integer channelID) {
+		return businessDao.getBrandsByChannelID(channelID);
+	}
+
+	@Transactional
+	public void deleteBrand(Integer brandID) {
+		businessDao.deleteBrand(brandID);
+	}
+
+	@Transactional
+	public void deleteChannel(Integer channelID) {
+		businessDao.deleteChannel(channelID);
+	}
+
+	@Transactional
+	public List<SchedulerDTO> getScheduleListing() {
+		return businessDao.getScheduleListing();
+	}
+
+	@Transactional
+	public List<PartnerDTO> getPartners() {
+		return businessDao.getPartners();
+	}
+
+	@Transactional
+	public void deleteBusinessInfotest(List<Integer> listIds) {
+		businessDao.deleteBusinessInfotest(listIds);
+	}
+
+	@Transactional
+	public boolean saveScheduler(SchedulerDTO dto) {
+		return businessDao.saveScheduler(dto);
+	}
+
+	@Transactional
+	public List<String> getStoresbasedonState(String state) {
+		return businessDao.getStoresbasedonState(state);
+	}
+
+	@Transactional
+	public void saveUserUserStore(UsersBean bean, List<String> listofStores) {
+		businessDao.saveUserUserStore(bean, listofStores);
+
+	}
+
+	@Transactional
+	public void deleteBrands(List<Integer> listIds) {
+		businessDao.deleteBrands(listIds);
+
+	}
+
+	@Transactional
+	public List<LblErrorDTO> getListOfUserErrors() {
+		return businessDao.getListOfUserErrors();
+	}
+
+	@Transactional
+	public List<LocalBusinessDTO> getListOfUSerBusinessInfo() {
+		return businessDao.getListOfUSerBusinessInfo();
+	}
+
+	@Transactional
+	public boolean saveChangeTrackingInfo(ChangeTrackingEntity entity) {
+		return businessDao.saveChangeTrackingInfo(entity);
+	}
+
+	@Transactional
+	public List<String> getUserStores() {
+		return businessDao.getUserStores();
+	}
+
+	@Transactional
+	public List<BrandInfoDTO> getClientbrnds() {
+		return businessDao.getClientbrnds();
+	}
+
+	@Transactional
+	public Map<String, List<BrandInfoDTO>> getActivePartners(String client) {
+		return businessDao.getActivePartners(client);
+	}
+
+	@Transactional
+	public void deleteUSer(int parseInt) {
+		businessDao.deleteUSer(parseInt);
+	}
+
+	@Transactional
+	public boolean saveBrand(String brandName, Date startDateValue,
+			String locationsInvoiced, String submission, Integer channelID,
+			String partnerActive, Integer clientId, int brandId, String email) {
+		return businessDao.saveBrand(brandName, startDateValue,
+				locationsInvoiced, submission, channelID, partnerActive,
+				clientId, brandId, email);
+
+	}
+
+	@Transactional
+	public boolean updateBrand(Integer brandID, String brandName,
+			Date startDate, String locationsInvoiced, String submission,
+			Integer channelID, String partnerActive, Integer clientId,
+			Integer id, String email) {
+		return businessDao.updateBrand(brandID, brandName, startDate,
+				locationsInvoiced, submission, channelID, partnerActive,
+				clientId, id, email);
+
+	}
+
+	@Transactional
+	public List<CustomSubmissionsDTO> getDaySchedules() throws Exception {
+		return businessDao.getDaySchedules();
+	}
+
+	@Transactional
+	public void updateSchedule(SchedulerDTO dto) throws Exception {
+
+		businessDao.updateSchedule(dto);
+	}
+
+	@Transactional
+	public List<LocalBusinessDTO> getCLientListOfBusinessInfo(String client,
+			String templateName) {
+		return businessDao.getCLientListOfBusinessInfo(client, templateName);
+	}
+
+	@Transactional
+	public List<CategoryDTO> getCategeoryListing() {
+		return businessDao.getCategeoryListing();
+	}
+
+	@Transactional
+	public List<BrandInfoDTO> getBrandListing() {
+		return businessDao.getBrandListing();
+	}
+
+	@Transactional
+	public BrandInfoDTO getBrandInfo(Integer integer) {
+		return businessDao.getBrandInfo(integer);
+	}
+
+	@Transactional
+	public BrandInfoDTO getBrandInfoByBrandName(String brandName,
+			String channelName) {
+		return businessDao.getBrandInfoByBrandName(brandName, channelName);
+	}
+
+	@Transactional
+	public BrandInfoDTO getBrandInfoByBrand(String brandName) {
+		return businessDao.getBrandInfoByBrand(brandName);
+	}
+
+	@Transactional
+	public BrandInfoDTO getBrandInfoByChannel(String channelName) {
+		return businessDao.getBrandInfoByChannel(channelName);
+	}
+
+	@Transactional
+	public List<CategoryDTO> getCategeoryListingByBrand(String clinetname) {
+		return businessDao.getCategeoryListingByBrand(clinetname);
+	}
+
+	@Transactional
+	public Set<LocalBusinessDTO> searchBusinessListinginfo(String store,
+			String brands) {
+		return businessDao.searchBusinessListinginfo(store, brands);
+	}
+
+	@Transactional
+	public LocalBusinessDTO getBusinessListinginfoByBrandId(String store,
+			String brandName) {
+		return businessDao.getBusinessListinginfoByBrandId(store, brandName);
+	}
+
+	@Transactional
+	public Integer getlocationInvoicedByBrandname(String brandName) {
+		return businessDao.getlocationInvoicedByBrandname(brandName);
+	}
+
+	@Transactional
+	public Integer getlocationsByBrandName(String brandName) {
+		return businessDao.getlocationsByBrandName(brandName);
+	}
+
+	@Transactional
+	public void saveSearchDomainInfo(SearchDomainDTO domainDTO) {
+
+		businessDao.saveSearchDomainInfo(domainDTO);
+	}
+
+	@Transactional
+	public void saveCheckReportInfo(CheckReportDTO checkReportDTO) {
+
+		businessDao.saveCheckReportInfo(checkReportDTO);
+
+	}
+
+	@Transactional
+	public String getFactualCategoryId(Integer clientId) {
+		return businessDao.getFactualCategoryId(clientId);
+	}
+
+	@Transactional
+	public List<LocalBusinessDTO> getAllListings() {
+		return businessDao.getAllListings();
+	}
+
+	@Transactional
+	public List<SearchDomainDTO> getDomainsByStore(String store) {
+		return businessDao.getDomainsByStore(store);
+
+	}
+
+	@Transactional
+	public void insertAccuracyGraphInfo(AccuracyGraphDTO accuracyGraphDTO) {
+
+		businessDao.insertAccuracyGraphInfo(accuracyGraphDTO);
+	}
+
+	@Transactional
+	public List<LocalBusinessDTO> getStoresByBrandName(String clinetname) {
+
+		return businessDao.getStoresByBrandName(clinetname);
+	}
+
+	@Transactional
+	public void updateBrandInfo(Integer id) {
+
+		businessDao.updateBrandInforBasedOnBrand(id);
+	}
+
+	@Transactional
+	public List<BrandInfoDTO> getInActiveBrands(Integer brandid) {
+		return businessDao.getInActiveBrands(brandid);
+	}
+
+	@Transactional
+	public List<StatesListEntity> getStateList() {
+
+		return businessDao.getStateList();
+	}
+
+	@Transactional
+	public boolean updateBrand(Integer brandID, String brandName,
+			Date startDate, String inactive, String locationsInvoiced,
+			String submission, Integer channelID, String partnerActive,
+			Integer clientId, Integer id, String email) {
+		return businessDao.updateBrand(brandID, brandName, startDate, inactive,
+				locationsInvoiced, submission, channelID, partnerActive,
+				clientId, id, email);
+
+	}
+
+	@Transactional
+	public String getGoogleCategory(String category1) {
+		return businessDao.getGoogleCategory(category1);
+	}
+
+	@Transactional
+	public boolean isClientIdExistis(Integer clientId) {
+		return businessDao.isClientIdExistis(clientId);
+
+	}
+
+	@Transactional
+	public List<LocalBusinessDTO> getListOfBusinessInfoOrederByStore(
+			String flag, String companyname, String searchType) {
+		return businessDao.getListOfBusinessInfoOrederByStore(flag,
+				companyname, searchType);
+	}
+
+	@Transactional
+	public List<LocalBusinessDTO> getListOfBusinessInfoOrederByPhone(
+			String flag, Map<String, String> fmap) {
+
+		return businessDao.getListOfBusinessInfoOrederByPhone(flag, fmap);
+	}
+
+	@Transactional
+	public List<LocalBusinessDTO> getListOfBusinessInfoOrederByZip(String flag,
+			Map<String, String> fmap) {
+
+		return businessDao.getListOfBusinessInfoOrederByZip(flag, fmap);
+	}
+
+	@Transactional
+	public List<LocalBusinessDTO> getListOfBusinessInfoOrederByState(
+			String flag, Map<String, String> fmap) {
+
+		return businessDao.getListOfBusinessInfoOrederByState(flag, fmap);
+	}
+
+	@Transactional
+	public List<LocalBusinessDTO> getListOfBusinessInfoOrederByCity(
+			String flag, Map<String, String> fmap) {
+
+		return businessDao.getListOfBusinessInfoOrederByCity(flag, fmap);
+	}
+
+	@Transactional
+	public List<LocalBusinessDTO> getListOfBusinessInfoOrederByAddress(
+			String flag, Map<String, String> fmap) {
+
+		return businessDao.getListOfBusinessInfoOrederByAddress(flag, fmap);
+	}
+
+	@Transactional
+	public List<LocalBusinessDTO> getListOfBusinessInfoOrederByBusinessName(
+			String flag, Map<String, String> fmap) {
+
+		return businessDao
+				.getListOfBusinessInfoOrederByBusinessName(flag, fmap);
+	}
+
+	@Transactional
+	public List<CustomSubmissionsBean> getCustomSubmissions() {
+
+		return businessDao.getCustomSubmissions();
+	}
+
+	@Transactional
+	public List<String> getStoreBasedOnBrandsandStore(String brandname,
+			String store) {
+
+		return businessDao.getStoreBasedOnBrandsandStore(brandname, store);
+	}
+
+	@Transactional
+	public LocalBusinessDTO getBusinesslistingBystore(String store) {
+		return businessDao.getBusinesslistingBystore(store);
+	}
+
+	@Transactional
+	public void saveCustomSubmissions(CustomSubmissionsDTO dto) {
+		businessDao.saveCustomSubmissions(dto);
+
+	}
+
+	@Transactional
+	public CustomSubmissionsDTO getCustomSubmissions(int parseInt) {
+		return businessDao.getCustomSubmissions(parseInt);
+	}
+
+	@Transactional
+	public List<LocalBusinessDTO> getAllBusinessListingsSortBytotallocations(
+			String flag) {
+
+		return businessDao.getAllBusinessListingsSortBytotallocations(flag);
+	}
+
+	@Transactional
+	public List<ExportReportDTO> getListingActivityInf(String flag) {
+		return businessDao.getListingActivityInf(flag);
+	}
+
+	@Transactional
+	public List<CustomSubmissionsBean> getSearchBrandandChannelDetails(
+			String channelName, String brandName1) {
+		return businessDao.getSearchBrandandChannelDetails(channelName,
+				brandName1);
+	}
+
+	@Transactional
+	public List<SearchDomainDTO> getDomainsByStore(String store, String domain) {
+		return businessDao.getDomainsByStore(store, domain);
+	}
+
+	@Transactional
+	public List<LocalBusinessDTO> getListOfBusinessInfoByStore(String flag,
+			Map<String, String> fmap) {
+		return businessDao.getListOfBusinessInfoByStore(flag, fmap);
+	}
+
+	@Transactional
+	public void deleteBusinessInfoByStoreAndClient(UploadBusinessBean uploadBean) {
+		businessDao.deleteBusinessInfoByStoreAndClient(uploadBean);
+	}
+
+	@Transactional
+	public void updateErrorBusinessInfoByAddressVerfication(LblErrorDTO errorDTO) {
+
+		businessDao.updateErrorBusinessInfoByAddressVerfication(errorDTO);
+	}
+
+	@Transactional
+	public Map<Integer, List<ChangeTrackingDTO>> getBusinessListing(
+			List<String> listofStores, String brand, Date fromDate, Date toDate) {
+
+		return businessDao.getBusinessListing(listofStores, brand, fromDate,
+				toDate);
+	}
+
+	@Transactional
+	public Integer isStoreExist(String store, String directory) {
+
+		return businessDao.isStoreExist(store, directory);
+	}
+
+	@Transactional
+	public void updateCheckReportInfo(CheckReportDTO highestMatchingStore) {
+		businessDao.updateCheckReportInfo(highestMatchingStore);
+
+	}
+
+	@Transactional
+	public ChangeTrackingEntity isClientIdAndStoreExists(Integer clientId,
+			String store) {
+		return businessDao.isClientIdAndStoreExists(clientId, store);
+	}
+
+	@Transactional
+	public boolean updateChangeTrackingInfo(ChangeTrackingEntity entity) {
+		return businessDao.updateChangeTrackingInfo(entity);
+	}
+
+	@Transactional
+	public void updateAccuracyInfo(AccuracyDTO dto) {
+		businessDao.updateAccuracyInfo(dto);
+
+	}
+
+	@Transactional
+	public void saveAccuracyInfo(AccuracyDTO dto) {
+
+		businessDao.saveAccuracyInfo(dto);
+	}
+
+	@Transactional
+	public Integer isStoreExistInAccuracy(String store, String brandName) {
+
+		return businessDao.isStoreExistInAccuracy(store, brandName);
+	}
+
+	@Transactional
+	public void saveAccuracyGraphInfo(AccuracyGraphDTO accuracyGraphDTO) {
+
+		businessDao.saveAccuracyGraphInfo(accuracyGraphDTO);
+	}
+
+	@Transactional
+	public Map<String, Integer> getErrorsCount(String store) {
+
+		return businessDao.getErrorsCount(store);
+	}
+
+	@Transactional
+	public List<String> getStoreForBrand(String string) {
+
+		return businessDao.getStoreForBrand(string);
+	}
+
+	@Transactional
+	public void saveIntoFailedScapes(FailedScrapingsEntity scrapingsEntity) {
+		businessDao.saveIntoFailedScapes(scrapingsEntity);
+
+	}
+
+	@Transactional
+	public List<FailedScrapingsEntity> getAllStoresFromFailedScraping() {
+
+		return businessDao.getAllStoresFromFailedScraping();
+	}
+
+	@Transactional
+	public boolean isStoreAndDirectoryExist(String store, String directory) {
+
+		return businessDao.isStoreAndDirectoryExist(store, directory);
+	}
+
+	@Transactional
+	public void deleteFailedScapingEntity(FailedScrapingsEntity scrapingsEntity) {
+		businessDao.deleteFailedScapingEntity(scrapingsEntity);
+
+	}
+
+	@Transactional
+	public void deleteFailedScapingEntity(String store, String directory) {
+		businessDao.deleteFailedScapingEntity(store, directory);
+
+	}
+
+	@Transactional
+	public String getStateFromStateList(String state) {
+
+		return businessDao.getStateFromStateList(state);
+	}
+
+	@Transactional
+	public boolean isAbbreviationExist(String lastWordinDirectoryddress,
+			String lastWordinLocationAddress) {
+		return businessDao.isAbbreviationExist(lastWordinDirectoryddress,
+				lastWordinLocationAddress);
+	}
+
+	@Transactional
+	public void updateCustomSubmissions(CustomSubmissionsDTO schedulerDTO,
+			String brandName) {
+		businessDao.updateCustomSubmissions(schedulerDTO, brandName);
+
+	}
+
+	@Transactional
+	public List<LocalBusinessDTO> getListOfBusinessInfoForExport(
+			String templateName) {
+		return businessDao.getListOfBusinessInfoForExport(templateName);
+	}
+
+	@Transactional
+	public Integer getlocationInvoicedByClient(Integer clientId) {
+		return businessDao.getlocationInvoicedByClient(clientId);
+	}
+
+	@Transactional
+	public List<BrandInfoDTO> getClientNamesByBrand(String brand) {
+		return businessDao.getClientNamesByBrand(brand);
+	}
+
+	@Transactional
+	public List<BrandInfoDTO> getChannelBasedClientsByBrand(String channelName,
+			String brand) {
+		return businessDao.getChannelBasedClientsByBrand(channelName, brand);
+	}
+
+	@Transactional
+	public List<StatesListEntity> getStateListByState(String state) {
+		return businessDao.getStateListByState(state);
+	}
+
+	@Transactional
+	public RenewalReportEntity isStoreExistInRenewal(String store,
+			Integer brandId) {
+		return businessDao.isStoreExistInRenewal(store, brandId);
+	}
+
+	@Transactional
+	public void updateRenewalInfo(RenewalReportEntity entity) {
+		businessDao.updateRenewalInfo(entity);
+	}
+
+	@Transactional
+	public void saveRenewalInfo(RenewalReportEntity entity) {
+		businessDao.saveRenewalInfo(entity);
+
+	}
+
+	@Transactional
+	public String getSyphCodeByStore(String store) {
+		return businessDao.getSyphCodeByStore(store);
+
+	}
+
+	@Transactional
+	public Date getActiveDateForClient(String brandName, String partner) {
+
+		return businessDao.getActiveDateForClient(brandName, partner);
+	}
+
+	@Transactional
+	public List<AccuracyDTO> getAccuracyInfoFromAccuracyStage() {
+		return businessDao.getAccuracyInfoFromAccuracyStage();
+	}
+
+	@Transactional
+	public List<CheckReportDTO> getcheckreportInfoFromCheckReportStage() {
+		return businessDao.getcheckreportInfoFromCheckReportStage();
+	}
+
+	@Transactional
+	public Integer getClientIdFromBusiness(String store, String zip) {
+		return businessDao.getClientIdFromBusiness(store, zip);
+	}
+
+	@Transactional
+	public List<LocalBusinessDTO> getListOfBussinessByBrandId(Integer brandID) {
+		return businessDao.getListOfBussinessByBrandId(brandID);
+	}
+
+	@Transactional
+	public Map<String, Integer> getPathCountMapForStores(String store,
+			Integer brandID) {
+		return businessDao.getPathCountMapForStores(store, brandID);
+	}
+
+	@Transactional
+	public List<CitationReportDTO> getListOfCitationInfo(String brandname) {
+		return businessDao.getListOfCitationInfo(brandname);
+	}
+
+	@Transactional
+	public Map<String, Integer> getPathCountMapForStores(
+			List<LocalBusinessDTO> listOfBussinessinfo) {
+		return businessDao.getPathCountMapForStores(listOfBussinessinfo);
+	}
+
+	@Transactional
+	public Map<String, List<String>> getPathFromSearch(String store,
+			Integer brandID) {
+		return businessDao.getPathFromSearch(store, brandID);
+	}
+
+	@Transactional
+	public Map<String, List<String>> getDomainAuthorities(String store,
+			Integer brandID) {
+
+		return businessDao.getDomainAuthorities(store, brandID);
+	}
+
+	@Transactional
+	public Integer isStoreAndBrandExistInCitation(String store, Integer brandID) {
+
+		return businessDao.isStoreAndBrandExistInCitation(store, brandID);
+	}
+
+	@Transactional
+	public void updateCitationreportInfo(
+			CitationReportEntity citationReportEntity) {
+
+		businessDao.updateCitationreportInfo(citationReportEntity);
+	}
+
+	@Transactional
+	public void saveCitationreportInfo(CitationReportEntity citationReportEntity) {
+		businessDao.saveCitationreportInfo(citationReportEntity);
+
+	}
+
+	@Transactional
+	public void saveCitationGraphInfo(CitationGraphEntity graphEntity) {
+		businessDao.saveCitationGraphInfo(graphEntity);
+
+	}
+
+	@Transactional
+	public Integer getTotalCitationCount(String brandname) {
+
+		return businessDao.getTotalCitationCount(brandname);
+	}
+
+	@Transactional
+	public CitationReportDTO getCitationInfoInfoByStore(String store,
+			String brandname) {
+		return businessDao.getCitationInfoInfoByStore(store, brandname);
+	}
+
+	@Transactional
+	public int getPercentagecategory1(String brandName) {
+
+		return businessDao.getPercentagecategory1(brandName);
+	}
+
+	@Transactional
+	public int getPercentagecategory2(String brandName) {
+
+		return businessDao.getPercentagecategory2(brandName);
+	}
+
+	@Transactional
+	public int getPercentagecategory3(String brandName) {
+
+		return businessDao.getPercentagecategory3(brandName);
+	}
+
+	@Transactional
+	public int getPercentagecategory4(String brandName) {
+
+		return businessDao.getPercentagecategory4(brandName);
+	}
+
+	@Transactional
+	public double getTotalPercentage(String brandName) {
+
+		return businessDao.getTotalPercentage(brandName);
+	}
+
+	@Transactional
+	public void saveAccuracyPercentageInfo(
+			AccuracyPercentageEntity percentageEntity) {
+		businessDao.saveAccuracyPercentageInfo(percentageEntity);
+
+	}
+
+	@Transactional
+	public AccuracyPercentageEntity getAcccuracyPercentageInfo(String brandname) {
+		return businessDao.getAcccuracyPercentageInfo(brandname);
+	}
+
+	@Transactional
+	public List<LocalBusinessDTO> getListOfBusinessInfoByClient(String services) {
+		return businessDao.getListOfBusinessInfoByClient(services);
+	}
+
+	@Transactional
+	public Integer getRoleId(String userName) {
+		return businessDao.getRoleId(userName);
+	}
+
+	@Transactional
+	public List<BrandInfoDTO> getChannelBasedClient(String channelName) {
+		return businessDao.getChannelBasedClient(channelName);
+	}
+
+	@Transactional
+	public void addErrorToBusinessList(LocalBusinessDTO localBusinessDTO,
+			Date date, String string, List<Integer> listIds) {
+		businessDao.addErrorToBusinessList(localBusinessDTO, date, string,
+				listIds);
+
+	}
+
+	@Transactional
+	public List<ValueObject> getData(String string, String string2) {
+		return businessDao.getData(string, string2);
+	}
+
+	@Transactional
+	public List<ValueObject> getComapareListData(String storeId,
+			String directory, String brandname) {
+
+		return businessDao.getComapareListData(storeId, directory, brandname);
+	}
+
+	@Transactional
+	public List<ValueObject> getDS(String storeId, String directory,
+			String brandname) {
+
+		return businessDao.getDS(storeId, directory, brandname);
+	}
+
+	@Transactional
+	public List<AuditEntity> getListOfOverridenListingsByBrand(Date fromDate,
+			Date toDate, String brand) {
+		return businessDao.getListOfOverridenListingsByBrand(fromDate, toDate,
+				brand);
+	}
+
+	@Transactional
+	public List<AuditEntity> getListOfOverridenListings(Date fromDate,
+			Date toDate) {
+		return businessDao.getListOfOverridenListings(fromDate, toDate);
+	}
+
+	@Transactional
+	public List<RenewalReportDTO> runRenewalReport(Date fromDate, Date toDate,
+			String storeName, String brand) {
+		return businessDao.runRenewalReport(fromDate, toDate, storeName, brand);
+
+	}
+
+	@Transactional
+	public List<RenewalReportDTO> runRenewalReportForBrand(Date fromDate,
+			Date toDate, String brand) {
+		return businessDao.runRenewalReportForBrand(fromDate, toDate, brand);
+	}
+
+	@Transactional
+	public RenewalReportDTO isRenewed(String store, Integer clientId) {
+		return businessDao.isRenewed(store, clientId);
+	}
+
+	@Transactional
+	public List<RenewalReportDTO> runSummaryReport(Date fromDate, Date toDate,
+			String storeName, String brand) {
+		return businessDao.runSummaryReport(fromDate, toDate, storeName, brand);
+	}
+
+	@Transactional
+	public List<RenewalReportDTO> runSummaryReportForBrand(Date fromDate,
+			Date toDate, String brand) {
+		return businessDao.runSummaryReportForBrand(fromDate, toDate, brand);
+	}
+
+	@Transactional
+	public LocalBusinessDTO getBusinessListinginfo(String store,
+			String brandname) {
+		return businessDao.runSummaryReportForBrand(store, brandname);
+	}
+
+	@Transactional
+	public List<LblErrorDTO> getListOfBusinessErrorInfoByStore(String flag,
+			Map<String, String> fmap) {
+		return businessDao.getListOfBusinessErrorInfoByStore(flag, fmap);
+	}
+
+	@Transactional
+	public List<LblErrorDTO> getListOfBusinessErrorInfoByBusinessName(
+			String flag, Map<String, String> fmap) {
+
+		return businessDao.getListOfBusinessErrorInfoByBusinessName(flag, fmap);
+	}
+
+	@Transactional
+	public List<LblErrorDTO> getListOfBusinessErrorInfoByAddress(String flag,
+			Map<String, String> fmap) {
+
+		return businessDao.getListOfBusinessErrorInfoByAddress(flag, fmap);
+	}
+
+	@Transactional
+	public List<LblErrorDTO> getListOfBusinessErrorInfoByCity(String flag,
+			Map<String, String> fmap) {
+
+		return businessDao.getListOfBusinessErrorInfoByCity(flag, fmap);
+	}
+
+	@Transactional
+	public List<LblErrorDTO> getListOfBusinessErrorInfoByState(String flag,
+			Map<String, String> fmap) {
+
+		return businessDao.getListOfBusinessErrorInfoByState(flag, fmap);
+	}
+
+	@Transactional
+	public List<LblErrorDTO> getListOfBusinessErrorInfoByZip(String flag,
+			Map<String, String> fmap) {
+
+		return businessDao.getListOfBusinessErrorInfoByZip(flag, fmap);
+	}
+
+	@Transactional
+	public List<LblErrorDTO> getListOfBusinessErrorInfoByPhone(String flag,
+			Map<String, String> fmap) {
+
+		return businessDao.getListOfBusinessErrorInfoByPhone(flag, fmap);
+	}
+
+	@Transactional
+	public Map<String, Integer> getisDirectoryExist(String store,
+			String brandName) {
+		return businessDao.getisDirectoryExist(store, brandName);
+	}
+
+	@Transactional
+	public AccuracyReportEntity getpercentageForStoreCount(String store) {
+		return businessDao.getpercentageForStoreCount(store);
+	}
+
+	@Transactional
+	public Integer getCountForBrand(Integer clients,
+			List<UploadBusinessBean> listDataFromXLS) {
+		return businessDao.getCountForBrand(clients, listDataFromXLS);
+	}
+
+	@Transactional
+	public boolean isBusinessExcelRecordUnique(LocalBusinessDTO excelRecord) {
+		// TODO Auto-generated method stub
+		return businessDao.isBusinessExcelRecordUnique(excelRecord);
+	}
+
+	@Transactional
+	public boolean updateBusinessWithGoogleMB(String googleAccountId,
+			List<Location> locations) {
+		return businessDao.updateBusinessWithGoogleMB(googleAccountId,
+				locations);
+	}
+
+	@Transactional
+	public List<LocalBusinessDTO> getLocationsByGoogleAccount(
+			String googleAccountId) {
+		// TODO Auto-generated method stub
+		return businessDao.getLocationsByGoogleAccount(googleAccountId);
+	}
+	@Transactional
+	public LocalBusinessDTO getLocationByGoogleAccount(String googleAccountId,
+			String locationId) {
+		// TODO Auto-generated method stub
+		return businessDao.getLocationByGoogleAccount(googleAccountId,locationId);
+	}
+
+	@Transactional
+	public Map<String, Long> getInsightsDataForBrandAndStore(String brand,
+			String store, Date startDate, Date endDate) {
+		// TODO Auto-generated method stub
+		return businessDao.getInsightsDataForBrandAndStore(brand, store,
+				startDate, endDate);
+	}
+
+	@Transactional
+	public List<String> getAllStates() {
+		return businessDao.getAllStates();
+
+	}
+
+	@Transactional
+	public List<InsightsGraphDTO> getViewsHistoryByWeek(String state,
+			String brand, String store, Date startDate, Date endDate) {
+		// TODO Auto-generated method stub
+		return businessDao.getViewsHistoryByWeek(state, brand, store,
+				startDate, endDate);
+	}
+	
+	@Transactional
+	public  Map<String, InsightsGraphDTO> getHistory(String brand,
+			String state, Date startDate, Date endDate) {
+		// TODO Auto-generated method stub
+		return businessDao.getHistory(brand,
+				state, startDate, endDate);
+	}
+	@Transactional
+	public Map<String, InsightsGraphDTO> getHistoryForStore(String brand,
+			String store, Date startDate, Date endDate) {
+		// TODO Auto-generated method stub
+		return businessDao.getHistoryForStore(brand,
+				store, startDate, endDate);
+	}
+	@Transactional
+	public List<String> getAllStatesListByBrand(String brand) {
+		// TODO Auto-generated method stub
+		return businessDao.getAllStatesListByBrand(brand);
+	}
+
+	@Transactional
+	public void addInsightGraphDetails(LocalBusinessDTO dto, Date formattedEndDate, String googleAccountId,
+			String googleLocationId, Long directCount, Long inDirectCount,Long searchCount, Long mapCount,
+			Long callsCount, Long directionsCount, Long websiteCount) {
+		businessDao.addInsightGraphDetails(dto , formattedEndDate, googleAccountId, googleLocationId,directCount,inDirectCount,
+				searchCount, mapCount, callsCount, directionsCount, websiteCount);
+
+	}
+	@Transactional
+	public List<String> getStoresNames(String brand) {
+		// TODO Auto-generated method stub
+		return businessDao.getStoresNames(brand);
+	}
+	@Transactional
+	public Map<String, Long> getInsightsData(String brand, String store,
+			Date startDate, Date endDate) {
+		// TODO Auto-generated method stub
+		return businessDao.getInsightsData(brand, store, startDate,
+				endDate);
+	}
+	@Transactional
+	public Map<String, Long> getInsightsBrandData(String brand, String state,
+			Date startDate, Date endDate) {
+		// TODO Auto-generated method stub
+		return businessDao.getInsightsBrandData(brand, state, startDate,
+				endDate);
+	}
+	@Transactional
+	public List<InsightsGraphDTO> getInsightsBrandExcelData(String brand,
+			String state, Date startDate, Date endDate) {
+		// TODO Auto-generated method stub
+		return businessDao.getInsightsBrandExcelData(brand, state, startDate,
+				endDate);
+	}
+	
+	@Transactional
+	public List<InsightsGraphDTO> getBrandViewsHistoryByWeek(String brand,
+			String state, Date startDate, Date endDate) {
+		// TODO Auto-generated method stub
+		return businessDao.getBrandViewsHistoryByWeek(brand, state, startDate,
+				endDate);
+	}
+	
+	@Transactional
+	public Map<String, List<InsightsGraphDTO>> getTopandBottomSearches(
+			String brand, String state, Date startDate, Date endDate) {
+		// TODO Auto-generated method stub
+		return businessDao.getTopandBottomSearches(brand, state, startDate, endDate);
+	}
+	@Transactional
+	public List<LocalBusinessDTO> getStoresByGMBAccount(String googleAccountId) {
+		// TODO Auto-generated method stub
+		return businessDao.getStoresByGMBAccount(googleAccountId);
+	}
+	@Transactional
+	public Integer getInsightCountsForBrand(String brand, String store) {
+		// TODO Auto-generated method stub
+		return businessDao.getInsightCountsForBrand(brand, store);
+	}
+	@Transactional
+	public void updateStoresWithGMBAccountId(String client,
+			String googleAccountId) {
+		businessDao.updateStoresWithGMBAccountId(client, googleAccountId);
+		
+	}
+	@Transactional
+	public void deleteExistingRecords(Integer clientId, Date formattedEndDate) {
+		// TODO Auto-generated method stub
+		businessDao.deleteExistingRecords(clientId,formattedEndDate);
+	}
+
+	
 }

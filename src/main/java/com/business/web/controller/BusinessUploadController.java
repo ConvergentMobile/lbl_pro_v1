@@ -1,5 +1,9 @@
 package com.business.web.controller;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -12,9 +16,13 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.apache.log4j.Logger;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
@@ -30,6 +38,9 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
+
+import au.com.bytecode.opencsv.CSVReader;
+
 import com.business.common.dto.ExportReportDTO;
 import com.business.common.dto.LblErrorDTO;
 import com.business.common.dto.LocalBusinessDTO;
@@ -37,7 +48,12 @@ import com.business.common.dto.UploadReportDTO;
 import com.business.common.dto.UsersDTO;
 import com.business.common.util.ControllerUtil;
 import com.business.common.util.LBLConstants;
+import com.business.common.util.SmartyStreetsThread;
 import com.business.common.util.UploadBeanValidateUtil;
+import com.business.common.util.UploadDataAddExecutorService;
+import com.business.common.util.UploadDataErrorsAddExecutorService;
+import com.business.common.util.UploadDataUpdateExecutorService;
+import com.business.common.util.ValidationExecutorService;
 import com.business.service.BusinessService;
 import com.business.web.bean.BussinessData;
 import com.business.web.bean.LblErrorBean;
@@ -53,6 +69,8 @@ import com.business.web.bean.UsersBean;
  *         Layer and sends to the Business Logic Layer and returns respective
  *         results to View Layer
  * 
+ * 
+ * 
  */
 
 @Controller
@@ -61,7 +79,7 @@ public class BusinessUploadController {
 	public int totalDataCount;
 	private ControllerUtil controllerUtil = new ControllerUtil();
 
-	Logger logger = Logger.getLogger(BusinessController.class);
+	Logger logger = Logger.getLogger(BusinessUploadController.class);
 
 	Set<LocalBusinessDTO> duplicateRecord = new HashSet<LocalBusinessDTO>();
 	List<LocalBusinessDTO> updateBusinessRecords = null;
@@ -119,17 +137,29 @@ public class BusinessUploadController {
 
 		Map<String, Long> brandsCountsMap = new HashMap<String, Long>();
 		String headerpopup = "";
-		List<UploadBusinessBean> listDataFromXLS = getListDataFromXLS(file,
-				brandsCountsMap, headerpopup);
+		List<UploadBusinessBean> listDataFromXLS = null;
+		if (!fName.contains(".csv")) {
+			listDataFromXLS = getListDataFromXLS(file, brandsCountsMap,
+					headerpopup);
+		} else {
+			listDataFromXLS = getListFromCSV(file, brandsCountsMap, headerpopup);
+		}
 
 		boolean isClientIdExists = true;
+		Set<Integer> clients = new HashSet<Integer>();
 		for (UploadBusinessBean business : listDataFromXLS) {
 			Integer clientId = business.getClientId();
-			String brandByClientId = service.getBrandByClientId(clientId);
-			if (brandByClientId == null) {
-				logger.error("Client does not exists in LBL: " + clientId);
-				isClientIdExists = false;
-				break;
+			clients.add(clientId);
+		}
+
+		if (clients != null) {
+			for (Integer clientId : clients) {
+				String brandByClientId = service.getBrandByClientId(clientId);
+				if (brandByClientId == null) {
+					logger.error("Client does not exists in LBL: " + clientId);
+					isClientIdExists = false;
+					break;
+				}
 			}
 		}
 
@@ -142,13 +172,27 @@ public class BusinessUploadController {
 			headerpopup = "Client Does Not Exist. Contact Account Manager for Assistance";
 			listDataFromXLS = null;
 		}
+		Integer locations = 0;
+		Integer invoicedlocations = 0;
+		for (Integer clientId : clients) {
+			locations = locations
+					+ service.getCountForBrand(clientId, listDataFromXLS);
+			invoicedlocations = invoicedlocations
+					+ service.getlocationInvoicedByClient(clientId);
+		}
+
+		if (locations.intValue() > invoicedlocations.intValue()) {
+			headerpopup = "This upload will exceed the number of locations included in your current contract. Please contact your Sales Rep to increase the number of locations allowed for upload.";
+			listDataFromXLS = null;
+
+		}
 
 		boolean isStoreDuplicate = false;
 		if (listDataFromXLS != null) {
 			isStoreDuplicate = isStoreDuplicateInExcel(listDataFromXLS);
 		}
 		if (isStoreDuplicate == true) {
-			headerpopup = "Attempting to upload duplicate store Id's";
+			headerpopup = "Attempting to upload Duplicated Locations. Please check your file and try again.";
 			listDataFromXLS = null;
 		}
 
@@ -158,11 +202,22 @@ public class BusinessUploadController {
 			headerpopup = "";
 			totalDataCount = listDataFromXLS.size();
 
-			BussinessData bussinessData = checkBusinessInfoFormat(listDataFromXLS);
-			List<UploadBusinessBean> validBusinessList = bussinessData
-					.getValidBusinessList();
-			List<LblErrorBean> erroredBusinessList = bussinessData
-					.getErroredBusinessList();
+			try {
+				ValidationExecutorService.executeService(service,
+						listDataFromXLS);
+			} catch (InterruptedException e1) {
+
+				e1.printStackTrace();
+			}
+
+			List<UploadBusinessBean> validBusinessList = ValidationExecutorService.validBusinessList;
+			List<LblErrorBean> erroredBusinessList = ValidationExecutorService.erroredBusinessList;
+
+			logger.info("Toatal valid records found are: "
+					+ validBusinessList.size());
+			logger.info("Toatal Errored records found are: "
+					+ erroredBusinessList);
+
 			List<LocalBusinessDTO> correctDatas = new ArrayList<LocalBusinessDTO>();
 			List<LblErrorDTO> inCorrectData = new ArrayList<LblErrorDTO>();
 
@@ -199,6 +254,7 @@ public class BusinessUploadController {
 			for (LblErrorDTO lblErrorDTO : inCorrectDataList) {
 				Long recordsCount = Long.valueOf(1);
 				String brandName = lblErrorDTO.getClient();
+
 				if (brandsCountsMap.containsKey(brandName)) {
 					recordsCount = brandsCountsMap.get(brandName) + 1;
 				}
@@ -213,11 +269,30 @@ public class BusinessUploadController {
 					+ System.currentTimeMillis();
 			session.setAttribute("uploadJobId", uploadJobId);
 
-			// insert business list to business table
-			service.addBusinessList(correctRecords, date, uploadJobId);
-			// updateBusinessRecords in business table
-			service.updateBusinessRecords(updateBusinessRecords, date,
-					uploadJobId);
+			logger.info("Start: Add listings");
+			UploadDataAddExecutorService uploadAddService = new UploadDataAddExecutorService();
+			try {
+				uploadAddService.addBusinessList(correctRecords, date,
+						uploadJobId, service);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			logger.info("End: Add listings");
+
+			logger.info("Start: update listings");
+			// String userName = (String) session.getAttribute("userName");
+			UploadDataUpdateExecutorService uploadUpdateService = new UploadDataUpdateExecutorService();
+			try {
+				uploadUpdateService.updateBusinessList(updateBusinessRecords,
+						date, uploadJobId, service, uploadUserName);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			logger.info("End: update listings");
+
 			logger.info("reomve Correct ErrorData from business error ::"
 					+ correctDBErrorRecords);
 			// deleteBusinessByActionCode in business table
@@ -226,8 +301,21 @@ public class BusinessUploadController {
 			// remove the CorrectErrorData from business table
 			service.reomveCorrectErrorData(correctDBErrorRecords);
 
+			logger.info("Start: Add  Error listings");
+			UploadDataErrorsAddExecutorService errorService = new UploadDataErrorsAddExecutorService();
+
+			try {
+				errorService.insertErrorBusiness(inCorrectDataList, date,
+						uploadJobId, service);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			logger.info("End: Add  Error listings");
+
 			// insert error records to error table
-			service.insertErrorBusiness(inCorrectDataList, date, uploadJobId);
+			// service.insertErrorBusiness(inCorrectDataList, date,
+			// uploadJobId);
 
 			// updateErrorBusinessByActionCode in business error table
 			service.updateErrorBusinessByActionCode(
@@ -235,6 +323,24 @@ public class BusinessUploadController {
 
 			// deleteErrorBusinessByActioncode in business error table
 			service.deleteErrorBusinessByActioncode(listofErrorDeletesbyActionCode);
+
+			SmartyStreetsThread st = new SmartyStreetsThread(service,
+					correctRecords, updateBusinessRecords, inCorrectDataList,
+					listOfErrorUpdatesByActionCode);
+			st.start();
+
+			logger.info("Total Records: " + totalDataCount);
+			logger.info("Total Corect Records: " + correctRecords.size());
+			logger.info("Total Updated Records: "
+					+ updateBusinessRecords.size());
+			logger.info("Total Deleted Records: "
+					+ listofDeletesbyActionCode.size());
+
+			logger.info("Total Error Records: " + inCorrectDataList.size());
+			logger.info("Total error updated Records: "
+					+ listOfErrorUpdatesByActionCode.size());
+			logger.info("Total error deleted Records: "
+					+ listofErrorDeletesbyActionCode.size());
 
 			if (correctRecords != null) {
 				correctDataCount = correctRecords.size();
@@ -263,6 +369,9 @@ public class BusinessUploadController {
 				}
 				inCorrectDataCount = inCorrectDataCount + updateSize
 						- deleteSize;
+				if (inCorrectDataCount < 0) {
+					inCorrectDataCount = 0;
+				}
 			}
 			if (correctRecords.size() > 0 || inCorrectDataList.size() > 0) {
 				Set<String> brandNames = brandsCountsMap.keySet();
@@ -282,6 +391,13 @@ public class BusinessUploadController {
 			model.addAttribute("showPopup", "showMessage");
 		}
 		model.addAttribute("headerPopup", headerpopup);
+
+		try {
+			response.getWriter().write(headerpopup);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 		List<LocalBusinessDTO> listOfBusinessInfo = service
 				.getListOfBusinessInfo();
 		model.addAttribute("allBusinessInfo", listOfBusinessInfo);
@@ -322,6 +438,8 @@ public class BusinessUploadController {
 			model.addAttribute("listingActivityInfo", listingActivityInfo);
 			model.addAttribute("brandsInfo", listOfBrandsInfo);
 			logger.info("end :: uploadBusinessInformation method");
+			LocalBusinessDTO dto = new LocalBusinessDTO();
+			dashBoardCommonInfo(model, session, dto);
 			return "dashboard";
 		} else if (pageName.equals("uploadExport")) {
 			logger.info("end :: uploadBusinessInformation method");
@@ -355,6 +473,22 @@ public class BusinessUploadController {
 				listOfBusinessInfo);
 		logger.info("end :: uploadBusinessInformation method");
 		return "business-listings";
+	}
+
+	private void dashBoardCommonInfo(Model model, HttpSession session,
+			LocalBusinessDTO dto) {
+		Integer userId = (Integer) session.getAttribute("userID");
+		List<UsersDTO> userInfo = service.userInfo(userId);
+		UsersDTO usersDTO = userInfo.get(0);
+		String name = usersDTO.getName();
+		String lastName = usersDTO.getLastName();
+		String fullName = name + " " + lastName;
+		usersDTO.setFullName(fullName);
+		UsersBean bean = new UsersBean();
+		BeanUtils.copyProperties(usersDTO, bean);
+		model.addAttribute("adminUser", bean);
+		model.addAttribute("searchBusiness", dto);
+
 	}
 
 	/***
@@ -422,10 +556,26 @@ public class BusinessUploadController {
 
 		for (int x = 0; x < records.size(); x++) {
 			UploadBusinessBean xRecord = records.get(x);
+
 			for (int y = x + 1; y < records.size(); y++) {
 				UploadBusinessBean yRecord = records.get(y);
+
 				if (xRecord.getStore().equals(yRecord.getStore())
-						&& xRecord.getClientId().equals(yRecord.getClientId())) {
+						&& xRecord.getClientId().equals(yRecord.getClientId())
+						&& xRecord.getCompanyName().equalsIgnoreCase(
+								yRecord.getCompanyName())
+						&& xRecord.getSuite().equalsIgnoreCase(
+								yRecord.getSuite())
+						&& xRecord.getLocationAddress().equalsIgnoreCase(
+								yRecord.getLocationAddress())
+						&& xRecord.getLocationCity().equalsIgnoreCase(
+								yRecord.getLocationCity())
+						&& xRecord.getLocationState().equalsIgnoreCase(
+								yRecord.getLocationState())
+						&& xRecord.getLocationPhone().equals(
+								yRecord.getLocationPhone())
+						&& xRecord.getLocationZipCode().equalsIgnoreCase(
+								yRecord.getLocationZipCode())) {
 					isStoreDuplicate = true;
 				}
 			}
@@ -449,14 +599,31 @@ public class BusinessUploadController {
 		updateBusinessRecords = new ArrayList<LocalBusinessDTO>();
 		List<LocalBusinessDTO> listOfBusinessInfo = service
 				.getListOfBusinessInfo();
+		List<LblErrorDTO> listOfErorBusinessInfo = service
+				.getListOfErorBusinessInfo();
+		List<LblErrorDTO> listOfErorBusinessInfos = new ArrayList<LblErrorDTO>();
 
 		for (int i = 0; i < records.size(); i++) {
-
 			LocalBusinessDTO excelRecord = records.get(i);
+			for (LblErrorDTO lblErrorDTO : listOfErorBusinessInfo) {
+
+				if (lblErrorDTO.getStore().equals(excelRecord.getStore())
+						&& lblErrorDTO.getClientId().equals(
+								excelRecord.getClientId())) {
+					listOfErorBusinessInfos.add(lblErrorDTO);
+
+				}
+			}
+			if (!listOfErorBusinessInfos.isEmpty()
+					&& listOfErorBusinessInfos.size() > 0) {
+				service.deleteErrorBusinessByActioncode(listOfErorBusinessInfos);
+			}
+
 			boolean isDuplicate = false;
 			for (int j = 0; j < listOfBusinessInfo.size(); j++) {
-
+				/* Business Name, Address, Suite, City, State, Zip and Phone */
 				LocalBusinessDTO dbRecord = listOfBusinessInfo.get(j);
+
 				if (dbRecord.getStore().equals(excelRecord.getStore())
 						&& dbRecord.getClientId().equals(
 								excelRecord.getClientId())) {
@@ -465,6 +632,7 @@ public class BusinessUploadController {
 						listofDeletesbyActionCode.add(excelRecord);
 					} else {
 						excelRecord.setId(dbRecord.getId());
+
 						updateBusinessRecords.add(excelRecord);
 					}
 					isDuplicate = true;
@@ -474,7 +642,7 @@ public class BusinessUploadController {
 			}
 
 			if (!isDuplicate) {
-				if(!service.isStoreUnique(excelRecord.getStore(), excelRecord.getClientId())){
+				if (!service.isBusinessExcelRecordUnique(excelRecord)) {
 					insertRecord.add(excelRecord);
 				}
 			} /*
@@ -496,6 +664,7 @@ public class BusinessUploadController {
 
 		for (int i = 0; i < records.size(); i++) {
 			LblErrorDTO excelErrorRecord = records.get(i);
+
 			boolean isDuplicate = false;
 			for (int j = 0; j < listOfErrorRecords.size(); j++) {
 				LblErrorDTO dbRecord = listOfErrorRecords.get(j);
@@ -537,10 +706,11 @@ public class BusinessUploadController {
 			for (int j = 0; j < listOfErrorRecords.size(); j++) {
 
 				LblErrorDTO dbRecord = listOfErrorRecords.get(j);
-				logger.info(dbRecord.getStore() + ".equals("
-						+ excelRecord.getStore() + " , "
-						+ dbRecord.getClientId() + ".equals("
-						+ excelRecord.getClientId());
+				/*
+				 * logger.info(dbRecord.getStore() + ".equals(" +
+				 * excelRecord.getStore() + " , " + dbRecord.getClientId() +
+				 * ".equals(" + excelRecord.getClientId());
+				 */
 				if (dbRecord.getStore().equals(excelRecord.getStore())
 						&& dbRecord.getClientId().equals(
 								excelRecord.getClientId())) {
@@ -564,6 +734,14 @@ public class BusinessUploadController {
 	 * @param infile
 	 * @return
 	 */
+	public boolean isRowEmpty(Row row) {
+		for (int c = row.getFirstCellNum(); c < row.getLastCellNum(); c++) {
+			Cell cell = row.getCell(c);
+			if (cell != null && cell.getCellType() != Cell.CELL_TYPE_BLANK)
+				return false;
+		}
+		return true;
+	}
 
 	private List<UploadBusinessBean> getListDataFromXLS(
 			CommonsMultipartFile infile, Map<String, Long> brandsCountsMap,
@@ -576,42 +754,47 @@ public class BusinessUploadController {
 			DataFormatter df = new DataFormatter();
 			Iterator<Row> rowIterator = sheet.rowIterator();
 			boolean header = true;
+
 			while (rowIterator.hasNext()) {
 				Row row = (Row) rowIterator.next();
-				if (header) {
-					header = false;
-					headerpopup = "";
-					if (!headersValid(row, df)) {
-						headerpopup = "Invalid Bulk Upload Template";
-						return tListData;
-					}
-					continue;
-				}
-
-				UploadBusinessBean uploadBusinessBean = new UploadBusinessBean();
-
-				Iterator<Cell> cellIterator = row.cellIterator();
-				while (cellIterator.hasNext()) {
-
-					Cell cell = cellIterator.next();
-					if (cell == null) // Process only the rows with some data
+				boolean rowEmpty = isRowEmpty(row);
+				if (rowEmpty == false) {
+					if (header) {
+						header = false;
+						headerpopup = "";
+						if (!headersValid(row, df)) {
+							headerpopup = "Invalid Bulk Upload Template";
+							return tListData;
+						}
 						continue;
+					}
 
-					org.apache.commons.beanutils.BeanUtils.setProperty(
-							uploadBusinessBean,
-							LBLConstants.UPLOAD_BEAN_PROPERTIES[cell
-									.getColumnIndex()], df
-									.formatCellValue(cell));
+					UploadBusinessBean uploadBusinessBean = new UploadBusinessBean();
 
+					Iterator<Cell> cellIterator = row.cellIterator();
+					while (cellIterator.hasNext()) {
+
+						Cell cell = cellIterator.next();
+						if (cell == null) // Process only the rows with some
+											// data
+							continue;
+
+						int columnIndex = cell.getColumnIndex();
+						// System.out.println("columnIndex" + columnIndex);
+						String formatCellValue = df.formatCellValue(cell);
+						// System.out.println("formatCellValue" +
+						// formatCellValue);
+						org.apache.commons.beanutils.BeanUtils
+								.setProperty(
+										uploadBusinessBean,
+										LBLConstants.UPLOAD_BEAN_PROPERTIES[columnIndex],
+										formatCellValue);
+
+					}
+
+					tListData.add(uploadBusinessBean);
 				}
-				/*
-				 * Long recordsCount = Long.valueOf(1); String brandName =
-				 * uploadBusinessBean.getClient(); if
-				 * (brandsCountsMap.containsKey(brandName)) { recordsCount =
-				 * brandsCountsMap.get(brandName) + 1; }
-				 * brandsCountsMap.put(brandName, recordsCount);
-				 */
-				tListData.add(uploadBusinessBean);
+
 			}
 		} catch (Exception e) {
 			logger.error("Exception : " + e);
@@ -621,6 +804,142 @@ public class BusinessUploadController {
 		logger.info("Excel sheet Records size == " + tListData.size());
 		logger.info(tListData);
 		return tListData;
+	}
+
+	private boolean allValuesInRowAreEmpty(String[] row) {
+		boolean returnValue = true;
+		for (String s : row) {
+			if (s.length() != 0) {
+				returnValue = false;
+			}
+		}
+		return returnValue;
+	}
+
+	private List<UploadBusinessBean> getListFromCSV(CommonsMultipartFile file,
+			Map<String, Long> brandsCountsMap, String headerpopup) {
+		List<UploadBusinessBean> tListData = new ArrayList<UploadBusinessBean>();
+		boolean value = isheaderValid(file);
+
+		if (!value) {
+			headerpopup = "Invalid Bulk Upload Template";
+			return tListData;
+
+		}
+		InputStream inputStream = null;
+		try {
+
+			inputStream = file.getInputStream();
+			BufferedReader bufferedReader = new BufferedReader(
+					new InputStreamReader(inputStream));
+			CSVReader reader = new CSVReader(bufferedReader, ',', '"', 1);
+
+			String[] nextLine;
+
+			while ((nextLine = reader.readNext()) != null) {
+
+				UploadBusinessBean uploadBusinessBean = new UploadBusinessBean();
+				if (nextLine != null) {
+
+					for (int i = 0; i < nextLine.length; i++) {
+
+						try {
+
+							org.apache.commons.beanutils.BeanUtils.setProperty(
+									uploadBusinessBean,
+									LBLConstants.UPLOAD_BEAN_PROPERTIES[i],
+									nextLine[i]);
+
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+
+					}
+
+				}
+				tListData.add(uploadBusinessBean);
+			}
+		} catch (IOException e) {
+
+			e.printStackTrace();
+		}
+
+		logger.info("Excel CSV  sheet Records size == " + tListData.size());
+		logger.info(tListData);
+		return tListData;
+	}
+
+	private boolean isheaderValid(CommonsMultipartFile file) {
+		boolean isHeadersValid = true;
+		CSVParser parser;
+		try {
+			InputStream inputStream = file.getInputStream();
+			BufferedReader bufferedReader = new BufferedReader(
+					new InputStreamReader(inputStream));
+			parser = new CSVParser(bufferedReader,
+					CSVFormat.DEFAULT.withHeader());
+			Map<String, Integer> headerMap = parser.getHeaderMap();
+
+			List<String> list = new ArrayList<String>();
+			for (Map.Entry<String, Integer> entry : headerMap.entrySet()) {
+
+				list.add(entry.getKey());
+
+			}
+			for (int i = 0; i < list.size(); i++) {
+
+				String anotherString = LBLConstants.UPLOAD_EXCEL_HEADERS[i];
+
+				if (!list.get(i).equalsIgnoreCase(anotherString)) {
+					isHeadersValid = false;
+					break;
+				}
+			}
+		} catch (IOException e) {
+
+			e.printStackTrace();
+		}
+		return isHeadersValid;
+	}
+
+	private boolean isheaderValid(Map<String, Integer> headerMap) {
+		boolean isHeadersValid = true;
+		List<String> list = new ArrayList<String>();
+		for (Map.Entry<String, Integer> entry : headerMap.entrySet()) {
+
+			list.add(entry.getKey());
+
+		}
+		for (int i = 0; i < list.size(); i++) {
+
+			String anotherString = LBLConstants.UPLOAD_EXCEL_HEADERS[i];
+
+			if (!list.get(i).equalsIgnoreCase(anotherString)) {
+				isHeadersValid = false;
+				break;
+			}
+
+		}
+		return isHeadersValid;
+		// TODO Auto-generated method stub
+
+	}
+
+	private boolean headersValid(List<String> list) {
+
+		boolean isHeadersValid = true;
+		for (int i = 0; i < list.size(); i++) {
+			// System.out.println(list.get(i));
+			String anotherString = LBLConstants.UPLOAD_EXCEL_HEADERS[i];
+			// System.out.println(anotherString);
+			if (!list.get(i).equalsIgnoreCase(anotherString)) {
+				isHeadersValid = false;
+				break;
+			}
+
+		}
+
+		return isHeadersValid;
 	}
 
 	/**
@@ -646,5 +965,4 @@ public class BusinessUploadController {
 		return isHeadersValid;
 	}
 
-	
 }

@@ -21,7 +21,16 @@
 <script src="js/jquery.bpopup.min.js"></script>
 <script src="js/jquery.cycle.all.js"></script>
 <script src="js/functions.js"></script>
+<link rel="stylesheet" href="js/jquery.mCustomScrollbar.css">
+<script src="js/jquery.mCustomScrollbar.js"></script>
 <script src="js/jquery.session.js"></script>
+<script type = "text/javascript" >
+history.pushState(null, null, 'clienterror-listings-profile');
+window.addEventListener('popstate', function(event) {
+	
+history.pushState(null, null, 'clienterror-listings-profile');
+});
+</script>
 <script type="text/javascript">
 function saveChangepopup(){
 	var editType = $.session.get("editType");
@@ -171,7 +180,7 @@ function enableReadOnly() {
 			<li class="si_error_listings"><a href="listingClient-error.htm">Listing Errors</a></li>
 			<li class="si_reports"><a href="client-reports.htm">Reports</a></li>
 			
-			<li class="si_toolbox"><a href="clntToolbox.htm">Convergent Toolbox</a></li>
+			<!-- <li class="si_toolbox"><a href="clntToolbox.htm">Convergent Toolbox</a></li> -->
 		</ul>
 		<!-- // left side navigation --> 
 		<!-- content area -->
@@ -253,7 +262,7 @@ function enableReadOnly() {
 						</div>
 					</div>
 			
-					<div class="box-content">
+					<div class="box-content" style="margin: 0px -98px 0px">
 						<div class="bc-inner" id="location_profile">
 						
 							
@@ -833,6 +842,13 @@ function enableReadOnly() {
 										<td><span  style="color: red">${pinteristLink_Error}</span></td>
 									</tr>
 									
+										<tr>
+										<td class="td_01"><div><tag:message code="businessApp.lable.helpLink">
+										</tag:message></div></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="social_links_field"   path="yelpLink" /></div></td>
+										<td><span  style="color: red">${helpLink_Error}</span></td>
+									</tr>
+									
 									</tbody>
 							</table>
 						
@@ -853,65 +869,81 @@ function enableReadOnly() {
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Products">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="products" /> </div></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field" rows="10" cols="30"  path="products" style="padding-top: 0px; width:260px; height :60px" /> </div></td>
 										<td><span  style="color: red">${products_Error}</span></td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Services">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="services" /></div></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field" rows="10" cols="30"  path="services" style="padding-top: 0px; width:260px; height :60px" /></div></td>
 										<td><span  style="color: red">${services_Error}</span></td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.ProductsOrServicescombined">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="productsOrServices_combined" /></div></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"  rows="10" cols="30" path="productsOrServices_combined" style="padding-top: 0px; width:260px; height :60px"  /></div></td>
 										<td><span  style="color: red">${productsOrServices_combined_Error}</span></td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Brands">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="brands" /></div></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field" rows="10" cols="30"  path="brands" style="padding-top: 0px; width:260px; height :60px" /></div></td>
 										<td><span  style="color: red">${brands_Error}</span></td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Keywords">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="keywords" /></div></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field" rows="10" cols="30"  path="keywords" style="padding-top: 0px; width:260px; height :60px" /></div></td>
 										<td><span  style="color: red">${keywords_Error}</span></td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Languages">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="languages" /></div></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field" rows="10" cols="30"  path="languages" style="padding-top: 0px; width:260px; height :60px" /></div></td>
 										<td><span  style="color: red">${languages_Error}</span></td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.YearEstablished">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="yearEstablished" /></div></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field" rows="10" cols="30"  path="yearEstablished" style="padding-top: 0px; width:260px; height :60px"  /></div></td>
 										<td><span  style="color: red">${yearEstablished_Error}</span></td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Tagline">
 												</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="tagline" /></div></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field" rows="10" cols="30"  path="tagline" style="padding-top: 0px; width:260px; height :60px"  /></div></td>
 										<td><span  style="color: red">${tagline_Error}</span></td>
 									</tr>
 									
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.BusinessDescription">
 										</tag:message><span style="color: red">*</span></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="businessDescription" /></div></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="enhanced_content_field"   path="businessDescription" rows="10" cols="30" style="padding-top: 0px; width:260px; height :60px;    margin: 0px -15px 0px;"  /></div></td>
 										<td><div  style="color: red">${businessDescription_Error}</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div><tag:message code="businessApp.lable.businessDescriptionShort">
+										</tag:message><span style="color: red">*</span></div></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="enhanced_content_field"  path="businessDescriptionShort" rows="10" cols="30" style="padding-top: 0px; width:260px; height :60px;    margin: 0px -15px 0px;" /></div></td>
+										<td><div  style="color: red">${businessDescriptionShort_Error}</div></td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.ADDRESSPRIVACYFLAG">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="ADDRESSPRIVACYFLAG" /></div></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="ADDRESSPRIVACYFLAG" rows="10" cols="30" style="padding-top: 0px; width:260px; height :60px" /></div></td>
 										<td><span  style="color: red">${ADDRESSPRIVACYFLAG_Error}</span></td>
 									</tr>									
-									
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+					
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td ><div>&nbsp;</div></td>
+									</tr>
 								</tbody>
 							</table>
 						</div>

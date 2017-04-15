@@ -1,4 +1,5 @@
 
+<%@page import="com.business.common.util.LBLConstants"%>
 <%@ taglib uri="http://www.springframework.org/tags/form"
 	prefix="spring"%>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="tag"%>
@@ -38,10 +39,17 @@
 				<li class="si_error_listings"><a href="listing-error.htm">Listing Errors</a></li>
 				<li class="si_upload_export"><a href="upload-export.htm">Upload/Export</a></li>
 				<li class="si_reports"><a href="reports.htm">Reports</a></li>
-				<li class="si_mobile_profile "><a href="manage-account.htm">Manage
-						Account</a></li>
-				<li class="si_toolbox selected"><a
-					href="getConvergentToolbox.htm">Convergent Toolbox</a></li>
+					<%
+						Integer Role=(Integer)session.getAttribute("roleId");				
+							if(Role==LBLConstants.CONVERGENT_MOBILE_ADMIN){						
+						%>
+			<li class="si_admin"><a href="admin-listings.htm">CM admin</a></li>
+			<li class="si_mobile_profile "><a href="manage-account.htm">Manage Account</a></li>
+			<%} %>
+		<!-- 	<li class="si_schduler"><a href="scheduler.htm">Schedule</a></li> -->
+			
+				
+			<li class="si_toolbox selected"><a href="getConvergentToolbox.htm">Convergent Toolbox</a></li>
 			</ul>
 			<br><br><br><br>
 			<h1 align="center" style="color: red;">Currently We are working on this page...........</h1>

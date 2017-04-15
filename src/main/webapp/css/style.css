@@ -1,57 +1,139 @@
 input.text {
 	min-width: 140px;
 }
+
 select {
+	
 }
+
 textarea {
 	min-width: 140px;
 	min-height: 60px;
 }
+
 table td {
 	padding: 3px 5px;
 	line-height: 25px;
 }
 
-.step1, .step2, .step3, .step4, .step5, .step6, .step7, .step8, .step9 {
+.step1,.step2,.step3,.step4,.step5,.step6,.step7,.step8,.step9 {
 	padding: 10px 0 0 80px;
 	*padding: 0 0 0 80px;
 }
+
 .step1 {
 	background: url(../images/step1.gif) no-repeat 0 0;
 }
+
 .step2 {
 	background: url(../images/step2.gif) no-repeat 0 0;
 }
+
 .step3 {
 	background: url(../images/step3.gif) no-repeat 0 0;
 }
+
 .step4 {
 	background: url(../images/step4.gif) no-repeat 0 0;
 }
+
 .step5 {
 	background: url(../images/step5.gif) no-repeat 0 0;
 }
+
 .step6 {
 	background: url(../images/step6.gif) no-repeat 0 0;
 }
+
 .step7 {
 	background: url(../images/step7.gif) no-repeat 0 0;
 }
+
 .step8 {
 	background: url(../images/step8.gif) no-repeat 0 0;
 }
+
 .step9 {
 	background: url(../images/step9.gif) no-repeat 0 0;
 }
 
-.box1 lable,
-.step2 label {
+.box1 lable,.step2 label {
 	display: block;
 	padding-bottom: 5px;
 }
-.box1 input.text,
-.step2 input.text {
+
+.box1 input.text,.step2 input.text {
 	display: block;
 	margin-bottom: 15px;
 	width: 210px;
+}
+
+/* progress bar style */
+
+/* #progressbox {
+	position: relative;
+	width: 400px;
+	border: 1px solid #ddd;
+	padding: 1px;
+	border-radius: 3px;
+}
+
+#progressbar {
+	background-color: lightblue;
+	width: 0%;
+	height: 20px;
+	border-radius: 4px;
+}
+
+#percent {
+	position: absolute;
+	display: inline-block;
+	top: 3px;
+	left: 48%;
+} */
+#progressbox {
+	border: 1px solid #0099CC;
+	padding: 1px;
+	position: relative;
+	width: 400px;
+	border-radius: 3px;
+	margin: 35px auto 60px;
+	display: none;
+	text-align: left;
+}
+
+#progressbar {
+	height: 20px;
+	border-radius: 3px;
+	background-color: #003333;
+	width: 1%;
+}
+
+#statustxt {
+	top: 3px;
+	left: 50%;
+	color:green;
+	position: absolute;
+	display: inline-block;
+	color: #000000;
+}
+
+.dsp_None{
+display: none;
+}
+
+/* style for loaders*/
+
+ .loading {
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    top:0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index:9999;
+    font-size: 20px;
+    text-align: center;
+    padding-top: 200px;
+    color: #fff;
 }

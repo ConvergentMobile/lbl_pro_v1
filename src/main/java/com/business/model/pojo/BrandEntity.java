@@ -42,6 +42,25 @@ public class BrandEntity {
 	private String partnerActive;
 	@Column(name = "clientid")
 	private Integer clientId;
+	private String email;
+	private String inactive;
+	
+	
+	public String getInactive() {
+		return inactive;
+	}
+
+	public void setInactive(String inactive) {
+		this.inactive = inactive;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
 
 	public Integer getId() {
 		return id;

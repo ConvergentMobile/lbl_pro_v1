@@ -47,6 +47,13 @@ public class UsersEntity {
 	private String viewOnly;
 	
 	
+	
+	public String getViewOnly() {
+		return viewOnly;
+	}
+	public void setViewOnly(String viewOnly) {
+		this.viewOnly = viewOnly;
+	}
 	public Integer getUserID() {
 		return userID;
 	}
@@ -114,12 +121,6 @@ public class UsersEntity {
 	}
 	public void setRoleId(Integer roleId) {
 		this.roleId = roleId;
-	}
-	public String getViewOnly() {
-		return viewOnly;
-	}
-	public void setViewOnly(String viewOnly) {
-		this.viewOnly = viewOnly;
 	}
 	
 

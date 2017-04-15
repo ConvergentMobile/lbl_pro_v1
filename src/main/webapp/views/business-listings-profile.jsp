@@ -1,3 +1,4 @@
+<%@page import="com.business.common.util.LBLConstants"%>
 <%@ taglib uri="http://www.springframework.org/tags/form"	prefix="spring"%>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="tag"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="core"%>
@@ -22,13 +23,59 @@
 <script src="js/jquery.cycle.all.js"></script>
 <script src="js/functions.js"></script>
 <script src="js/jquery.session.js"></script>
+<link rel="stylesheet" href="js/jquery.mCustomScrollbar.css">
+<script src="js/jquery.mCustomScrollbar.js"></script>
+<link rel="stylesheet" href="js/jquery.mCustomScrollbar.css">
+<script src="js/jquery.mCustomScrollbar.js"></script>
+<script src="js/functions.js"></script>
 <style>
 	.error { 
 		color: red; font-weight: bold; 
 	}
+	.box.location_profile .box-buttons {
+    text-align: left;
+}
+
+ /* #location_information td:last-child span {
+    margin: 20px 0 0 0!important;
+    position: absolute;
+    left: 30px;
+}  */ 
+
 </style>
 <script type="text/javascript">
+
+/* 
+ function disableF5(e) { if ((e.which || e.keyCode) == 116 || (e.which || e.keyCode) == 82) e.preventDefault(); };
+
+$(document).ready(function(){
+	
+     $(document).on("keydown", disableF5);
+     
+     /* window.onbeforeunload = function(e) {
+    	 var listid=$("#listId").val();
+
+    	 document.location.href = "editBusinessInfor.htm?listid="+listid;
+    	}; 
+/* });
+ */
+     
+
+</script>
+<script type = "text/javascript" >
+$(document).ready(function(){
+var listid=$("#listId").val();
+history.pushState(null, null, 'editBusinessInfor.htm?listid='+listid);
+window.addEventListener('popstate', function(event) {
+	
+history.pushState(null, null, 'editBusinessInfor.htm?listid='+listid);
+});
+});
+</script> 
+<script type="text/javascript">
+
 function saveChangepopup(){
+	
 	var editType = $.session.get("editType");
 	var updateMsg = "Do you want to save the changes you have<br>entered for this location?";
 	if ($.session.get("isSave") === "true") {
@@ -40,7 +87,8 @@ function saveChangepopup(){
 	}
 	
 	$("div#savePopupMessage").html(updateMsg);
-  $('#editSaveChanges').bPopup();  
+  $('#editSaveChanges').bPopup(); 
+	
   $("ul li").removeClass("selected");
  }
  
@@ -61,6 +109,7 @@ function sendSubmitResult(){
  } 
 
  $(document).ready(function() {
+
 	 var id = "location_information";
 	 locatoinProfileUpdate(id);	
 	 diableReadOnlyForAddLocation(id+"_field");	 
@@ -125,8 +174,10 @@ function sendSubmitResult(){
 	     $('#validationSearchpop').bPopup();
 	     $("ul li").removeClass("selected");
 	    } */
-	
-	
+
+
+
+
 });
  
  function locatoinProfileUpdate(id) {
@@ -183,7 +234,7 @@ function diableReadOnlyForAddLocation(id){
 	<div class="pp-subheader">You have selected to Cancel the changes you have entered.<br>If you click OK, any changes made will not be saved.</div>
 	<div class="pp-body">
 		<div class="buttons">
-			<a href="business-listings.htm" class="btn_dark_blue_2">Ok</a>
+			<a href="businesstorelistings.htm" class="btn_dark_blue_2">Ok</a>
 			<a href="#" class="btn_dark_blue_2 b-close">Continue Edit</a>
 		</div>
 	</div>
@@ -204,12 +255,12 @@ function diableReadOnlyForAddLocation(id){
   </div>
  </div>
 </div>
-<body id="office">
+<body id="office"   >
 <spring:form action="updateBusiness.htm" id="editBusinessForm" commandName="businessInfo" >
 <!-- page wrapper -->
 <div class="wrapper"> 
 	<!-- header -->
-	<div class="header"> <a href="dashboard.htm" class="logo_lbl">Local Business Listings</a>
+	<div class="header"> <a href="dash-board.htm" class="logo_lbl">Local Business Listings</a>
 		<ul class="top_nav">
 			<li class="home"><a href="dash-board.htm">Home</a></li>
 			<li class="help"><a href="help.htm">Help</a></li>
@@ -230,8 +281,17 @@ function diableReadOnlyForAddLocation(id){
 			<li class="si_error_listings"><a href="listing-error.htm">Listing Errors</a></li>
 			<li class="si_upload_export"><a href="upload-export.htm">Upload/Export</a></li>
 			<li class="si_reports"><a href="reports.htm">Reports</a></li>
+				<%
+						Integer Role=(Integer)session.getAttribute("roleId");				
+							if(Role==LBLConstants.CONVERGENT_MOBILE_ADMIN){						
+						%>
+			<li class="si_admin"><a href="admin-listings.htm">CM admin</a></li>
 			<li class="si_mobile_profile "><a href="manage-account.htm">Manage Account</a></li>
-			<li class="si_toolbox"><a href="getConvergentToolbox.htm">Convergent Toolbox</a></li>
+				
+			<%} %>
+		<!-- 	<li class="si_schduler"><a href="scheduler.htm">Schedule</a></li> -->
+			
+			<!--<li class="si_toolbox"><a href="getConvergentToolbox.htm">Convergent Toolbox</a></li>-->
 		</ul>
 		<!-- // left side navigation --> 
 		<!-- content area -->
@@ -248,7 +308,11 @@ function diableReadOnlyForAddLocation(id){
 				
 				<div class="box box_red_title location_profile"> 
 					<div class="box-sidebar">
-						<div class="box_title"><h2>Location profile</h2></div>
+					<%-- <core:out value="${listId}"></core:out> --%>
+					<input type="hidden" value="${listId}" name="listId" id="listId">
+					<input type="hidden" value="${brandName }" name="brandval">
+					<input type="hidden" value="${storeVal }" name="storeVal">
+						<div class="box_title"><h2 style="text-align: left;">Location profile</h2></div>
 						<!-- <a href="business-listings.htm" class="lp-back"><span>Back to Business Listings</span></a> -->
 						<div class="lp-subtitle-text">
 							<div class="text-1">${businessInfo.client}</div>
@@ -310,8 +374,7 @@ function diableReadOnlyForAddLocation(id){
 						
 						<span style="color: red;padding:13px 50px 10px;">*required fields</span>
 				
-					
-						<div class="box-buttons">
+					<div class="box-buttons">
 							<!-- <a id="edit" href="#" class="btn_dark_blue_2">Edit</a> -->
 							<a id="cancel" href="#" class="btn_dark_blue_2">Cancel</a>
 							
@@ -324,40 +387,48 @@ function diableReadOnlyForAddLocation(id){
 						</div>
 					</div>
 			
-					<div class="box-content">
+					<div class="box-content" style="margin: 0px -80px 0px">
 						<div class="bc-inner" id="location_profile">
-						
-							
-							
-							<table  id="location_information" width="110%" class="grid grid_10">
+
+							<table  id="location_information" width="100%" class=" grid_10 localinfo">
 								<colgroup>
-									<col width="35%" />
-									<col width="40%" />
-									<col width="35%"/>
+									<col width="27%" />
+									<col width="25%" />
+									<col width="48%"/>
 								</colgroup>
 								<thead>
 								
 									<tr>
-										<th class="th_01" colspan="2"><div>Location Information</div>
-										<spring:hidden path="multiUpdateString"	id="multiUpdateString" />
+										<th class="th_01"><div>Location Information</div>
 										</th>
-										<th class="th_02" colspan="2"> <div>ErrorMessage</div></th>
+										<th class="th_02"><spring:hidden path="multiUpdateString"	id="multiUpdateString" /></th>
+
+										<th class="th_03"> <div>Error Message</div></th>
 									</tr>
 								</thead>
+								<colgroup>
+									<col width="27%" />
+									<col width="25%" />
+									<col width="48%"/>
+								</colgroup>
 								<tbody>
-									
+							<%-- 	<spring:hidden  path="id" value="${listId}" id="listId"/> --%>
+									<input type="hidden" value="${listId}" name="listId" id="listId">
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Client">
-																</tag:message><span style="color: red">*</span></div></td>
+																</tag:message><span style="color: red">*</span>
+																<%-- <span  style="color: red;    margin: 12px -10px 0px; font-size: 12px;display: block;">${clientId_Error}</span> --%>
+																</div></td>
 										<td class="td_02"><div><spring:input class="bussinessInfo" path="clientId" id="location_information_field" readonly="" /></div></td>
 										
-										<td><span  style="color: red">${clientId_Error}</span></td>
+										  <td class="errors">${clientId_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Store">
-																</tag:message><span style="color: red">*</span></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" path="store" id="location_information_field"  /></div></td>
-										<td><span  style="color: red">${store_Error}</span></td>
+																</tag:message><span style="color: red">*</span>
+																</div></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" path="store" id="location_information_field" /></div></td>
+										 <td class="errors">${store_Error}</td>
 									</tr>
 									
 										
@@ -366,164 +437,196 @@ function diableReadOnlyForAddLocation(id){
 									
 										<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.countryCode">
-															</tag:message><span style="color: red">*</span></div></td>
+															</tag:message><span style="color: red">*</span>
+															
+															</div></td>
 										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="countryCode" /></div></td>
-										<td><span  style="color: red">${countryCode_Error}</span></td>
+										 <td class="errors">${countryCode_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.CompanyName">
-													</tag:message><span style="color: red">*</span></div></td>
+													</tag:message><span style="color: red">*</span>
+													</div></td>
 										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="companyName" /></div></td>
 										
-										<td><span  style="color: red">${companyName_Error}</span></td>
+										 <td class="errors">${companyName_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.AlternativeName">
 												</tag:message></div></td>
 										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="alternativeName" /></div></td>
-										<td><span  style="color: red">${alternativeName_Error}</span></td>
+										 <td class="errors">${alternativeName_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.AnchorOrHostBusiness">
 												</tag:message></div></td>
 										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="anchorOrHostBusiness" /></div></td>
-										<td><span  style="color: red">${anchorOrHostBusiness_Error}</span></td>
+										 <td class="errors">${anchorOrHostBusiness_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Locationaddress">
 											</tag:message><span style="color: red">*</span></div></td>
 										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="locationAddress" /></div></td>
-										<td><span  style="color: red">${locationAddress_Error}</span></td>
+										 <td class="errors">${locationAddress_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Suite">
 											</tag:message></div></td>
 										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="suite" /></div></td>
-										<td><span  style="color: red">${suite_Error}</span></td>
+										 <td class="errors">${suite_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.LocationCity">
 										</tag:message><span style="color: red">*</span></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="locationCity" /></div></td>
-										<td><span  style="color: red">${locationCity_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="locationCity"/></div></td>
+										 <td class="errors">${locationCity_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.LocationState">
 											</tag:message><span style="color: red">*</span></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="locationState" /></div></td>
-										<td><span  style="color: red">${locationState_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="locationState"/></div></td>
+										 <td class="errors">${locationState_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.LocationZipCode">
 											</tag:message><span style="color: red">*</span></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="locationZipCode" /></div></td>
-										<td><span  style="color: red">${locationZipCode_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="locationZipCode"/></div></td>
+										 <td class="errors">${locationZipCode_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.LocationPhone">
 											</tag:message><span style="color: red">*</span></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="locationPhone" /></div></td>
-										<td><span  style="color: red">${locationPhone_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="locationPhone"/></div></td>
+										 <td class="errors">${locationPhone_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Fax">
 													</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="fax" /> </div></td>
-										<td><span  style="color: red">${fax_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="fax"/> </div></td>
+										<td class="errors">${fax_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.TollFree">
 													</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="tollFree" /></div></td>
-										<td><span  style="color: red">${tollFree_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="tollFree"/></div></td>
+										 <td class="errors">${tollFree_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.TTY">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="tty" /> </div></td>
-										<td><span  style="color: red">${tty_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="tty"/> </div></td>
+										 <td class="errors">${tty_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.MobileNumber">
 											</tag:message></div></td>
 										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="mobileNumber" /></div></td>
-										<td><span  style="color: red">${mobileNumber_Error}</span></td>
+										 <td class="errors">${mobileNumber_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.AdditionalNumber">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="additionalNumber" /></div></td>
-										<td><span  style="color: red">${additionalNumber_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="additionalNumber"/></div></td>
+										 <td class="errors">${additionalNumber_Error}</td>
 									</tr>
 										<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.LocationEmail">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="locationEmail" /></div></td>
-										<td><span  style="color: red">${locationEmail_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="locationEmail"/></div></td>
+										 <td class="errors">${locationEmail_Error}</td>
 									</tr>								
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.ShortWebAddress">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="shortWebAddress" /></div></td>
-										<td><span  style="color: red">${shortWebAddress_Error}</span></td>
-									</tr>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="shortWebAddress"/></div></td>
+										 <td class="errors">${shortWebAddress_Error}</td>
 									
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.WebAddress">
 												</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="webAddress" /></div></td>
-										<td><span  style="color: red">${webAddress_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="webAddress"/></div></td>
+										 <td class="errors">${webAddress_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Category1">
-													</tag:message><span style="color: red">*</span></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="category1" /></div></td>
-										<td><span  style="color: red">${category1_Error}</span></td>
+													</tag:message></div></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="category1"/></div></td>
+										 <td class="errors">${category1_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Category2">
 												</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="category2" /></div></td>
-										<td><span  style="color: red">${category2_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="category2"/></div></td>
+										 <td class="errors">${category2_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Category3">
 													</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="category3" /> </div></td>
-										<td><span  style="color: red">${category3_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="category3"/> </div></td>
+										 <td class="errors">${category3_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Category4">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="category4" /></div></td>
-										<td><span  style="color: red">${category4_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="category4"/></div></td>
+										 <td class="errors">${category4_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Category5">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="category5" /></div></td>
-										<td><span  style="color: red">${category5_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="category5"/></div></td>
+										 <td class="errors">${category5_Error}</td>
 										
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.LogoLink">
 												</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="logoLink" /></div></td>
-										<td><span  style="color: red">${logoLink_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="location_information_field"   path="logoLink"/></div></td>
+										 <td class="errors">${logoLink_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.ServiceArea">
 												</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_information_field"   path="serviceArea" /></div></td>
-										<td><span  style="color: red">${serviceArea_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="location_information_field"   path="serviceArea" style="height: 105px;"/></div></td>
+										 <td class="errors">${serviceArea_Error}</td>
 									</tr>									
-																		
+										<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+					
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td ><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td ><div>&nbsp;</div></td>
+									</tr>								
 									<tr>
 										<td class="td_01"><div>&nbsp;</div></td>
 										<td class="td_02"><div>&nbsp;</div></td>
 										<td class="td_02"><div>&nbsp;</div></td>
 									</tr>
 					
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td ><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td ><div>&nbsp;</div></td>
+									</tr>
 									<tr>
 										<td class="td_01"><div>&nbsp;</div></td>
 										<td class="td_02"><div>&nbsp;</div></td>
@@ -541,276 +644,357 @@ function diableReadOnlyForAddLocation(id){
 									</tr>
 								</tbody>
 							</table>
-						
-							<table id="location_content" width="110%" class="grid grid_10">
-										<colgroup>
-									<col width="35%" />
-									<col width="40%" />
-									<col width="35%"/>
+					
+							<table id="location_content" width="100%" class=" grid_10 localinfo">
+								<colgroup>
+									<col width="27%" />
+									<col width="25%" />
+									<col width="48%"/>
 								</colgroup>
 								<thead>
 									<tr>
-										<th class="th_01" colspan="2"><div>Location Content</div></th>
-										<th class="th_02" colspan="2"> <div>ErrorMessage</div></th>
+										<th class="th_01"><div>Location Content</div></th>
+										<th class="th_02"><div></div></th>
+										<th class="th_03"><div>Error Message</div></th>
 									</tr>
 								</thead>
+								<colgroup>
+									<col width="27%" />
+									<col width="25%" />
+									<col width="48%"/>
+								</colgroup>
 								<tbody>			
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.PrimaryContactFirstName">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_content_field"   path="primaryContactFirstName" /></div></td>
-										<td><span  style="color: red">${primaryContactFirstName_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_content_field"   path="primaryContactFirstName" style="margin: 0px -45px 0px;"/></div></td>
+										 <td class="errors">${primaryContactFirstName_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message  code="businessApp.lable.PrimaryContactLastName">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_content_field"   path="primaryContactLastName" /></div></td>
-										<td><span  style="color: red">${primaryContactLastName_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_content_field"   path="primaryContactLastName" style="margin: 0px -45px 0px;"/></div></td>
+										 <td class="errors">${primaryContactLastName_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.ContactTitle">
 									</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_content_field"   path="contactTitle" /></div></td>
-										<td><span  style="color: red">${contactTitle_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_content_field"   path="contactTitle" style="margin: 0px -45px 0px;"/></div></td>
+										 <td class="errors">${contactTitle_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.ContactEmail">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_content_field"   path="contactEmail" /></div></td>
-										<td><span  style="color: red">${contactEmail_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_content_field"   path="contactEmail" style="margin: 0px -45px 0px;"/></div></td>
+										 <td class="errors">${contactEmail_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.LocationEmployeeSize">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_content_field"    path="locationEmployeeSize" /></div></td>
-										<td><span  style="color: red">${locationEmployeeSize_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_content_field"    path="locationEmployeeSize" style="margin: 0px -45px 0px;"/></div></td>
+										 <td class="errors">${locationEmployeeSize_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.TitleManagerOrOwner">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_content_field"   path="title_ManagerOrOwner" /></div></td>
-										<td><span  style="color: red">${title_ManagerOrOwner_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_content_field"   path="title_ManagerOrOwner" style="margin: 0px -45px 0px;"/></div></td>
+										 <td class="errors">${title_ManagerOrOwner_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.ProfessionalTitle">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_content_field"   path="professionalTitle" /></div></td>
-										<td><span  style="color: red">${professionalTitle_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_content_field"   path="professionalTitle" style="margin: 0px -45px 0px;"/></div></td>
+										 <td class="errors">${professionalTitle_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.ProfessionalAssociations">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_content_field"   path="professionalAssociations" /></div></td>
-										<td><span  style="color: red">${professionalAssociations_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="location_content_field"   path="professionalAssociations" style="margin: 0px -45px 0px;"/></div></td>
+										 <td class="errors">${professionalAssociations_Error}</td>
 									</tr>
-									
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+					
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td ><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td ><div>&nbsp;</div></td>
+									</tr>
 									</tbody>
 							</table>
 						
-							<table id="hours_of_operation" width="110%" class="grid grid_10">
+							<table id="hours_of_operation" width="100%" class=" grid_10 localinfo">
 								<colgroup>
-									<col width="35%" />
-									<col width="40%" />
-									<col width="35%"/>
+									<col width="27%" />
+									<col width="25%" />
+									<col width="48%"/>
 								</colgroup>
 								<thead>
 									<tr>
-										<th class="th_01" colspan="2"><div>Hours Of Operation</div></th>
-										<th class="th_02" colspan="2"> <div>ErrorMessage</div></th>
+										<th class="th_01"><div>Hours Of Operation</div></th>
+										<th class="th_02"><div></div></th>
+										<th class="th_03"><div>Error Message</div></th>
 									</tr>
 								</thead>
+								<colgroup>
+									<col width="27%" />
+									<col width="25%" />
+									<col width="48%"/>
+								</colgroup>
 								<tbody>	
 									
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.MondayOpen">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="mondayOpen" /> </div></td>
-										<td><span  style="color: red">${mondayOpen_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="mondayOpen" style="margin: 0px -100px 0px;" /> </div></td>
+										 <td class="errors">${mondayOpen_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.MondayClose">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="mondayClose" /></div></td>
-										<td><span  style="color: red">${mondayClose_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="mondayClose" style="margin: 0px -100px 0px;"/></div></td>
+										 <td class="errors">${mondayClose_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.TuesdayOpen">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="tuesdayOpen" /></div></td>
-										<td><span  style="color: red">${tuesdayOpen_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="tuesdayOpen" style="margin: 0px -100px 0px;"/></div></td>
+										 <td class="errors">${tuesdayOpen_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.TuesdayClose">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="tuesdayClose" /></div></td>
-										<td><span  style="color: red">${tuesdayClose_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="tuesdayClose" style="margin: 0px -100px 0px;"/></div></td>
+										 <td class="errors">${tuesdayClose_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.WednesdayOpen">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="wednesdayOpen" /></div></td>
-										<td><span  style="color: red">${wednesdayOpen_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="wednesdayOpen" style="margin: 0px -100px 0px;"/></div></td>
+										 <td class="errors">${wednesdayOpen_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.WednesdayClose">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="wednesdayClose" /></div></td>
-										<td><span  style="color: red">${wednesdayClose_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="wednesdayClose" style="margin: 0px -100px 0px;"/></div></td>
+										 <td class="errors">${wednesdayClose_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.ThursdayOpen">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="thursdayOpen" /></div></td>
-										<td><span  style="color: red">${thursdayOpen_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="thursdayOpen" style="margin: 0px -100px 0px;"/></div></td>
+										 <td class="errors">${thursdayOpen_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.ThursdayClose">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="thursdayClose" /></div></td>
-										<td><span  style="color: red">${thursdayClose_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="thursdayClose" style="margin: 0px -100px 0px;"/></div></td>
+										<td class="errors">${thursdayClose_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.FridayOpen">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="fridayOpen" /></div></td>
-										<td><span  style="color: red">${fridayOpen_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="fridayOpen" style="margin: 0px -100px 0px;"/></div></td>
+										 <td class="errors">${fridayOpen_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.FridayClose">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="fridayClose" /></div></td>
-										<td><span  style="color: red">${fridayClose_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="fridayClose" style="margin: 0px -100px 0px;"/></div></td>
+										 <td class="errors">${fridayClose_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.SaturdayOpen">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="saturdayOpen" /></div></td>
-										<td><span  style="color: red">${saturdayOpen_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="saturdayOpen" style="margin: 0px -100px 0px;"/></div></td>
+										 <td class="errors">${saturdayOpen_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.SaturdayClose">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="saturdayClose" /></div></td>
-										<td><span  style="color: red">${saturdayClose_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="saturdayClose" style="margin: 0px -100px 0px;"/></div></td>
+										 <td class="errors">${saturdayClose_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.SundayOpen">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="sundayOpen" /></div></td>
-										<td><span  style="color: red">${sundayOpen_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="sundayOpen" style="margin: 0px -100px 0px;" /></div></td>
+										 <td class="errors">${sundayOpen_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.SundayClose">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="sundayClose" /></div></td>
-										<td><span  style="color: red">${sundayClose_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="hours_of_operation_field"   path="sundayClose" style="margin: 0px -100px 0px;"/></div></td>
+										 <td class="errors">${sundayClose_Error}</td>
 									</tr>
-									
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+					
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+					
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td ><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td ><div>&nbsp;</div></td>
+									</tr>
 									</tbody>
 							</table>
 						
-							<table id="payment_methods" width="110%" class="grid grid_10">
+							<table id="payment_methods" width="100%" class=" grid_10 localinfo">
 								<colgroup>
-									<col width="35%" />
-									<col width="40%" />
-									<col width="35%"/>
+									<col width="27%" />
+									<col width="25%" />
+									<col width="48%"/>
 								</colgroup>
 								<thead>
 									<tr>
-										<th class="th_01" colspan="2"><div>Payment Methods</div></th>
-										<th class="th_02" colspan="2"> <div>ErrorMessage</div></th>
+										<th class="th_01"><div>Payment Methods</div></th>
+										<th class="th_02"><div></div></th>
+										<th class="th_03"><div>Error Message</div></th>
 									</tr>
 								</thead>
+								<colgroup>
+									<col width="27%" />
+									<col width="25%" />
+									<col width="48%"/>
+								</colgroup>
 								<tbody>	
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.AMEX">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="aMEX" /></div></td>
-										<td><span  style="color: red">${aMEX_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="aMEX" style="margin: 0px -100px 0px;"/></div></td>
+										<td class="errors">${aMEX_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Discover">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"    path="discover" /></div></td>
-										<td><span  style="color: red">${discover_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"    path="discover" style="margin: 0px -100px 0px;"/></div></td>
+										<td class="errors">${discover_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Visa">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="visa" /> </div></td>
-										<td><span  style="color: red">${visa_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="visa" style="margin: 0px -100px 0px;"/> </div></td>
+										<td class="errors">${visa_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.MasterCard">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input  class="bussinessInfo" id="payment_methods_field"   path="masterCard" /> </div></td>
-										<td><span  style="color: red">${masterCard_Error}</span></td>
+										<td class="td_02"><div><spring:input  class="bussinessInfo" id="payment_methods_field"   path="masterCard" style="margin: 0px -100px 0px;"/> </div></td>
+										<td class="errors">${masterCard_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.DinersClub">
 												</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="dinersClub" /></div></td>
-										<td><span  style="color: red">${dinersClub_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="dinersClub" style="margin: 0px -100px 0px;"/></div></td>
+										<td class="errors">${dinersClub_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.DebitCard">
 												</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="debitCard" /> </div></td>
-										<td><span  style="color: red">${debitCard_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="debitCard" style="margin: 0px -100px 0px;"/> </div></td>
+										<td class="errors">${debitCard_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.StoreCard">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="storeCard" /></div></td>
-										<td><span  style="color: red">${storeCard_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="storeCard" style="margin: 0px -100px 0px;"/></div></td>
+										<td class="errors">${storeCard_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.OtherCard">
 												</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="otherCard" /></div></td>
-										<td><span  style="color: red">${otherCard_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="otherCard" style="margin: 0px -100px 0px;"/></div></td>
+										<td class="errors">${otherCard_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Cash">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="cash" /></div></td>
-										<td><span  style="color: red">${cash_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="cash" style="margin: 0px -100px 0px;"/></div></td>
+										<td class="errors">${cash_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Check">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="check" /> </div></td>
-										<td><span  style="color: red">${check_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="check" style="margin: 0px -100px 0px;"/> </div></td>
+										<td class="errors">${check_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.TravelersCheck">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="travelersCheck" /></div></td>
-										<td><span  style="color: red">${travelersCheck_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="travelersCheck" style="margin: 0px -100px 0px;"/></div></td>
+										<td class="errors">${travelersCheck_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Financing">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="financing" /></div></td>
-										<td><span  style="color: red">${financing_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="financing" style="margin: 0px -100px 0px;"/></div></td>
+										<td class="errors">${financing_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.GoogleCheckout">
 												</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="googleCheckout" /></div></td>
-										<td><span  style="color: red">${googleCheckout_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="googleCheckout" style="margin: 0px -100px 0px;"/></div></td>
+										<td class="errors">${googleCheckout_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Invoice">
-										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="invoice" /></div></td>
-										<td><span  style="color: red">${invoice_Error}</span></td>
+										</tag:message>
+										</div></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="invoice" style="margin: 0px -100px 0px;"/></div></td>
+										<td class="errors">${invoice_Error}</td>
 									</tr>
+									
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.PayPal">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="payPal" /></div></td>
-										<td><span  style="color: red">${payPal_Error}</span></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" id="payment_methods_field"   path="payPal" style="margin: 0px -100px 0px;"/></div></td>
+										<td class="errors">${payPal_Error}</td>
 									</tr>
 																		
 									<tr>
@@ -834,157 +1018,292 @@ function diableReadOnlyForAddLocation(id){
 										<td class="td_02"><div>&nbsp;</div></td>
 										<td ><div>&nbsp;</div></td>
 									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+					
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td ><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td ><div>&nbsp;</div></td>
+									</tr>
 									</tbody>
 							</table>
 						
-							<table  id="social_links" width="110%" class="grid grid_10">
+							<table  id="social_links" width="100%" class=" grid_10 localinfo">
 								<colgroup>
-									<col width="35%" />
-									<col width="40%" />
-									<col width="35%"/>
+									<col width="27%" />
+									<col width="25%" />
+									<col width="48%"/>
 								</colgroup>
 								<thead>
 									<tr>
-										<th class="th_01" colspan="2"><div>Social Links</div></th>
-										<th class="th_02" colspan="2"> <div>ErrorMessage</div></th>
+										<th class="th_01"><div>Social Links</div></th>
+										<th class="th_02"><div></div></th>
+										<th class="th_03"><div>Error Message</div></th>
 									</tr>
 								</thead>
+								<colgroup>
+									<col width="27%" />
+									<col width="25%" />
+									<col width="48%"/>
+								</colgroup>
 								<tbody>	
 									
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.CouponLink">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="social_links_field"   path="couponLink" /> </div></td>
-										<td><span  style="color: red">${couponLink_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="social_links_field"   path="couponLink" /> </div></td>
+										<td class="errors">${couponLink_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.TwitterLink">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="social_links_field"   path="twitterLink" /></div></td>
-										<td><span  style="color: red">${twitterLink_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="social_links_field"   path="twitterLink" /></div></td>
+										<td class="errors">${twitterLink_Error}</td>
 									</tr>
 									<tr>
 									<td class="td_01"><div><tag:message code="businessApp.lable.LinkedInLink">
 									</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="social_links_field"   path="linkedInLink" /></div></td>
-										<td><span  style="color: red">${linkedInLink_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="social_links_field"   path="linkedInLink" /></div></td>
+										<td class="errors">${linkedInLink_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.FacebookLink">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="social_links_field"   path="facebookLink" /></div></td>
-										<td><span  style="color: red">${facebookLink_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="social_links_field"   path="facebookLink" /></div></td>
+										<td class="errors">${facebookLink_Error}</td>
 									</tr>
 									<tr>
-										<td class="td_01"><div><tag:message code="businessApp.lable.AlternateSocialLink">
+										<td class="td_01"><div><tag:message code="businessApp.lable.foursquareLink">
 									</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="social_links_field"   path="alternateSocialLink" /></div></td>
-										<td><span  style="color: red">${alternateSocialLink_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="social_links_field"   path="foursquareLink" /></div></td>
+										<td class="errors">${foursquareLink_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.YouTubeOrVideoLink">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="social_links_field"   path="youTubeOrVideoLink" /></div></td>
-										<td><span  style="color: red">${youTubeOrVideoLink_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="social_links_field"   path="youTubeOrVideoLink" /></div></td>
+										<td class="errors">${youTubeOrVideoLink_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.GooglePlusLink">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="social_links_field"   path="googlePlusLink" /> </div></td>
-										<td><span  style="color: red">${googlePlusLink_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="social_links_field"   path="googlePlusLink" /> </div></td>
+										<td class="errors">${googlePlusLink_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.MyspaceLink">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="social_links_field"   path="myspaceLink" /></div></td>
-										<td><span  style="color: red">${myspaceLink_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="social_links_field"   path="myspaceLink" /></div></td>
+										<td class="errors">${myspaceLink_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.PinterestLink">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="social_links_field"   path="pinteristLink" /></div></td>
-										<td><span  style="color: red">${pinteristLink_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="social_links_field"   path="pinteristLink" /></div></td>
+										<td class="errors">${pinteristLink_Error}</td>
 									</tr>
 									
+										<tr>
+										<td class="td_01"><div><tag:message code="businessApp.lable.helpLink">
+										</tag:message></div></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="social_links_field"   path="yelpLink" /></div></td>
+										<td class="errors">${helpLink_Error}</td>
+									</tr>
+									<tr>
+										<td class="td_01"><div><tag:message code="businessApp.lable.instagramLink">
+										</tag:message></div></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="social_links_field"   path="instagramLink" /></div></td>
+										<td class="errors">${instagramLink_Error}</td>
+									</tr>
+									<tr>
+										<td class="td_01"><div><tag:message code="businessApp.lable.menuLink">
+										</tag:message></div></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="social_links_field"   path="menuLink" /></div></td>
+										<td class="errors">${menuLink_Error}</td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+					
+					
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td ><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td ><div>&nbsp;</div></td>
+									</tr>
 									</tbody>
 							</table>
 						
-							<table  id="enhanced_content" width="110%" class="grid grid_10">
-										<colgroup>
-									<col width="35%" />
-									<col width="40%" />
-									<col width="35%"/>
+							<table  id="enhanced_content" width="100%" class=" grid_10 localinfo">
+								<colgroup>
+									<col width="27%" />
+									<col width="25%" />
+									<col width="48%"/>
 								</colgroup>
 								<thead>
 									<tr>
-										<th class="th_01" colspan="2"><div>Enhanced Content</div></th>
-										<th class="th_02" colspan="2"> <div>ErrorMessage</div></th>
+										<th class="th_01"><div>Enhanced Content</div></th>
+										<th class="th_02"><div></div></th>
+										<th class="th_03" style="margin: :0px -20px 0px"> <div>Error Message</div></th>
 									</tr>
 								</thead>
+								<colgroup>
+									<col width="27%" />
+									<col width="25%" />
+									<col width="48%"/>
+								</colgroup>
 								<tbody>	
 									
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Products">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="products" /> </div></td>
-										<td><span  style="color: red">${products_Error}</span></td>
+										<td class="td_02" ><div><spring:textarea class="bussinessInfo" id="enhanced_content_field" rows="10" cols="30"   path="products" style="padding-top: 0px; width:100%; height :105px;    " /> </div></td>
+										<td class="errors">${products_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Services">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="services" /></div></td>
-										<td><span  style="color: red">${services_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="enhanced_content_field" rows="10" cols="30"   path="services" style="padding-top: 0px; width:100%; height :105px;    " /></div></td>
+										<td class="errors">${services_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.ProductsOrServicescombined">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="productsOrServices_combined" /></div></td>
-										<td><span  style="color: red">${productsOrServices_combined_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="enhanced_content_field" rows="10" cols="30"   path="productsOrServices_combined" style="padding-top: 0px; width:100%; height :105px;" /></div></td>
+										<td class="errors">${productsOrServices_combined_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Brands">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="brands" /></div></td>
-										<td><span  style="color: red">${brands_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="enhanced_content_field"  rows="10" cols="30"  path="brands" style="padding-top: 0px; width:100%; height :105px;    "/></div></td>
+										<td class="errors">${brands_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Keywords">
 											</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="keywords" /></div></td>
-										<td><span  style="color: red">${keywords_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="enhanced_content_field" rows="10" cols="30"    path="keywords" style="padding-top: 0px; width:100%; height :105px;    " /></div></td>
+										<td class="errors">${keywords_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Languages">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="languages" /></div></td>
-										<td><span  style="color: red">${languages_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="enhanced_content_field" rows="10" cols="30"   path="languages" style="padding-top: 0px; width:100%; height :60px;    " /></div></td>
+										<td class="errors">${languages_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.YearEstablished">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="yearEstablished" /></div></td>
-										<td><span  style="color: red">${yearEstablished_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="enhanced_content_field"  rows="10" cols="30"  path="yearEstablished" style="padding-top: 0px; width:100%; height :60px;    " /></div></td>
+										<td class="errors">${yearEstablished_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Tagline">
 												</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="tagline" /></div></td>
-										<td><span  style="color: red">${tagline_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="enhanced_content_field" rows="10" cols="30"   path="tagline" style="padding-top: 0px; width:100%; height :60px;    " /></div></td>
+										<td class="errors">${tagline_Error}</td>
 									</tr>
 									
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.BusinessDescription">
+										</tag:message></div></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="enhanced_content_field" rows="10" cols="30"  path="businessDescription" style="padding-top: 0px; width:100%; height :105px;    " /></div></td>
+										<td class="errors">${businessDescription_Error}</td>
+									</tr>
+									<tr>
+										<td class="td_01"><div><tag:message code="businessApp.lable.businessDescriptionShort">
 										</tag:message><span style="color: red">*</span></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="businessDescription" /></div></td>
-										<td><div  style="color: red">${businessDescription_Error}</div></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="enhanced_content_field" rows="10" cols="30"  path="businessDescriptionShort" style="padding-top: 0px; width:100%; height :105px;    " /></div>
+										
+										</td>
+										<td class="errors">${businessDescriptionShort_Error}</td>
 									</tr>
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.ADDRESSPRIVACYFLAG">
 										</tag:message></div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" id="enhanced_content_field"   path="ADDRESSPRIVACYFLAG" /></div></td>
-										<td><span  style="color: red">${ADDRESSPRIVACYFLAG_Error}</span></td>
+										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="enhanced_content_field"  rows="10" cols="30"  path="ADDRESSPRIVACYFLAG" style="padding-top: 0px; width:100%; height :60px;    " /></div></td>
+										<td class="errors">${ADDRESSPRIVACYFLAG_Error}</td>
+									</tr>	
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+					
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td ><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td ><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+									</tr>
+					
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td ><div>&nbsp;</div></td>
+									</tr>
+									<tr>
+										<td class="td_01"><div>&nbsp;</div></td>
+										<td class="td_02"><div>&nbsp;</div></td>
+										<td ><div>&nbsp;</div></td>
 									</tr>
 									
+									
+								
 									
 								</tbody>
 							</table>
@@ -1008,4 +1327,5 @@ function diableReadOnlyForAddLocation(id){
 </div>
 </spring:form>
 </body>
+
 </html>

@@ -18,4 +18,10 @@ public class PropUtil {
 	
 	public static final ResourceBundle UPLOAD_BUNDLE=ResourceBundle.getBundle("uploadfile");
 	
+	public static final ResourceBundle SMART_BUNDLE=ResourceBundle.getBundle("smartstreet");
+	
+	public static final ResourceBundle WHITE_SPARK=ResourceBundle.getBundle("whitespark");
+	
+	public static final ResourceBundle Google_Key=ResourceBundle.getBundle("google");
+	
 }

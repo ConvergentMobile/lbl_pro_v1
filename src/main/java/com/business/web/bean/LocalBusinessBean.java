@@ -72,6 +72,7 @@ public class LocalBusinessBean {
 	private String myspaceLink;
 	private String logoLink;
 	private String pinteristLink;
+	private String yelpLink;
 	private String products;
 	private String services;
 	private String productsOrServices_combined;
@@ -106,7 +107,53 @@ public class LocalBusinessBean {
 	private String sundayClose;
 	private String ADDRESSPRIVACYFLAG;
 	private Integer clientId;
-	  
+	private String foursquareLink;
+	private String instagramLink;
+	private String menuLink;
+	private String businessDescriptionShort;
+	private String googleAccountId;
+	private String googleLocationId;
+
+	public String getGoogleAccountId() {
+		return googleAccountId;
+	}
+
+	public void setGoogleAccountId(String googleAccountId) {
+		this.googleAccountId = googleAccountId;
+	}
+
+	public String getGoogleLocationId() {
+		return googleLocationId;
+	}
+	
+	public void setGoogleLocationId(String googleLocationId) {
+		this.googleLocationId = googleLocationId;
+	}
+	
+	public String getBusinessDescriptionShort() {
+		return businessDescriptionShort;
+	}
+	public void setBusinessDescriptionShort(String businessDescriptionShort) {
+		this.businessDescriptionShort = businessDescriptionShort;
+	}
+	public String getFoursquareLink() {
+		return foursquareLink;
+	}
+	public void setFoursquareLink(String foursquareLink) {
+		this.foursquareLink = foursquareLink;
+	}
+	public String getInstagramLink() {
+		return instagramLink;
+	}
+	public void setInstagramLink(String instagramLink) {
+		this.instagramLink = instagramLink;
+	}
+	public String getMenuLink() {
+		return menuLink;
+	}
+	public void setMenuLink(String menuLink) {
+		this.menuLink = menuLink;
+	}
 	
 	 public Integer getClientId() {
 		return clientId;
@@ -835,6 +882,13 @@ public class LocalBusinessBean {
 	public void setClient(String client) {
 		this.client = client;
 	}
+	public String getYelpLink() {
+		return yelpLink;
+	}
+	public void setYelpLink(String yelpLink) {
+		this.yelpLink = yelpLink;
+	}
+	
 
 	
 	

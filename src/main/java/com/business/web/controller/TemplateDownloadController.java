@@ -43,6 +43,7 @@ public class TemplateDownloadController {
 	 * Path of the file to be downloaded, relative to application's directory
 	 */
 	private String googleFilePath = bundle.getString("mastertemplate.googlePath");
+	private String YpFilePath = bundle.getString("mastertemplate.ypPath");
 	//2533_598167450219661_2142348102_n.jpg
 	
 	/**
@@ -65,7 +66,10 @@ public class TemplateDownloadController {
 			 fullPath = appPath + bingFilePath;		
 		}else if(templateName.equals("Google")){
 			 fullPath = appPath + googleFilePath;		
-		}		
+		}else if(templateName.equals("YP")){
+			 fullPath = appPath + YpFilePath;		
+		}
+		
 		logger.info("Full path = "+fullPath);
 		File downloadFile = new File(fullPath);
 		FileInputStream inputStream = new FileInputStream(downloadFile);

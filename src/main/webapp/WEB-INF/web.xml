@@ -9,7 +9,7 @@
 
 	<context-param>
 		<param-name>contextConfigLocation</param-name>
-		<param-value>/WEB-INF/business-servlet.xml</param-value>
+		<param-value>/WEB-INF/business-servlet.xml,/WEB-INF/quartz-schedule.xml</param-value>
 	</context-param>
 
   

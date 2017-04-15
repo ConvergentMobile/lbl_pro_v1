@@ -57,7 +57,7 @@ public class ExcelErrorBuilder extends AbstractExcelView {
 	public void errorListCopyToExcel(HSSFWorkbook workbook,
 			List<LblErrorDTO> inCorrectData) {
 		// create a new Excel sheet
-		HSSFSheet sheet = workbook.createSheet("template");
+		HSSFSheet sheet = workbook.createSheet("errorInfo");
 		// create style for header cells
 		CellStyle style = workbook.createCellStyle();
 		Font font = workbook.createFont();
@@ -73,10 +73,10 @@ public class ExcelErrorBuilder extends AbstractExcelView {
 		header.getCell(3).setCellStyle(style);
 		header.createCell(4).setCellValue("Company Name");
 		header.getCell(4).setCellStyle(style);
-		header.createCell(5).setCellValue("Alternative Name ");
+		header.createCell(5).setCellValue("Alternative Name");
 		header.getCell(5).setCellStyle(style);
 		header.createCell(6).setCellValue("Anchor/Host Business");
-		header.createCell(7).setCellValue("Location address");
+		header.createCell(7).setCellValue("Location Address");
 		header.createCell(8).setCellValue("Suite");
 		header.getCell(8).setCellStyle(style);
 		header.createCell(9).setCellValue("Location City");
@@ -144,24 +144,31 @@ public class ExcelErrorBuilder extends AbstractExcelView {
 		header.createCell(66).setCellValue("Twitter Link");
 		header.createCell(67).setCellValue("LinkedIn Link");
 		header.createCell(68).setCellValue("Facebook Link");
-		header.createCell(69).setCellValue("Alternate Social Link");
+		header.createCell(69).setCellValue("Foursquare Link");
 		header.createCell(70).setCellValue("YouTube/Video Link");
 		header.createCell(71).setCellValue("Google Plus Link");
 		header.createCell(72).setCellValue("Myspace Link");
 		header.createCell(73).setCellValue("Pinterist Link");
-		header.createCell(74).setCellValue("Products");
-		header.createCell(75).setCellValue("Services");
-		header.createCell(76).setCellValue("Products/Services - combined");
-		header.createCell(77).setCellValue("Brands");
-		header.createCell(78).setCellValue("Keywords");
-		header.createCell(79).setCellValue("Languages");
-		header.createCell(80).setCellValue("Year Established");
-		header.createCell(81).setCellValue("Tagline");
-		header.createCell(82).setCellValue("Business Description");
-		header.getCell(82).setCellStyle(style);
-		header.createCell(83).setCellValue("ADDRESSPRIVACYFLAG");
-		header.createCell(84).setCellValue("errorMessage");
-		header.createCell(85).setCellValue("client");
+		header.createCell(74).setCellValue("Yelp Link");
+		header.createCell(75).setCellValue("Instagram Link");
+		header.createCell(76).setCellValue("Menu Link");
+
+		header.createCell(77).setCellValue("Products");
+		header.createCell(78).setCellValue("Services");
+		header.createCell(79).setCellValue("Products/Services - combined");
+		header.createCell(80).setCellValue("Brands");
+		header.createCell(81).setCellValue("Keywords");
+		header.createCell(82).setCellValue("Languages");
+		header.createCell(83).setCellValue("Year Established");
+		header.createCell(84).setCellValue("Tagline");
+		header.createCell(85).setCellValue("Business Description");
+		header.getCell(85).setCellStyle(style);
+		header.createCell(86).setCellValue("Business Description Short");
+		header.getCell(86).setCellStyle(style);
+		header.createCell(87).setCellValue("ADDRESSPRIVACYFLAG");
+		
+		header.createCell(88).setCellValue("errorMessage");
+		header.createCell(89).setCellValue("client");
 		
 		// create data rows
 		int rowCount = 1;
@@ -237,24 +244,29 @@ public class ExcelErrorBuilder extends AbstractExcelView {
 			aRow.createCell(66).setCellValue(obj.getTwitterLink());
 			aRow.createCell(67).setCellValue(obj.getLinkedInLink());
 			aRow.createCell(68).setCellValue(obj.getFacebookLink());
-			aRow.createCell(69).setCellValue(obj.getAlternateSocialLink());
+			aRow.createCell(69).setCellValue(obj.getFoursquareLink());
 			aRow.createCell(70).setCellValue(obj.getYouTubeOrVideoLink());
 			aRow.createCell(71).setCellValue(obj.getGooglePlusLink());
 			aRow.createCell(72).setCellValue(obj.getMyspaceLink());
 			aRow.createCell(73).setCellValue(obj.getPinteristLink());
-			aRow.createCell(74).setCellValue(obj.getProducts());
-			aRow.createCell(75).setCellValue(obj.getServices());
-			aRow.createCell(76).setCellValue(
+			aRow.createCell(74).setCellValue(obj.getYelpLink());
+			aRow.createCell(75).setCellValue(obj.getInstagramLink());
+			aRow.createCell(76).setCellValue(obj.getMenuLink());
+			aRow.createCell(77).setCellValue(obj.getProducts());
+			aRow.createCell(78).setCellValue(obj.getServices());
+			aRow.createCell(79).setCellValue(
 					obj.getProductsOrServices_combined());
-			aRow.createCell(77).setCellValue(obj.getBrands());
-			aRow.createCell(78).setCellValue(obj.getKeywords());
-			aRow.createCell(79).setCellValue(obj.getLanguages());
-			aRow.createCell(80).setCellValue(obj.getYearEstablished());
-			aRow.createCell(81).setCellValue(obj.getTagline());
-			aRow.createCell(82).setCellValue(obj.getBusinessDescription());
-			aRow.createCell(83).setCellValue(obj.getADDRESSPRIVACYFLAG());
-			aRow.createCell(84).setCellValue(obj.getErrorMessage());
-			aRow.createCell(85).setCellValue(obj.getClient());
+			aRow.createCell(80).setCellValue(obj.getBrands());
+			aRow.createCell(81).setCellValue(obj.getKeywords());
+			aRow.createCell(82).setCellValue(obj.getLanguages());
+			aRow.createCell(83).setCellValue(obj.getYearEstablished());
+			aRow.createCell(84).setCellValue(obj.getTagline());
+			aRow.createCell(85).setCellValue(obj.getBusinessDescription());
+			aRow.createCell(86).setCellValue(obj.getBusinessDescriptionShort());
+			aRow.createCell(87).setCellValue(obj.getADDRESSPRIVACYFLAG());
+			
+			aRow.createCell(88).setCellValue(obj.getErrorMessage());
+			aRow.createCell(89).setCellValue(obj.getClient());
 			
 		}
 		logger.info("Total ErrorList Rows in Excel Sheet ::" + rowCount);

@@ -11,7 +11,16 @@ import org.junit.Test;
 public class Test1 {
 	@BeforeClass
 	public static void beforeClassTest(){
-		System.out.println(" before class test case ");
+		
+		int count =6;
+		
+		int inAccuracy =  0%10*10;
+		
+		
+		
+		
+		
+		System.out.println(" before class test case " + inAccuracy);
 	}
 	@Before
 	public void start(){

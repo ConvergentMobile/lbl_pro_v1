@@ -108,9 +108,84 @@ public class LblErrorDTO implements Serializable {
 	private String errorMessage;
 	private String client;
 	private Integer clientId;
-	  
+	private String foursquareLink;
+	private String instagramLink;
+	private String menuLink;
+	private String yelpLink;
 	
-	 public Integer getClientId() {
+	private String businessDescriptionShort;
+	private String googleAccountId;
+	private String googleLocationId;
+	
+	private String searchType;
+	private String searchValue;
+	
+	
+
+	public String getSearchType() {
+		return searchType;
+	}
+
+	public void setSearchType(String searchType) {
+		this.searchType = searchType;
+	}
+
+	public String getSearchValue() {
+		return searchValue;
+	}
+
+	public void setSearchValue(String searchValue) {
+		this.searchValue = searchValue;
+	}
+
+	public String getGoogleAccountId() {
+		return googleAccountId;
+	}
+
+	public void setGoogleAccountId(String googleAccountId) {
+		this.googleAccountId = googleAccountId;
+	}
+
+	public String getGoogleLocationId() {
+		return googleLocationId;
+	}
+	
+	public void setGoogleLocationId(String googleLocationId) {
+		this.googleLocationId = googleLocationId;
+	}
+	
+	
+	 public String getBusinessDescriptionShort() {
+		return businessDescriptionShort;
+	}
+	public void setBusinessDescriptionShort(String businessDescriptionShort) {
+		this.businessDescriptionShort = businessDescriptionShort;
+	}
+	 public String getFoursquareLink() {
+		return foursquareLink;
+	}
+	public void setFoursquareLink(String foursquareLink) {
+		this.foursquareLink = foursquareLink;
+	}
+	public String getInstagramLink() {
+		return instagramLink;
+	}
+	public void setInstagramLink(String instagramLink) {
+		this.instagramLink = instagramLink;
+	}
+	public String getMenuLink() {
+		return menuLink;
+	}
+	public void setMenuLink(String menuLink) {
+		this.menuLink = menuLink;
+	}
+	public String getYelpLink() {
+		return yelpLink;
+	}
+	public void setYelpLink(String yelpLink) {
+		this.yelpLink = yelpLink;
+	}
+	public Integer getClientId() {
 		return clientId;
 	}
 	public void setClientId(Integer clientId) {
@@ -844,6 +919,70 @@ public class LblErrorDTO implements Serializable {
 	public void setDateRange(String dateRange) {
 		this.dateRange = dateRange;
 	}
+	@Override
+	public String toString() {
+		return "LblErrorDTO [id=" + id + ", store=" + store + ", actionCode="
+				+ actionCode + ", companyName=" + companyName
+				+ ", alternativeName=" + alternativeName
+				+ ", anchorOrHostBusiness=" + anchorOrHostBusiness
+				+ ", locationAddress=" + locationAddress + ", suite=" + suite
+				+ ", locationCity=" + locationCity + ", locationState="
+				+ locationState + ", locationZipCode=" + locationZipCode
+				+ ", locationPhone=" + locationPhone + ", fax=" + fax
+				+ ", tollFree=" + tollFree + ", tty=" + tty + ", mobileNumber="
+				+ mobileNumber + ", additionalNumber=" + additionalNumber
+				+ ", category1=" + category1 + ", category2=" + category2
+				+ ", category3=" + category3 + ", category4=" + category4
+				+ ", category5=" + category5 + ", primaryContactFirstName="
+				+ primaryContactFirstName + ", primaryContactLastName="
+				+ primaryContactLastName + ", contactTitle=" + contactTitle
+				+ ", contactEmail=" + contactEmail + ", locationEmployeeSize="
+				+ locationEmployeeSize + ", title_ManagerOrOwner="
+				+ title_ManagerOrOwner + ", professionalTitle="
+				+ professionalTitle + ", professionalAssociations="
+				+ professionalAssociations + ", shortWebAddress="
+				+ shortWebAddress + ", webAddress=" + webAddress + ", aMEX="
+				+ aMEX + ", discover=" + discover + ", visa=" + visa
+				+ ", masterCard=" + masterCard + ", dinersClub=" + dinersClub
+				+ ", debitCard=" + debitCard + ", storeCard=" + storeCard
+				+ ", otherCard=" + otherCard + ", cash=" + cash + ", check="
+				+ check + ", travelersCheck=" + travelersCheck + ", financing="
+				+ financing + ", googleCheckout=" + googleCheckout
+				+ ", invoice=" + invoice + ", payPal=" + payPal
+				+ ", couponLink=" + couponLink + ", twitterLink=" + twitterLink
+				+ ", linkedInLink=" + linkedInLink + ", facebookLink="
+				+ facebookLink + ", alternateSocialLink=" + alternateSocialLink
+				+ ", youTubeOrVideoLink=" + youTubeOrVideoLink
+				+ ", googlePlusLink=" + googlePlusLink + ", myspaceLink="
+				+ myspaceLink + ", logoLink=" + logoLink + ", pinteristLink="
+				+ pinteristLink + ", products=" + products + ", services="
+				+ services + ", productsOrServices_combined="
+				+ productsOrServices_combined + ", brands=" + brands
+				+ ", keywords=" + keywords + ", languages=" + languages
+				+ ", yearEstablished=" + yearEstablished + ", tagline="
+				+ tagline + ", businessDescription=" + businessDescription
+				+ ", uploadedTime=" + uploadedTime + ", locationClosed="
+				+ locationClosed + ", multiUpdateString=" + multiUpdateString
+				+ ", dateRange=" + dateRange + ", uploadJobId=" + uploadJobId
+				+ ", countryCode=" + countryCode + ", locationEmail="
+				+ locationEmail + ", serviceArea=" + serviceArea
+				+ ", mondayOpen=" + mondayOpen + ", mondayClose=" + mondayClose
+				+ ", tuesdayOpen=" + tuesdayOpen + ", tuesdayClose="
+				+ tuesdayClose + ", wednesdayOpen=" + wednesdayOpen
+				+ ", wednesdayClose=" + wednesdayClose + ", thursdayOpen="
+				+ thursdayOpen + ", thursdayClose=" + thursdayClose
+				+ ", fridayOpen=" + fridayOpen + ", fridayClose=" + fridayClose
+				+ ", saturdayOpen=" + saturdayOpen + ", saturdayClose="
+				+ saturdayClose + ", sundayOpen=" + sundayOpen
+				+ ", sundayClose=" + sundayClose + ", ADDRESSPRIVACYFLAG="
+				+ ADDRESSPRIVACYFLAG + ", errorMessage=" + errorMessage
+				+ ", client=" + client + ", clientId=" + clientId
+				+ ", foursquareLink=" + foursquareLink + ", instagramLink="
+				+ instagramLink + ", menuLink=" + menuLink + ", yelpLink="
+				+ yelpLink + ", businessDescriptionShort="
+				+ businessDescriptionShort + "]";
+	}
+	
 	
 	
 

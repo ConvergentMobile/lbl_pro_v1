@@ -17,7 +17,17 @@ public class ReportForm implements Serializable {
 	protected List<String> reportColumnHeaders;
 	protected String sortColumn;
 	protected String sortOrder;
+	private String brandName;
 	
+	
+	public String getBrandName() {
+		return brandName;
+	}
+
+	public void setBrandName(String brandName) {
+		this.brandName = brandName;
+	}
+
 	public Integer getReportId() {
 		return reportId;
 	}

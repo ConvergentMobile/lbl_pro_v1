@@ -5,6 +5,9 @@
 <head>
 	<meta charset="utf-8">
 	<meta content="width=device-width,initial-scale=1.0" name="viewport">
+	<meta http-equiv="Pragma" content="no-cache"> 
+ <meta http-equiv="Cache-Control"      content="no-cache"> 
+<meta http-equiv="Expires" content="Sat, 01 Dec 2012 00:00:00 GMT">
 	<title>Local Business Listings</title>
 	
   <link rel="stylesheet" type="text/css" href="css/reset.css">
@@ -13,7 +16,7 @@
 
 	<script src="js/jquery-1.9.1.min.js"></script>
 	<style type="text/css">
-	
+
 	.error{
 color:red;
 font-size: 25px;

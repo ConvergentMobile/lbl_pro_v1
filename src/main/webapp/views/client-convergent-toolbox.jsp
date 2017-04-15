@@ -15,6 +15,8 @@
 <link rel="stylesheet" href="css/grids.css">
 <link rel="stylesheet" href="css/sidebar.css">
 <link rel="stylesheet" href="css/bpopUp.css">
+<link rel="stylesheet" href="js/jquery.mCustomScrollbar.css">
+<script src="js/jquery.mCustomScrollbar.js"></script>
 </head>
 <body style="background-color: white;">
 	<div class="">

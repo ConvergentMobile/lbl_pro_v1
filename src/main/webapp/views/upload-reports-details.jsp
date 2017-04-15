@@ -1,3 +1,4 @@
+<%@page import="com.business.common.util.LBLConstants"%>
 <%@ taglib uri="http://www.springframework.org/tags/form" prefix="spring"%>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="tag"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="core"%>
@@ -15,7 +16,8 @@
 <link rel="stylesheet" href="css/common.css">
 <link rel="stylesheet" href="css/grids.css">
 <link rel="stylesheet" href="css/sidebar.css">
-
+<link rel="stylesheet" href="js/jquery.mCustomScrollbar.css">
+<script src="js/jquery.mCustomScrollbar.js"></script>
 <link rel="stylesheet" href="css/jquery-ui.css">
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js"></script>
@@ -103,8 +105,17 @@
 			<li class="si_business_listings "><a href="business-listings.htm">Business Listings</a></li>
 			<li class="si_upload_export"><a href="upload-export.htm">Upload/Export</a></li>
 			<li class="si_reports selected"><a href="reports.htm">Reports</a></li>
-			<li class="si_mobile_profile "><a href="manage-account.htm">Manage Account</a></li>
-			<li class="si_toolbox"><a href="toolbox-corporate.html">Convergent Toolbox</a></li>
+				<%
+						Integer Role=(Integer)session.getAttribute("roleId");				
+							if(Role==LBLConstants.CONVERGENT_MOBILE_ADMIN){						
+						%>
+			<li class="si_admin"><a href="admin-listings.htm">CM admin</a></li>
+				<li class="si_mobile_profile "><a href="manage-account.htm">Manage Account</a></li>
+			<%} %>
+<!-- 			<li class="si_schduler"><a href="scheduler.htm">Schedule</a></li> -->
+		
+				
+			<!--<li class="si_toolbox"><a href="getConvergentToolbox.htm">Convergent Toolbox</a></li>-->
 		</ul>
 		<!-- // left side navigation --> 
 		<!-- content area -->

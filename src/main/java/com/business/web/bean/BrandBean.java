@@ -24,7 +24,17 @@ public class BrandBean {
 	private Date activeDate;
 	private String partnerActive;
 	private Integer clientId;
+private String inactive;
 	
+	
+	public String getInactive() {
+		return inactive;
+	}
+
+	public void setInactive(String inactive) {
+		this.inactive = inactive;
+	}
+
 	 public Integer getClientId() {
 		return clientId;
 	}

@@ -1,7 +1,10 @@
- <%@ taglib uri="http://www.springframework.org/tags/form" 	prefix="spring"%>
+ <%@page import="com.business.common.util.LBLConstants"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" 	prefix="spring"%>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="tag"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="core"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
 <%@ taglib prefix="fn"  uri="http://java.sun.com/jsp/jstl/functions" %>
+
 <html>
 <head>
 
@@ -24,13 +27,67 @@
 <script src="js/jquery.bpopup.min.js"></script>
 <script src="js/jquery.jsort.0.4.min.js"></script>
 <script src="js/jquery.session.js"></script>
-
-
-<script type="text/javascript">
-function search() {
-	$("#searchAndFilterForm").attr('action',
-			'dashsearch.htm');
+<link rel="stylesheet" href="js/jquery.mCustomScrollbar.css">
+<script src="js/jquery.mCustomScrollbar.js"></script>
+<script type="text/javascript" src="js/jquery-1.8.0.min.js"></script>
+<script type="text/javascript" src="js/jquery.form.js"></script>
+<style type="text/css">
+.sb_buttons_center-2 {
+    padding: 42px 0 20px;
+    text-align: center;
+        margin: 0px 0px 113px;
 }
+.grid_09 td > div{
+	padding: 4px 6px;
+	font-family: verdana;
+	}
+
+</style>
+<style type="text/css">
+.sidebar {
+    width: 38%;
+    overflow: hidden;
+    padding-top: 0px;
+    padding-bottom: 21px;
+    float: right;
+    position: relative;
+    z-index: 1000;
+    _border-top: #444b4d 2px solid;
+    background: #8c9fac url(../images/sb_bg.png) 0 0 repeat-y;
+}
+
+</style>
+<script type="text/javascript">
+
+
+ 
+$(document).ready(function(){
+	
+	 $('.commonclass').keypress(function(e) {
+		 var keyCode = (e.keyCode ? event.keyCode:event.which);
+			 if(event.keyCode==13){
+				 var form = document.getElementById('searchAndFilterForm');
+					form.action = "dashsearch.htm";
+					form.submit();
+					event.returnValue= false;
+			 }			 
+    });	
+	
+	 
+});
+
+
+function sortByCount(flag){
+	 document.location.href = "getCountSort.htm?flag="+flag;
+}
+
+function search() {
+	
+	$("#searchAndFilterForm").attr('action',
+	'dashsearch.htm'); 
+    
+  }
+
 
 function searchUser() {
 	 $("#searchAndFilterForm").attr('action',
@@ -52,7 +109,7 @@ function searchListingActivityByDate() {
      form.action = "searchListingActivity.htm";
      form.submit();
 	}
-	
+
 function  myfunction() {
 	var form ="";
 	var count = 0;
@@ -76,6 +133,13 @@ function  myfunction() {
 		return false;
 	}
 }
+function sendSubmitResult(){
+
+	 var form = document.getElementById('loginform');
+	
+	     form.action = "saveChannelUser.htm";
+	    form.submit();
+	}
 
 function showUplaodPopup(){
 	
@@ -93,7 +157,7 @@ function load_File(id,ext){
 }
 function validateExtension(v)
 {
- var allowedExtensions = new Array("xls","xlsx");
+ var allowedExtensions = new Array("xls","xlsx","csv");
  for(var ct=0;ct<allowedExtensions.length;ct++)
  {
   sample = v.lastIndexOf(allowedExtensions[ct]);
@@ -101,13 +165,62 @@ function validateExtension(v)
   }
  return false;
  }
- 
+ function sortByLocationCount(flag){
+	 document.location.href = "sortByLCount.htm?flag="+flag;
+ }
+ function disableReadOnly() {
+		$("table > tbody > tr > td > div.user > input").attr("readonly",false);
+	}
+
  $(document).ready(function(){
+	 
+	/*  $("#uploadSubmission").click(function(){
+			///alert("coing");
+			
+		}); */
+		 $("#cancel").hide(); 		
+		 $("#saveConfirmationId").hide(); 
+		    
+		    $("div > a#edit").click(function() {
+		    	disableReadOnly();    	 
+		    	 $("#cancel").show(); 		
+		 		$("#saveConfirmationId").show(); 
+		 		$("#edit").hide(); 		
+		 	});
+		 
+		    $('#saveConfirmationId').click(function(event){
+		        
+	            data = $('.password').val();
+	            var len = data.length;
+	            
+	            if(len < 1) {
+	            	 $("#PasswordPopUp").bPopup();
+	    			 $("ul li").removeClass("selected");
+	                //alert("Password cannot be blank");
+	                // Prevent form submission
+	                event.preventDefault();
+	            }else if($('.password').val() != $('.confpass').val()) {            	
+	            	 $("#ConfirmPasswordPopUp").bPopup();
+	    			 $("ul li").removeClass("selected");
+	               // alert("Enter Confirm Password Same as Password");
+	                // Prevent form submission
+	                event.preventDefault();
+	            }else{
+	              $('#displaySaveConfirmationpopup').bPopup();
+	              $("ul li").removeClass("selected");
+	              event.preventDefault();
+	            } 
+	        });
+	
 	 $.session.set("currentPage",1);
 	 $.session.set("isNewUser",true);
 	 $.session.set("isUploadReport",false);
 	
-	
+/* 	 $("thead#brandsTableHeaders tr th.th_02#totallocations").click(function(){
+		 alert("coming");
+		 var falgvalue="DESC";
+		 document.location.href = "getAllBusinessListingsSortBytotallocations.htm?flag="+falgvalue;
+	 }); */
 	 var isAsc = true;
 	$("thead#brandsTableHeaders tr th.th_02").click(function(){
 		
@@ -139,6 +252,9 @@ function validateExtension(v)
 		}
 		 
 	});
+
+
+	
 	 
 	var message =$("#uploadResultStatus").val();
 	if(message != null){
@@ -163,9 +279,12 @@ function validateExtension(v)
 		   $("#errorMessage").text("");
 		   var fileName =$("#UploadFileName").val();
 		   if(fileName.length == 0){
-		    $("#errorMessage").text("Please select any one file");
+		    $("#errorMessage").text("Please select a file to upload");
 		    return false;
 		   }else{
+			   $('#statusPopup').bPopup();
+			   
+			   $('#showuploadpopup').hide();
 		    return true;
 		   }
 		   
@@ -203,7 +322,49 @@ function validateExtension(v)
 	
 	});
 </script>
+<!-- <script>
+	$(document).ready(function() {
+		
+		//elements
+		var progressbox = $('#progressbox');
+		var progressbar = $('#progressbar');
+		var statustxt = $('#statustxt');
+		var submitbutton = $("#uploadSubmission");
+		var myform = $("#UploadForm");
+		var output = $("#output");
+		var completed = '0%';
 
+		$(myform).ajaxForm({
+			beforeSend : function() { //brfore sending form
+				submitbutton.attr('disabled', ''); // disable upload button
+				statustxt.empty();
+				progressbox.slideDown(); //show progressbar
+				progressbar.width(completed); //initial value 0% of progressbar
+				statustxt.html(completed); //set status text
+				statustxt.css('color', '#000'); //initial color of status text
+			},
+			uploadProgress : function(event, position, total, percentComplete) { //on progress
+				progressbar.width(percentComplete + '%'); //update progressbar percent complete
+				statustxt.html(percentComplete + '%'); //update status text
+				if (percentComplete > 50) {
+					statustxt.css('color', '#fff'); //change status text to white after 50%
+				}
+			},
+			complete : function(response) { // on complete
+				output.html(response.responseText); //update element with received data
+				myform.resetForm(); // reset form
+				submitbutton.removeAttr('disabled'); //enable submit button
+				progressbox.slideUp(); // hide progressbar
+
+			}
+			
+		});
+
+		$("#showuploadpopup").hide();
+	
+		
+	});
+</script> -->
 
 </head>
 
@@ -221,8 +382,58 @@ function validateExtension(v)
 		</div>
 	</div>
 </div>
-
-
+<div class="popup" id="PasswordPopUp" style="display: none;">
+	<div class="pp-header">
+		<!-- <div class="close"></div> -->
+		 <span class="buttonIndicator b-close"><span>X</span></span>
+		<span>Warning!!</span>
+	</div>
+	<div class="pp-subheader"></div>
+	<div class="pp-body">
+		<div class="buttons">
+		Password cannot be blank.
+				
+		</div>
+	</div>
+</div>
+<div class="popup" id="ConfirmPasswordPopUp" style="display: none;">
+	<div class="pp-header">
+		<!-- <div class="close"></div> -->
+		 <span class="buttonIndicator b-close"><span>X</span></span>
+		<span>Warning!!</span>
+	</div>
+	<div class="pp-subheader"></div>
+	<div class="pp-body">
+		<div class="buttons">
+		Enter Confirm Password Same as Password.
+				
+		</div>
+	</div>
+</div>
+<div class="popup" id="displaySaveConfirmationpopup" style="display: none;">
+	<div class="pp-header">
+		<!-- <div class="close"></div> -->
+		<span class="buttonIndicator b-close"><span>X</span></span>
+		<span>Save Changes</span>
+	</div>
+	<div class="pp-subheader">Do you want to save the changes you have<br>entered for this location?</div>
+	<div class="pp-body">
+		<div class="buttons">
+			 <button onclick="sendSubmitResult()" class="btn_dark_blue_2">Ok</button>
+			 <button class="btn_dark_blue_2 b-close">Continue Edit</button>
+		</div>
+	</div>
+</div>
+<div class="popup" id="statusPopup" style="display: none;">
+	<div class="pp-header">
+		<!-- <div class="close"></div> -->
+		<span class="buttonIndicator b-close"><span>X</span></span> <span>Message</span>
+	</div>
+	<div class="pp-subheader"></div>
+	<div class="pp-body">
+		<div class="buttons"><span style="color: green">Uploading is in progress. This process may take several minutes. Please wait for upload to complete...</span></div>
+	</div>
+</div>
 
 <core:if test="${showDistrpopup ne null }">
 <input type="hidden" value="${showDistrpopup}" id="displayDistrpopup">
@@ -279,7 +490,9 @@ function validateExtension(v)
         <core:set var="brandArr" value="${fn:split(brandStr,'_')}"/>
         <label> <img src="images/logo1_${brandArr[0]}.png" alt=""><%-- <core:out value="${num}" /> --%>
         <core:if test="${brandArr[1] != 'null'}">
-  <p><core:out value="${brandArr[1]}"/></p></core:if></label>
+        <fmt:parseDate value="${brandArr[1]}" var="parsedDate" pattern="yyyy-MM-dd"></fmt:parseDate>
+        <fmt:formatDate value="${parsedDate}" pattern="MM/dd/yyyy" var="dateFormat"/>
+  <p><core:out value="${dateFormat}"/></p></core:if></label>
      </core:if> 
   </core:forEach>
  
@@ -297,9 +510,18 @@ function validateExtension(v)
 		<span class="buttonIndicator b-close"><span>X</span></span>
 		Upload File
 	</div>
+	
 	<div class="pp-subheader">Make sure you are using our <a href="download.htm">bulk upload template</a> for your data</div>
+	<div id="progressbox">
+								
+									<div id="progressbar"></div>
+									<div id="statustxt">0%</div>
+									
+								</div>
+
+						<div id="output" style="display: none"></div>
 	<div class="pp-body">
-	<spring:form action="uploadBusiness.htm?page=dashboard" commandName="uploadBusiness"
+	<spring:form action="uploadBusiness.htm?page=dashboard" commandName="uploadBusiness" id="UploadForm"
 			enctype="multipart/form-data">
 		
 
@@ -358,8 +580,8 @@ function validateExtension(v)
 				<li><span>${listingsCompleted }</span> Listings Completed</li>
 				<li class="red"><span>${listingsWithErrors }</span> Listings with Errors</li>
 			</ul>
-			<a href="view-listings.htm" class="btn_dark_blue_2">View Listings</a>
-			<a href="view-errors.htm" style=" margin-left: 251px;margin-top: -46px;" class="btn_dark_blue_2">View Errors</a>
+			<a href="view-listings.htm" class="btn_dark_blue_2" style=" margin: 0px 0px 61px;">View Listings</a>
+			<a href="view-errors.htm"  class="btn_dark_blue_2" style=" margin-left: 251px;margin-top: -46px;">View Errors</a>
 		</div>
 		</core:if>
 	</div>
@@ -391,12 +613,22 @@ function validateExtension(v)
 			<li class="si_error_listings"><a href="listing-error.htm">Listing Errors</a></li>
 			<li class="si_upload_export"><a href="upload-export.htm">Upload/Export</a></li>
 			<li class="si_reports"><a href="reports.htm">Reports</a></li>
+			<%
+						Integer Role=(Integer)session.getAttribute("roleId");				
+							if(Role==LBLConstants.CONVERGENT_MOBILE_ADMIN){						
+						%>
+			<li class="si_admin"><a href="admin-listings.htm">CM admin</a></li>
 			<li class="si_mobile_profile "><a href="manage-account.htm">Manage Account</a></li>
-			<li class="si_toolbox"><a href="getConvergentToolbox.htm">Convergent Toolbox</a></li>
+			<%} %>
+			<!-- <li class="si_schduler"><a href="scheduler.htm">Schedule</a></li> -->
+			
+				
+			<!--<li class="si_toolbox"><a href="getConvergentToolbox.htm">Convergent Toolbox</a></li>--> 
+		
 		</ul>
 		<!-- // left side navigation --> 
 		<!-- content area -->
-		<spring:form method="post" commandName="searchBusiness"
+		<spring:form method="post" commandName="searchBusiness" 
 			id="searchAndFilterForm">
 		<div class="content" id="id_content">
 			<div class="nav_pointer pos_01"></div>
@@ -414,9 +646,10 @@ function validateExtension(v)
 						<h2>Brands Overview</h2>
 						<div class="box_title_right"> <span>Total: ${brandSize } brands</span> 
 						<%
-						Boolean isViewOnly = (Boolean) session.getAttribute("isViewOnly");
-						if(!isViewOnly) { %>
-							<a href="#" onclick="showUplaodPopup();" class="btr_button">Upload</a>
+										
+							if(Role==LBLConstants.CONVERGENT_MOBILE_ADMIN){						
+						%>
+							<!-- <a href="#" onclick="showUplaodPopup();" class="btr_button">Upload</a> -->
 						<% }
 			
 						%>
@@ -427,15 +660,15 @@ function validateExtension(v)
 					<table width="100%" class="grid grid_07">
 						<colgroup>
 						<col width="8%"  />
-						<col width="40%" />
-						<col width="40%" />
-						<col width="12%" />
+						<col width="50%" />
+						<col width="29%" />
+						<col width="13%" />
 						</colgroup>
 						<thead id="brandsTableHeaders">
 							<tr>
 								<th class="th_01"><div>Distr.</div></th>
 								<th class="th_02" id="th_02"><div>Brand Name</div></th>
-								<th class="th_02" id="th_03"><div>Total Locations</div></th>
+								<th class="th_02" id="totallocations" onclick="sortByLocationCount('${flagvalue}')"><div>Total Locations</div></th>
 								<th class="th_04"><div>Edit</div></th>
 							</tr>
 						</thead>
@@ -445,9 +678,9 @@ function validateExtension(v)
 						<table id="brandsTable" width="100%" class="grid grid_07">					
 							<colgroup>
 							<col width="8%"  />
-							<col width="40%" />
-							<col width="40%" />
-							<col width="12%" />
+							<col width="50%" />
+							<col width="29%" />
+							<col width="13%" />
 							</colgroup>
 							<tbody id="brandsInfo">		
 								<core:forEach items="${brandsInfo}" var="brands" varStatus="i">					
@@ -492,17 +725,17 @@ function validateExtension(v)
      </div>
      <table width="100%" class="grid grid_07 grid_07_1">
       <colgroup>
-      <col width="20%" />
-      <col width="25%" />
+      <col width="16%" />
       <col width="35%" />
-      <col width="20%" />
+      <col width="35%" />
+      <col width="14%" />
       </colgroup>
       <thead id="activityTableHeaders">
        <tr>
         <th class="th_02" id="th_02"><div>Date</div></th>
         <th class="th_02" id="th_03"><div>Brand Name</div></th>
         <th class="th_02" id="th_04"><div>Activity Description</div></th>
-        <th class="th_02" id="th_05"><div>Count</div></th>
+        <th class="th_02" id="th_05" onclick="sortByCount('${flagvalue}')"><div>Count</div></th>
        </tr>
       </thead>
      </table>
@@ -510,16 +743,17 @@ function validateExtension(v)
      
       <table id="displayActivity" width="100%" class="grid grid_07 grid_07_1">
        <colgroup>
-       <col width="20%"  />
-       <col width="25%" />
+       <col width="16%" />
        <col width="35%" />
-       <col width="20%" />
+       <col width="35%" />
+       <col width="14%" />
        </colgroup>
        <tbody id="activityInfo">
       
          <core:forEach items="${listingActivityInfo}" var="activity" varStatus="i">
         <tr class="odd">
-         <td class="td_02"><div><core:out value="${activity.date}"></core:out></div></td>
+        <fmt:formatDate value="${activity.date}" pattern="MM/dd/yyyy" var="frmatDate"/>
+         <td class="td_02"><div><core:out value="${frmatDate}"></core:out></div></td>
          <td class="td_03"><div><core:out value="${activity.brandName}"></core:out></div></td>
          <td class="td_04"><div><core:out value="${activity.activityDescription}"></core:out></div></td>
          <td class="td_05"><div><core:out value="${activity.count}"></core:out></div></td>
@@ -537,7 +771,7 @@ function validateExtension(v)
 		</div>
 		<!-- // content area --> 
 		<!-- sidebar -->
-		<div class="sidebar" id="id_sidebar">
+		<div class="sidebar" id="id_sidebar" >
 			<div class="inner"> 
 				<div class="sb_box_wrapper">
 					<!-- title -->
@@ -558,7 +792,7 @@ function validateExtension(v)
 											<label for="brand_name">Brand Name</label>
 										</div></td>
 									<td class="td_02"><div>
-									<spring:input path="client" />
+									<spring:input path="client" id="client" class="commonclass"  />
 											
 										</div></td>
 								</tr>
@@ -567,17 +801,17 @@ function validateExtension(v)
 											<label for="business_name">Business Name</label>
 										</div></td>
 									<td class="td_02"><div>
-									<spring:input path="companyName"  />
+									<spring:input path="companyName"  id="companyname" class="commonclass"   />
 											
 										</div></td>
 								</tr>
 								<tr>
 									<td class="td_01"><div>
-											<label for="store_number">Store Number</label>
+											<label for="store_number" >Store Number</label>
 										</div></td>
 									<td class="td_02"><div>
 									
-									<spring:input path="store"  />
+									<spring:input path="store"  id="store" class="commonclass" />
 											
 										</div></td>
 								</tr>
@@ -586,27 +820,29 @@ function validateExtension(v)
 											<label for="phone_number">Phone Number</label>
 										</div></td>
 									<td class="td_02"><div>
-									<spring:input path="locationPhone"  />
+									<spring:input path="locationPhone"  id="locationphone" class="commonclass"  />
 										
 										</div></td>
 								</tr>
 								<tr>
 									<td class="td_01"><div></div></td>
 									<td class="td_02"><div>
-									<input type="submit"
-									value="Search" onclick="search()" class="btn_dark_blue_2"/>
+									<input type="submit" value="Search" onclick="search()" id="searchButton" class="btn_dark_blue_2"/>
+									
+
 										<!-- 	<a href="#" >Search</a> -->
-											<a href="business-listings.htm" class="lnk_advs">Advanced<br> Search</a>
-										</div></td>
+<!-- 											<a href="business-listings.htm" class="lnk_advs">Advanced<br> Search</a>
+										</div> --></td>
 								</tr>
 							</tbody>
 						</table>
 					</div>
 					<!-- // sidebar box --> 
 				</div>
+				<%if(Role==LBLConstants.CONVERGENT_MOBILE_ADMIN){ %>
 				<div class="sb_box_wrapper">
 					<!-- title -->
-					<div class="sb_title sb_title_ico ico_sb_user">
+					<div class="sb_title sb_title_ico ico_sb_user" style="margin-bottom: 2px">
 						<h2 class="">User Accounts</h2>
 					</div>
 					<!-- // title --> 
@@ -674,9 +910,73 @@ function validateExtension(v)
 						</div>
 					</div>
 					<!-- // sidebar box --> 
+					
 				</div>
 			</div>
+			
+			<%} %>
 			</spring:form>
+			
+			<%if(Role==LBLConstants.CHANNEL_ADMIN || Role==LBLConstants.PURIST ){ %>
+			
+						<div class="sb_box_wrapper">
+							<!-- title -->
+							<div class="sb_title sb_title_ico ico_sb_user">
+								<h2 class="">User Profile</h2>
+							</div>
+							<!-- // title --> 
+							<!-- sidebar box -->
+							<div class="sb_box">
+							<div class="sb_box " style="padding: 5px 0 0;">
+								<spring:form  id="loginform"  action="adminUser.htm" commandName="adminUser" >
+								<table width="100%" class="grid grid_14 mb5" style="margin: 5px 19px;">
+									<colgroup>
+										<col width="45%"  />
+										<col width="55%" />
+									</colgroup>
+									<tbody>
+										<tr>
+											<td><div>Name, Last Name</div></td>
+											<td><div class="user"><spring:input readonly="true"  path="fullName" id="searchField" /> </div></td>
+										</tr>
+										<tr>
+											<td><div>User Name</div></td>
+											<td><div ><spring:input path="userName" readonly="true"  /></div></td>
+										</tr>
+										<tr>
+											<td><div>Password</div></td>
+											<td><div class="user"><spring:password path="passWord" readonly="true"  id="passcss" class="password" showPassword="true" style="height: 30px;"/></div></td>
+										</tr>
+										<tr>
+											<td><div>Confirm Password</div></td>
+											<td><div class="user"><spring:password path="confirmPassWord" readonly="true"  id="passcss" class="confpass"  showPassword="true" style="height: 30px;"/></div></td>
+										</tr>
+										<tr>
+											<td><div>Phone</div></td>
+											<td><div class="user"><spring:input   path="phone" readonly="true"  /></div></td>
+										</tr>
+										<tr>
+											<td><div>Email</div></td>
+											<td><div class="user"> <spring:input  path="email"  readonly="true" /></div></td>
+										</tr>
+									</tbody>
+									<spring:hidden path="userID" />
+									<spring:hidden path="brandID"/>
+								</table>
+								
+								<div class="sb_buttons_center-2" >
+									<a href="#" id="edit" class="btn_dark_blue_2">Edit</a>
+									<a id="cancel" href="#" class="btn_dark_blue_2">Cancel</a>
+									<a href="#"  id="saveConfirmationId" class="btn_dark_blue_2">Save</a>
+								</div>
+								</spring:form>
+							</div>
+							</div>
+							<!-- // sidebar box --> 
+						</div>
+					
+					<%} %>
+			
 		</div>
 		<!-- // sidebar -->
 		<div class="floatfix"></div>

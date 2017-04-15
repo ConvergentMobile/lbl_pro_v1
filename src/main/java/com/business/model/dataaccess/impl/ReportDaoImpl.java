@@ -1,10 +1,14 @@
 package com.business.model.dataaccess.impl;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -12,8 +16,10 @@ import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.hibernate.classic.Session;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.transform.Transformers;
+import org.hibernate.type.DateType;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.StringType;
 import org.springframework.beans.BeanUtils;
@@ -21,14 +27,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.business.common.dto.ChangeTrackingDTO;
+import com.business.common.dto.ExportReportDTO;
 import com.business.common.dto.LocalBusinessDTO;
 import com.business.common.util.DateUtil;
 import com.business.common.util.LBLConstants;
 import com.business.model.dataaccess.ReportDao;
 import com.business.model.pojo.BrandEntity;
+import com.business.model.pojo.ExportReportEntity;
 import com.business.model.pojo.LocalBusinessEntity;
 import com.business.model.pojo.ReportEntity;
 import com.business.model.pojo.ReportParams;
+import com.business.model.pojo.SearchDomains;
 import com.business.model.pojo.User_brands;
 import com.business.model.pojo.UsersEntity;
 import com.business.model.pojo.ValueObject;
@@ -53,15 +63,14 @@ public class ReportDaoImpl implements ReportDao {
 
 	@Transactional
 	public Set<ReportEntity> getReports() {
-		logger.info("Start: getReports");
 		Session session = sessionFactory.getCurrentSession();
 		Query q = session
-				.createQuery("from ReportEntity r left join fetch r.params");
+				.createQuery("from ReportEntity r left join fetch r.params Order By r.name");
 		List<ReportEntity> reports = q.list();
 
 		if (reports.isEmpty())
 			return null;
-		Set<ReportEntity> reportSet = new HashSet<ReportEntity>();
+		Set<ReportEntity> reportSet = new LinkedHashSet<ReportEntity>();
 		for (ReportEntity reportEntity : reports) {
 			List<ReportParams> params = reportEntity.getParams();
 			List<ReportParams> paramsList = new ArrayList<ReportParams>();
@@ -75,7 +84,6 @@ public class ReportDaoImpl implements ReportDao {
 			reportSet.add(reportEntity);
 		}
 		// Set reportSet = new HashSet<ReportEntity>(reports);
-		logger.info("End: getReports");
 		return reportSet;
 	}
 
@@ -106,44 +114,40 @@ public class ReportDaoImpl implements ReportDao {
 			int offset, int numRecords, String sortField, String sortOrder,
 			String userName, int roleId, Date fromDate, Date toDate)
 			throws Exception {
-		logger.info("Start: renewalReport");
+
+		Session session = sessionFactory.getCurrentSession();
+
+		Integer userId = getUserFromUserId(userName);
+
 		String sqlStr = "select b.brandname as field1, b.locationsinvoiced as field2, date_format(b.startdate, '%m/%d/%Y') as field3,"
-				+ " b.submisions as field4 from brands b";
+				+ " b.submisions as field4 from brands b ";
 		boolean isSuperAdmin = true;
-		boolean isClient=false;
 		if (!(roleId == LBLConstants.CONVERGENT_MOBILE_ADMIN)) {
 			isSuperAdmin = false;
-			//if (roleId == LBLConstants.CHANNEL_ADMIN) {
-				//sqlStr += " where b.channelId= (select u.channelId from user_brands u where u.username=?)";
-			//}else {
-
-				//sqlStr += " where b.brandId= (select u.brandId from users u where u.username=?)";
-				isClient=true;
+			if (roleId == LBLConstants.CHANNEL_ADMIN || roleId==LBLConstants.PURIST) {
+				sqlStr += " where b.channelId= (select u.channelId from user_brands u where u.userid=?)";
+			} else {
 				List<String> allBrandNames = getAllBrandNames(false, userName);
-				String brands="";
-				if(allBrandNames!=null&&allBrandNames.size()>0){
+				String brands = "";
+				if (allBrandNames != null && allBrandNames.size() > 0) {
 					for (int i = 0; i < allBrandNames.size(); i++) {
-						if(brands.length()!=0){
-							brands = brands +",'"+allBrandNames.get(i) +"'";
+						if (brands.length() != 0) {
+							brands = brands + ",'" + allBrandNames.get(i) + "'";
+						} else {
+							brands = "'" + allBrandNames.get(i) + "'";
 						}
-						else {
-							brands = "'"+allBrandNames.get(i) +"'";
-						}
-					}		
+					}
 				}
-				if(allBrandNames.size()==1){
-					sqlStr += " where b.brandId = "+brands+"";
-				}else {
-					sqlStr += " where b.brandId in ("+brands+")";
+				if (allBrandNames.size() == 1) {
+					sqlStr += " where b.brandId = " + brands + "";
+				} else {
+					sqlStr += " where b.brandId in (" + brands + ")";
 				}
-				
+
 			}
-		//}
-		
-		logger.info("Sql in renewalReport" + sqlStr);
+		}
 		StringBuffer sql = new StringBuffer(sqlStr);
-		
-		Session session = sessionFactory.getCurrentSession();
+
 		String brand = "";
 		if (params != null) {
 			for (ReportParams param : params) {
@@ -160,6 +164,7 @@ public class ReportDaoImpl implements ReportDao {
 			} else {
 				sql.append(" AND b.startdate BETWEEN ? AND ?");
 			}
+		sql.append(" order By b.startdate DESC");
 
 		sql.append(" limit ").append(offset).append(", ").append(numRecords);
 		Query q = session
@@ -172,11 +177,11 @@ public class ReportDaoImpl implements ReportDao {
 						Transformers.aliasToBean(ValueObject.class));
 		int brandIndex = 0;
 		int dateIndex = 0;
-		/*if (!(roleId == LBLConstants.CONVERGENT_MOBILE_ADMIN)&&!isClient) {
-			q.setString(0, userName);
+		if (roleId == LBLConstants.CHANNEL_ADMIN || roleId==LBLConstants.PURIST) {
+			q.setInteger(0, userId);
 			++brandIndex;
 			++dateIndex;
-		}*/
+		}
 		if (brand != "") {
 			q.setString(brandIndex, brand);
 			++dateIndex;
@@ -212,7 +217,6 @@ public class ReportDaoImpl implements ReportDao {
 			valueObject.setField3(date);
 			rdList.add(valueObject);
 		}
-		logger.info("End: renewalReport");
 		return reports;
 	}
 
@@ -224,9 +228,7 @@ public class ReportDaoImpl implements ReportDao {
 			List<ReportParams> params, int offset, int numRecords,
 			String sortField, String sortOrder, Date fromDate, Date toDate,
 			int roleId) throws Exception {
-		
-		logger.info("Start: uploadReport");
-		String sqlStr = "select SQL_CALC_FOUND_ROWS u.brand as field1, u.numberofrecords as field2, u.date as field3"
+		String sqlStr = "select SQL_CALC_FOUND_ROWS u.brand as field1, u.numberofrecords as field2, u.date as field3,u.username as field4"
 				+ " from uploadinfo u";
 		boolean isSuperAdmin = true;
 		if (!(roleId == LBLConstants.CONVERGENT_MOBILE_ADMIN)) {
@@ -238,21 +240,13 @@ public class ReportDaoImpl implements ReportDao {
 
 		Session session = sessionFactory.getCurrentSession();
 
-		/*
-		 * if (params != null) { for (ReportParams param : params) { if
-		 * (param.getParamValue() != null &&
-		 * param.getParamValue().toString().length() > 0)
-		 * sql.append(" and ").append
-		 * (param.getParamName()).append(param.getCondition
-		 * ()).append(param.getParamValue()); } }
-		 */
 		if (fromDate != null && toDate != null)
 			if (isSuperAdmin) {
 				sql.append(" where u.date BETWEEN ? AND ?");
 			} else {
 				sql.append(" AND u.date BETWEEN ? AND ?");
 			}
-
+		sql.append(" order by u.date DESC");
 		sql.append(" limit ").append(offset).append(", ").append(numRecords);
 
 		Query q = session
@@ -260,6 +254,7 @@ public class ReportDaoImpl implements ReportDao {
 				.addScalar("field1", new StringType())
 				.addScalar("field2", new IntegerType())
 				.addScalar("field3", new StringType())
+				.addScalar("field4", new StringType())
 				.setResultTransformer(
 						Transformers.aliasToBean(ValueObject.class));
 		int dateIndex = 0;
@@ -286,7 +281,7 @@ public class ReportDaoImpl implements ReportDao {
 
 		if (reports.isEmpty())
 			return null;
-		logger.info("End: uploadReport");
+
 		return reports;
 	}
 
@@ -294,92 +289,191 @@ public class ReportDaoImpl implements ReportDao {
 	 * get exportReport::export report info
 	 */
 	@Transactional
-	public List<ValueObject> exportReport(String userName, List<ReportParams> params, int offset, 
-								int numRecords, String sortField, String sortOrder,Date fromDate, Date toDate,int roleId)  {
-	
-		logger.info("Start: exportReport");
-		String sqlStr = "select SQL_CALC_FOUND_ROWS e.brandname as field1, e.numberofrecords as field2, date_format(e.date, '%m/%d/%Y') as field3"
-				+ " from exportinfo e";
-		boolean isSuperAdmin = true;
-		boolean isClient=false;
-		if (!(roleId==LBLConstants.CONVERGENT_MOBILE_ADMIN)){
-			isSuperAdmin = false;
-			//if (roleId == LBLConstants.CHANNEL_ADMIN) {
-				//sqlStr += " where e.channelname = (select c.channelname from channels c where " +
-				//"c.channelid=(select u.channelid from user_brands u where u.username=?))";
-			//}else {
-				/*sqlStr += " where e.brandname=(select b.brandname from brands b where" +
-						" b.brandId= (select u.brandid from users u where u.username=?))";*/
-				isClient=true;
-				List<String> allBrandNames = getAllBrandNames(false, userName);
-				String brands="";
-				if(allBrandNames!=null&&allBrandNames.size()>0){
-					for (int i = 0; i < allBrandNames.size(); i++) {
-						if(brands.length()!=0){
-							brands = brands +",'"+allBrandNames.get(i) +"'";
-						}
-						else {
-							brands = "'"+allBrandNames.get(i) +"'";
-						}
-					}		
-				}
-				if(allBrandNames.size()==1){
-					sqlStr += " where e.brandname = "+brands+"";
-				}else {
-					sqlStr += " where e.brandname in ("+brands+")";
-				}
-				
-			}
-		//}
-		
-		logger.info("Sql in exportReport is: "+ sqlStr);
-		
-		StringBuffer sql = new StringBuffer(sqlStr);
-		
+	public List<ValueObject> exportReport(String userName,
+			List<ReportParams> params, int offset, int numRecords,
+			String sortField, String sortOrder, Date fromDate, Date toDate,
+			int roleId) {
 		Session session = sessionFactory.getCurrentSession();
-		
-		/*if (params != null) {
-	        for (ReportParams param : params) {
-	        	if (param.getParamValue() != null && param.getParamValue().toString().length() > 0)
-	        		sql.append(" and ").append(param.getParamName()).append(param.getCondition()).append(param.getParamValue());      	
-	        }
-		}*/
+
+		Integer userId = getUserFromUserId(userName);
+
+		String sqlStr = "select SQL_CALC_FOUND_ROWS e.brandname as field1, e.numberofrecords as field2, e.partner as field3, date_format(e.date, '%m/%d/%Y') as field4,e.userName as field5 "
+				+ " from exportinfo e where e.partner LIKE '%Template%' ";
+		boolean isSuperAdmin = true;
+
+		if (!(roleId == LBLConstants.CONVERGENT_MOBILE_ADMIN)) {
+			isSuperAdmin = false;
+			if (roleId == LBLConstants.CHANNEL_ADMIN || roleId==LBLConstants.PURIST) {
+				sqlStr += "AND e.channelname = (select c.channelname from channels c where "
+						+ "c.channelid=(select u.channelid from user_brands u where u.userid=? LIMIT 1))";
+			} else {
+				List<String> allBrandNames = getAllBrandNames(false, userName);
+				String brands = "";
+				if (allBrandNames != null && allBrandNames.size() > 0) {
+					for (int i = 0; i < allBrandNames.size(); i++) {
+						if (brands.length() != 0) {
+							brands = brands + ",'" + allBrandNames.get(i) + "'";
+						} else {
+							brands = "'" + allBrandNames.get(i) + "'";
+						}
+					}
+				}
+				if (allBrandNames.size() == 1) {
+					sqlStr += "AND e.brandname = " + brands + "";
+				} else {
+					sqlStr += " AND e.brandname in (" + brands + ")";
+				}
+
+			}
+		}
+		StringBuffer sql = new StringBuffer(sqlStr);
+
 		if (fromDate != null && toDate != null)
 			if (isSuperAdmin) {
-				sql.append(" where e.date BETWEEN ? AND ?");
-			}else {
+				sql.append(" AND e.date BETWEEN ? AND ?");
+			} else {
 				sql.append(" AND e.date BETWEEN ? AND ?");
 			}
+		sql.append("order by e.date DESC");
 		sql.append(" limit ").append(offset).append(", ").append(numRecords);
 
-        Query q = session.createSQLQuery(sql.toString())
-        		.addScalar("field1", new StringType())
+		Query q = session
+				.createSQLQuery(sql.toString())
+				.addScalar("field1", new StringType())
 				.addScalar("field2", new IntegerType())
 				.addScalar("field3", new StringType())
-				.setResultTransformer(Transformers.aliasToBean(ValueObject.class));        		
-        int dateIndex = 0;
-      /* if (!isSuperAdmin&&!isClient) {
-        	q.setString(0, userName);
-        	dateIndex = 1;
-		}*/
-        if (fromDate != null && toDate != null){
-        	q.setDate(dateIndex, fromDate);
-        	q.setDate(dateIndex+1, toDate);
-        }
+
+				.addScalar("field4", new StringType())
+				.addScalar("field5", new StringType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+		int dateIndex = 0;
+		if (roleId == LBLConstants.CHANNEL_ADMIN || roleId==LBLConstants.PURIST) {
+			q.setInteger(0, userId);
+			dateIndex = 1;
+		}
+		if (fromDate != null && toDate != null) {
+			q.setDate(dateIndex, fromDate);
+			q.setDate(dateIndex + 1, toDate);
+		}
 		List<ValueObject> reports = q.list();
-		
+
 		String sql1 = "select found_rows() field1";
-		q = session.createSQLQuery(sql1)
-				.addScalar("field1", new IntegerType())														
-				.setResultTransformer(Transformers.aliasToBean(ValueObject.class));			
+		q = session
+				.createSQLQuery(sql1)
+				.addScalar("field1", new IntegerType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
 
 		List<ValueObject> reportDataList1 = q.list();
 
-		reports.addAll(reportDataList1);		
-		
+		reports.addAll(reportDataList1);
+
 		if (reports.isEmpty())
 			return null;
-		logger.info("End: exportReport");
+
+		return reports;
+	}
+
+	private Integer getUserFromUserId(String userName) {
+		Session session = sessionFactory.getCurrentSession();
+		Criteria criteria = session.createCriteria(UsersEntity.class);
+		criteria.add(Restrictions.eq("userName", userName));
+		List<UsersEntity> list = criteria.list();
+		Integer userID = null;
+		for (UsersEntity usersEntity : list) {
+			userID = usersEntity.getUserID();
+			logger.info("userID::::::::::::::::::::::::" + userID);
+		}
+		return userID;
+
+	}
+
+	/**
+	 * get exportReport::export report info
+	 */
+	@Transactional
+	public List<ValueObject> distributionReport(String userName,
+			List<ReportParams> params, int offset, int numRecords,
+			String sortField, String sortOrder, Date fromDate, Date toDate,
+			int roleId) {
+
+		Session session = sessionFactory.getCurrentSession();
+		Integer userId = getUserFromUserId(userName);
+
+		String sqlStr = "select SQL_CALC_FOUND_ROWS e.brandname as field1, e.numberofrecords as field2, e.partner as field3 ,date_format(e.date, '%m/%d/%Y') as field4"
+				+ " from exportinfo e WHERE e.partner NOT LIKE '%Template%'";
+		boolean isSuperAdmin = true;
+		if (!(roleId == LBLConstants.CONVERGENT_MOBILE_ADMIN)) {
+			isSuperAdmin = false;
+			if (roleId == LBLConstants.CHANNEL_ADMIN || roleId==LBLConstants.PURIST) {
+				sqlStr += " AND e.channelname = (select c.channelname from channels c where "
+						+ "c.channelid=(select u.channelid from user_brands u where u.userid=? LIMIT 1 ))";
+			} else {
+				List<String> allBrandNames = getAllBrandNames(false, userName);
+				String brands = "";
+				if (allBrandNames != null && allBrandNames.size() > 0) {
+					for (int i = 0; i < allBrandNames.size(); i++) {
+						if (brands.length() != 0) {
+							brands = brands + ",'" + allBrandNames.get(i) + "'";
+						} else {
+							brands = "'" + allBrandNames.get(i) + "'";
+						}
+					}
+				}
+				if (allBrandNames.size() == 1) {
+					sqlStr += " AND e.brandname = " + brands + "";
+				} else if (!brands.isEmpty()) {
+					sqlStr += "AND  e.brandname in (" + brands + ")";
+				}
+			}
+		}
+
+		StringBuffer sql = new StringBuffer(sqlStr);
+
+		if (fromDate != null && toDate != null)
+			if (isSuperAdmin) {
+				sql.append("AND e.date BETWEEN ? AND ?");
+			} else {
+				sql.append(" AND e.date BETWEEN ? AND ?");
+			}
+		sql.append("order by e.date DESC");
+
+		sql.append(" limit ").append(offset).append(", ").append(numRecords);
+
+		Query q = session
+				.createSQLQuery(sql.toString())
+				.addScalar("field1", new StringType())
+				.addScalar("field2", new IntegerType())
+				.addScalar("field3", new StringType())
+				.addScalar("field4", new StringType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+		int dateIndex = 0;
+		if (roleId == LBLConstants.CHANNEL_ADMIN || roleId==LBLConstants.PURIST) {
+			q.setInteger(0, userId);
+			dateIndex = 1;
+		}
+		if (fromDate != null && toDate != null) {
+			q.setDate(dateIndex, fromDate);
+			q.setDate(dateIndex + 1, toDate);
+		}
+		List<ValueObject> reports = q.list();
+
+		String sql1 = "select found_rows() field1";
+		q = session
+				.createSQLQuery(sql1)
+				.addScalar("field1", new IntegerType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+
+		List<ValueObject> reportDataList1 = q.list();
+
+		reports.addAll(reportDataList1);
+
+		if (reports.isEmpty())
+			return null;
+
 		return reports;
 	}
 
@@ -399,6 +493,517 @@ public class ReportDaoImpl implements ReportDao {
 			businessDTOs.add(localBusinessDTO);
 		}
 		return businessDTOs;
+	}
+
+	/**
+	 * get changeTrackingReport :: changeTracking
+	 */
+
+	@Transactional
+	public List<ValueObject> changeTrackingReport(String userName,
+			List<ReportParams> params, int offset, int numRecords,
+			String sortField, String sortOrder, Date fromDate, Date toDate,
+			int roleId) {
+		Session session = sessionFactory.getCurrentSession();
+		Integer userId = getUserFromUserId(userName);
+		String sqlStr = "select SQL_CALC_FOUND_ROWS e.clientId as field1, e.store as field2, e.businessName as field3 ,e.locationAddress as field4,e.locationCity as field5,e.locationState as field6,e.locationZipCode as field7,e.locationPhone as field8,e.website as field9,e.hourseOfOperation as field10"
+				+ " from changetracking e";
+		boolean isSuperAdmin = true;
+		if (!(roleId == LBLConstants.CONVERGENT_MOBILE_ADMIN)) {
+			isSuperAdmin = false;
+			if (roleId == LBLConstants.CHANNEL_ADMIN || roleId==LBLConstants.PURIST) {
+				sqlStr += " where e.channelname = (select c.channelname from channels c where "
+						+ "c.channelid=(select u.channelid from user_brands u where u.userid=?))";
+			} else {
+				List<String> allBrandNames = getAllBrandNames(false, userName);
+				String brands = "";
+				if (allBrandNames != null && allBrandNames.size() > 0) {
+					for (int i = 0; i < allBrandNames.size(); i++) {
+						if (brands.length() != 0) {
+							brands = brands + ",'" + allBrandNames.get(i) + "'";
+						} else {
+							brands = "'" + allBrandNames.get(i) + "'";
+						}
+					}
+				}
+				if (allBrandNames.size() == 1) {
+					sqlStr += " where e.brandname = " + brands + "";
+				} else {
+					sqlStr += " where e.brandname in (" + brands + ")";
+				}
+			}
+		}
+
+		StringBuffer sql = new StringBuffer(sqlStr);
+
+		if (fromDate != null && toDate != null)
+			if (isSuperAdmin) {
+				sql.append(" where e.date BETWEEN ? AND ?");
+			} else {
+				sql.append(" AND e.date BETWEEN ? AND ?");
+			}
+		sql.append(" limit ").append(offset).append(", ").append(numRecords);
+
+		Query q = session
+				.createSQLQuery(sql.toString())
+				.addScalar("field1", new IntegerType())
+				.addScalar("field2", new StringType())
+				.addScalar("field3", new StringType())
+				.addScalar("field4", new StringType())
+				.addScalar("field5", new StringType())
+				.addScalar("field6", new StringType())
+				.addScalar("field7", new StringType())
+				.addScalar("field8", new StringType())
+				.addScalar("field9", new StringType())
+				.addScalar("field10", new StringType())
+
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+		int dateIndex = 0;
+		if (roleId == LBLConstants.CHANNEL_ADMIN || roleId==LBLConstants.PURIST) {
+			q.setInteger(0, userId);
+			dateIndex = 1;
+		}
+		if (fromDate != null && toDate != null) {
+			q.setDate(dateIndex, fromDate);
+			q.setDate(dateIndex + 1, toDate);
+		}
+		List<ValueObject> reports = q.list();
+
+		String sql1 = "select found_rows() field1";
+		q = session
+				.createSQLQuery(sql1)
+				.addScalar("field1", new IntegerType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+
+		List<ValueObject> reportDataList1 = q.list();
+
+		reports.addAll(reportDataList1);
+
+		if (reports.isEmpty())
+			return null;
+
+		return reports;
+	}
+
+	@Transactional
+	public List<ValueObject> renewalbrandReport(List<ReportParams> params,
+			int offset, int numRecords, String sortField, String sortOrder,
+			String userName, int roleId, Date fromDate, Date toDate,
+			String brand) {
+
+		String sqlStr = "select b.brandname as field1, b.locationsinvoiced as field2, date_format(b.startdate, '%m/%d/%Y') as field3,"
+				+ " b.submisions as field4 from brands b ";
+		boolean isSuperAdmin = true;
+		if (!(roleId == LBLConstants.CONVERGENT_MOBILE_ADMIN)) {
+			isSuperAdmin = false;
+
+		}
+		StringBuffer sql = new StringBuffer(sqlStr);
+
+		Session session = sessionFactory.getCurrentSession();
+		sql.append(" where b.brandname =?");
+
+		if (fromDate != null && toDate != null)
+			if (isSuperAdmin) {
+				sql.append(" AND b.startdate BETWEEN ? AND ?");
+			} else {
+				sql.append(" AND b.startdate BETWEEN ? AND ?");
+			}
+		sql.append("order By b.startdate DESC");
+		sql.append(" limit ").append(offset).append(", ").append(numRecords);
+		Query q = session
+				.createSQLQuery(sql.toString())
+				.addScalar("field1", new StringType())
+				.addScalar("field2", new IntegerType())
+				.addScalar("field3", new StringType())
+				.addScalar("field4", new StringType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+
+		if (brand != "") {
+			q.setString(0, brand);
+		}
+		if (fromDate != null && toDate != null) {
+			q.setDate(1, fromDate);
+			q.setDate(2, toDate);
+		}
+		List<ValueObject> reports = q.list();
+
+		String sql1 = "select found_rows() field1";
+		q = session
+				.createSQLQuery(sql1)
+				.addScalar("field1", new IntegerType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+
+		List<ValueObject> reportDataList1 = q.list();
+		reports.addAll(reportDataList1);
+		if (reports.isEmpty())
+			return null;
+		List<ValueObject> rdList = new ArrayList<ValueObject>();
+		for (ValueObject valueObject : reports) {
+			String field3 = (String) valueObject.getField3();
+			if (field3 == null) {
+				continue;
+			}
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(new Date(field3));
+			cal.add(Calendar.YEAR, 1);
+			Date time = cal.getTime();
+			Date date = DateUtil.getDate(time);
+			valueObject.setField3(date);
+			rdList.add(valueObject);
+		}
+		return reports;
+	}
+
+	@Transactional
+	public List<ValueObject> distributionbrandReport(String userName,
+			List<ReportParams> params, int offset, int numRecords,
+			String sortField, String sortOrder, Date fromDate, Date toDate,
+			int roleId, String brand) {
+		String sqlStr = "select SQL_CALC_FOUND_ROWS e.brandname as field1, e.numberofrecords as field2, e.partner as field3 ,date_format(e.date, '%m/%d/%Y') as field4"
+				+ " from exportinfo e WHERE e.partner NOT LIKE '%Template%'";
+		boolean isSuperAdmin = true;
+		if (!(roleId == LBLConstants.CONVERGENT_MOBILE_ADMIN)) {
+			isSuperAdmin = false;
+
+		}
+		StringBuffer sql = new StringBuffer(sqlStr);
+		Session session = sessionFactory.getCurrentSession();
+		sql.append(" AND  e.brandname =?");
+		if (fromDate != null && toDate != null)
+			if (isSuperAdmin) {
+				sql.append(" AND e.date BETWEEN ? AND ?");
+			} else {
+				sql.append(" AND e.date BETWEEN ? AND ?");
+			}
+		sql.append("order By e.date DESC");
+		sql.append(" limit ").append(offset).append(", ").append(numRecords);
+
+		Query q = session
+				.createSQLQuery(sql.toString())
+				.addScalar("field1", new StringType())
+				.addScalar("field2", new IntegerType())
+				.addScalar("field3", new StringType())
+				.addScalar("field4", new StringType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+
+		if (brand != "") {
+			q.setString(0, brand);
+		}
+		if (fromDate != null && toDate != null) {
+			q.setDate(1, fromDate);
+			q.setDate(2, toDate);
+		}
+		List<ValueObject> reports = q.list();
+		String sql1 = "select found_rows() field1";
+		q = session
+				.createSQLQuery(sql1)
+				.addScalar("field1", new IntegerType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+
+		List<ValueObject> reportDataList1 = q.list();
+
+		reports.addAll(reportDataList1);
+
+		if (reports.isEmpty())
+			return null;
+
+		return reports;
+	}
+
+	@Transactional
+	public List<ValueObject> changeTrackingBrandReport(String userName,
+			List<ReportParams> params, int offset, int numRecords,
+			String sortField, String sortOrder, Date fromDate, Date toDate,
+			int roleId, String brand) {
+		Session session = sessionFactory.getCurrentSession();
+		Criteria criteria = session.createCriteria(BrandEntity.class);
+		criteria.add(Restrictions.eq("brandName", brand));
+		Integer clientId = null;
+		List<BrandEntity> list = criteria.list();
+		for (BrandEntity brandEntity : list) {
+			clientId = brandEntity.getClientId();
+		}
+		String sqlStr = "select SQL_CALC_FOUND_ROWS e.clientId as field1, e.store as field2, e.businessName as field3 ,e.locationAddress as field4,e.locationCity as field5,e.locationState as field6,e.locationZipCode as field7,e.locationPhone as field8,e.website as field9,e.hourseOfOperation as field10"
+				+ " from changetracking e";
+		boolean isSuperAdmin = true;
+		if (!(roleId == LBLConstants.CONVERGENT_MOBILE_ADMIN)) {
+			isSuperAdmin = false;
+
+		}
+		StringBuffer sql = new StringBuffer(sqlStr);
+
+		sql.append(" where e.clientId =?");
+		if (fromDate != null && toDate != null)
+			if (isSuperAdmin) {
+				sql.append(" AND e.date BETWEEN ? AND ?");
+			} else {
+				sql.append(" AND e.date BETWEEN ? AND ?");
+			}
+		sql.append(" limit ").append(offset).append(", ").append(numRecords);
+
+		Query q = session
+				.createSQLQuery(sql.toString())
+				.addScalar("field1", new IntegerType())
+				.addScalar("field2", new StringType())
+				.addScalar("field3", new StringType())
+				.addScalar("field4", new StringType())
+				.addScalar("field5", new StringType())
+				.addScalar("field6", new StringType())
+				.addScalar("field7", new StringType())
+				.addScalar("field8", new StringType())
+				.addScalar("field9", new StringType())
+				.addScalar("field10", new StringType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+
+		if (brand != "") {
+			q.setInteger(0, clientId);
+
+		}
+		if (fromDate != null && toDate != null) {
+			q.setDate(1, fromDate);
+			q.setDate(2, toDate);
+		}
+		List<ValueObject> reports = q.list();
+
+		String sql1 = "select found_rows() field1";
+		q = session
+				.createSQLQuery(sql1)
+				.addScalar("field1", new IntegerType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+
+		List<ValueObject> reportDataList1 = q.list();
+
+		reports.addAll(reportDataList1);
+
+		if (reports.isEmpty())
+			return null;
+
+		return reports;
+	}
+
+	public List<ExportReportDTO> getDistrbutionReportDetails(String brand,
+			String date) {
+		Session session = sessionFactory.getCurrentSession();
+		Criteria criteria = session.createCriteria(ExportReportEntity.class);
+		criteria.add(Restrictions.eq("brandName", brand));
+		// criteria.add(Restrictions.eq("partner", date));
+		List<ExportReportEntity> businessEntities = criteria.list();
+		List<ExportReportDTO> businessDTOs = new ArrayList<ExportReportDTO>();
+		Integer clientID = null;
+		for (ExportReportEntity exportReportEntity : businessEntities) {
+			ExportReportDTO exportReportDTO = new ExportReportDTO();
+			String brandName = exportReportEntity.getBrandName();
+			Criteria createCriteria = session.createCriteria(BrandEntity.class);
+			createCriteria.add(Restrictions.eq("brandName", brandName));
+			List<BrandEntity> list2 = createCriteria.list();
+			for (BrandEntity brandEntity : list2) {
+				clientID = brandEntity.getClientId();
+			}
+			exportReportDTO.setClientId(clientID);
+			BeanUtils.copyProperties(exportReportEntity, exportReportDTO);
+			businessDTOs.add(exportReportDTO);
+		}
+		return businessDTOs;
+	}
+
+	@Transactional
+	public List<String> getStoreForBrand(String categoryId) {
+
+		Session session = sessionFactory.getCurrentSession();
+		List<String> storelist = new ArrayList<String>();
+
+		Criteria criteria = session.createCriteria(BrandEntity.class);
+		criteria.add(Restrictions.eq("brandName", categoryId));
+		Integer clientId = null;
+		List<BrandEntity> list = criteria.list();
+		for (BrandEntity brandEntity : list) {
+			clientId = brandEntity.getClientId();
+			// logger.info("client is: "+clientId);
+		}
+
+		Criteria createCriteria = session
+				.createCriteria(LocalBusinessEntity.class);
+		createCriteria.add(Restrictions.eq("clientId", clientId));
+		createCriteria.addOrder(Order.asc("store"));
+		List<LocalBusinessEntity> list2 = createCriteria.list();
+		for (LocalBusinessEntity localBusinessEntity : list2) {
+
+			String store = localBusinessEntity.getStore();
+
+			storelist.add(store);
+		}
+		return storelist;
+	}
+
+	@Transactional
+	public List<ValueObject> changeTrackingBrandListReport(String userName,
+			List<ReportParams> params, int offset, int numRecords,
+			String sortField, String sortOrder, Date fromDate, Date toDate,
+			int roleId, String brand, List<String> listofStores) {
+
+		Session session = sessionFactory.getCurrentSession();
+		Criteria criteria = session.createCriteria(BrandEntity.class);
+		criteria.add(Restrictions.eq("brandName", brand));
+		Integer clientId = null;
+		List<BrandEntity> list = criteria.list();
+		for (BrandEntity brandEntity : list) {
+			clientId = brandEntity.getClientId();
+		}
+		String sqlStr = "select SQL_CALC_FOUND_ROWS e.clientId as field1, e.store as field2, e.businessName as field3 ,e.locationAddress as field4,e.locationCity as field5,e.locationState as field6,e.locationZipCode as field7,e.locationPhone as field8,e.website as field9,e.hourseOfOperation as field10"
+				+ " from changetracking e";
+		boolean isSuperAdmin = true;
+		if (!(roleId == LBLConstants.CONVERGENT_MOBILE_ADMIN)) {
+			isSuperAdmin = false;
+
+		}
+		StringBuffer sql = new StringBuffer(sqlStr);
+		StringBuffer stores = new StringBuffer();
+		for (String store : listofStores) {
+			// System.out.println("Stores: "+ store);
+
+			if (stores.length() != 0) {
+				stores = stores.append(",").append("'").append(store)
+						.append("'");
+			} else {
+				stores = stores.append("'").append(store).append("'");
+			}
+		}
+
+		// System.out.println("Stores: "+ stores.toString());
+
+		if (listofStores.size() > 0) {
+			sql.append(" where e.store in (" + stores.toString() + ")");
+		}
+		/*
+		 * if(listofStores.size()== 1){ sql.append(" where e.store ="+
+		 * stores.toString()+""); }
+		 */
+
+		sql.append(" AND  e.clientId =?");
+		if (fromDate != null && toDate != null) {
+			if (isSuperAdmin) {
+				sql.append(" AND e.date BETWEEN ? AND ?");
+			} else {
+				sql.append(" AND e.date BETWEEN ? AND ?");
+			}
+		}
+
+		// sql.append(" limit ").append(offset).append(", ").append(numRecords);
+
+		Query q = session
+				.createSQLQuery(sql.toString())
+				.addScalar("field1", new IntegerType())
+				.addScalar("field2", new StringType())
+				.addScalar("field3", new StringType())
+				.addScalar("field4", new StringType())
+				.addScalar("field5", new StringType())
+				.addScalar("field6", new StringType())
+				.addScalar("field7", new StringType())
+				.addScalar("field8", new StringType())
+				.addScalar("field9", new StringType())
+				.addScalar("field10", new StringType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+
+		if (brand != "") {
+			q.setInteger(0, clientId);
+
+		}
+		if (fromDate != null && toDate != null) {
+			q.setDate(1, fromDate);
+			q.setDate(2, toDate);
+		}
+		// System.out.println("total query ::"+q);
+		List<ValueObject> reports = q.list();
+
+		String sql1 = "select found_rows() field1";
+		logger.info("sql::::::" + sql);
+		q = session
+				.createSQLQuery(sql1)
+				.addScalar("field1", new IntegerType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+
+		List<ValueObject> reportDataList1 = q.list();
+
+		reports.addAll(reportDataList1);
+
+		if (reports.isEmpty())
+			return null;
+
+		return reports;
+	}
+
+	public List<ValueObject> checkReportlisting(String userName,
+			List<ReportParams> params, int offset, int numRecords,
+			String sortField, String sortOrder, String brand, int roleId,
+			String listofStores) {
+		Session session = sessionFactory.getCurrentSession();
+		Criteria criteria = session.createCriteria(BrandEntity.class);
+		criteria.add(Restrictions.eq("brandName", brand));
+		Integer clientId = null;
+		List<BrandEntity> list = criteria.list();
+		for (BrandEntity brandEntity : list) {
+			clientId = brandEntity.getClientId();
+		}
+		String sqlStr = "select SQL_CALC_FOUND_ROWS e.clientId as field1, e.store as field2, e.businessName as field3 ,e.locationAddress as field4,e.locationCity as field5,e.locationState as field6,e.locationZipCode as field7,e.locationPhone as field8,e.website as field9,e.hourseOfOperation as field10"
+				+ " from changetracking e";
+		boolean isSuperAdmin = true;
+		if (!(roleId == LBLConstants.CONVERGENT_MOBILE_ADMIN)) {
+			isSuperAdmin = false;
+
+		}
+		StringBuffer sql = new StringBuffer(sqlStr);
+
+		// sql.append(" limit ").append(offset).append(", ").append(numRecords);
+
+		Query q = session
+				.createSQLQuery(sql.toString())
+				.addScalar("field1", new IntegerType())
+				.addScalar("field2", new StringType())
+				.addScalar("field3", new StringType())
+				.addScalar("field4", new StringType())
+				.addScalar("field5", new StringType())
+				.addScalar("field6", new StringType())
+				.addScalar("field7", new StringType())
+				.addScalar("field8", new StringType())
+				.addScalar("field9", new StringType())
+				.addScalar("field10", new StringType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+
+		if (brand != "") {
+			q.setInteger(0, clientId);
+
+		}
+
+		// System.out.println("total query ::"+q);
+		List<ValueObject> reports = q.list();
+
+		String sql1 = "select found_rows() field1";
+		q = session
+				.createSQLQuery(sql1)
+				.addScalar("field1", new IntegerType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+
+		List<ValueObject> reportDataList1 = q.list();
+
+		reports.addAll(reportDataList1);
+
+		if (reports.isEmpty())
+			return null;
+
+		return reports;
 	}
 
 	/**
@@ -468,5 +1073,296 @@ public class ReportDaoImpl implements ReportDao {
 		return brandnames;
 
 	}
+
+	public List<ValueObject> runRenewalReport(Date fromDate, Date toDate,
+			String storeName, String brand) {
+		Integer clinetId = getClinetIdIdByName(brand);
+		String sqlStr = "select r.store as field1,date_format(r.acxiomRenewalDate, '%m/%d/%Y') as field2,date_format(r.infogroupRenewalDate, '%m/%d/%Y') as field3,"
+				+ "date_format(r.factualRenewalDate, '%m/%d/%Y') as field4,date_format(r.localezeRenewalDate, '%m/%d/%Y') as field5 from renewal_report r where store= ? and clientId=?";
+		boolean isSuperAdmin = true;
+		
+
+		StringBuffer sql = new StringBuffer(sqlStr);
+		Date startDate=new Date();
+		Calendar calendar=Calendar.getInstance();
+		calendar.setTime(startDate);
+		
+		calendar.add(Calendar.DATE, 61);
+		Date endDate = calendar.getTime();
+		
+		sql.append(" AND r.renewalDate BETWEEN ? AND ?");
+		Session session = sessionFactory.getCurrentSession();
+
+		Query q = session
+				.createSQLQuery(sql.toString())
+				.addScalar("field1", new StringType())
+				.addScalar("field2", new StringType())
+				.addScalar("field3", new StringType())
+				.addScalar("field4", new StringType())
+				.addScalar("field5", new StringType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+		q.setString(0, storeName);
+		q.setInteger(1, clinetId);
+		q.setDate(2, startDate);
+		q.setDate(3, endDate);
+		List<ValueObject> reports = q.list();
+
+		String sql1 = "select found_rows() field1";
+		q = session
+				.createSQLQuery(sql1)
+				.addScalar("field1", new IntegerType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+
+		List<ValueObject> reportDataList1 = q.list();
+		reports.addAll(reportDataList1);
+		if (reports.isEmpty())
+			return null;
+		/*
+		 * List<ValueObject> rdList = new ArrayList<ValueObject>(); for
+		 * (ValueObject valueObject : reports) { String field3 = (String)
+		 * valueObject.getField3(); if (field3 == null) { continue; }
+		 * 
+		 * rdList.add(valueObject); }
+		 */
+		return reports;
+
+	}
+
+	public Map<String, Integer> getPathCountMapForStores(
+			List<LocalBusinessDTO> listOfBussinessinfo) {
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		
+		Session session = sessionFactory.getCurrentSession();
+
+		for (LocalBusinessDTO localBusinessDTO : listOfBussinessinfo) {
+			Criteria criteria = session.createCriteria(SearchDomains.class);
+
+			int googleCount = 0;
+			int bingCount = 0;
+			int yelpCount = 0;
+			int YahooCount = 0;
+			int ypCount = 0;
+			int citysearchCount = 0;
+			int mapquestCount = 0;
+			int superpagesCount = 0;
+			int yellobookCount = 0;
+			int whitepagesCount = 0;
+
+			String store = localBusinessDTO.getStore();
+			criteria.add(Restrictions.eq("searchId", store));
+
+			List<SearchDomains> list = criteria.list();
+			int count = 0;
+			for (SearchDomains searchDomain : list) {
+
+				String path = searchDomain.getDomainName();
+				Integer pathsCount = searchDomain.getPathsCount();
+				if (path.contains("google") && googleCount == 0) {
+
+					count = count + pathsCount;
+				}
+				else if (path.contains("yelp") && yelpCount == 0) {
+
+					count = count + pathsCount;
+				}
+				else if (path.contains("superpages") && superpagesCount == 0) {
+
+					count = count + pathsCount;
+				}
+				else if (path.contains("yellowbook") && yellobookCount == 0) {
+
+					count = count + pathsCount;
+				}
+				else if (path.contains("bing") && bingCount == 0) {
+
+					count = count + pathsCount;
+				}
+				else if (path.contains("yp") && ypCount == 0) {
+					count = count + pathsCount;
+				}
+				else if (path.contains("yahoo") && YahooCount == 0) {
+
+					count = count + pathsCount;
+				}
+				else if (path.contains("whitepages") && whitepagesCount == 0) {
+
+					count = count + pathsCount;
+				}
+				else if (path.contains("citysearch") && citysearchCount == 0) {
+
+					count = count + pathsCount;
+
+				}
+				else if (path.contains("mapquest") && mapquestCount == 0) {
+
+					count = count + pathsCount;
+				}
+
+			}
+			map.put(store, count);
+		}
+		return map;
+	}
+	private Integer getClinetIdIdByName(String clinetname) {
+		Session session = sessionFactory.getCurrentSession();
+		Criteria criteria = session.createCriteria(BrandEntity.class);
+		criteria.add(Restrictions.eq("brandName", clinetname));
+		Integer ClientId = null;
+		List<BrandEntity> list = criteria.list();
+		for (BrandEntity chanelentity : list) {
+			ClientId = chanelentity.getClientId();
+		}
+		return ClientId;
+	}
+	
+	public List<ValueObject> runRenewalReportForBrand(Date fromDate,
+			Date toDate, String brand) {
+			Integer clinetId = getClinetIdIdByName(brand);
+		String sqlStr = "select r.store as field1,date_format(r.acxiomRenewalDate, '%m/%d/%Y') as field2,date_format(r.infogroupRenewalDate, '%m/%d/%Y') as field3,"
+				+ "date_format(r.factualRenewalDate, '%m/%d/%Y') as field4,date_format(r.localezeRenewalDate, '%m/%d/%Y') as field5 from renewal_report r where clientId= ?";
+		boolean isSuperAdmin = true;
+		StringBuffer sql = new StringBuffer(sqlStr);
+		Date startDate=new Date();
+		
+		Calendar calendar=Calendar.getInstance();
+		calendar.setTime(startDate);
+		logger.info("startDate::::::::::::"+startDate);
+		calendar.add(Calendar.DATE, 61);
+		Date endDate = calendar.getTime();
+		logger.info("endDate::::::::::::"+endDate);
+	
+		sql.append(" AND r.renewalDate BETWEEN ? AND ?");
+		Session session = sessionFactory.getCurrentSession();
+
+		Query q = session
+				.createSQLQuery(sql.toString())
+				.addScalar("field1", new StringType())
+				.addScalar("field2", new StringType())
+				.addScalar("field3", new StringType())
+				.addScalar("field4", new StringType())
+				.addScalar("field5", new StringType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+		q.setInteger(0, clinetId);
+		
+			q.setDate(1, startDate);
+			q.setDate(2, endDate);
+		
+		List<ValueObject> reports = q.list();
+
+		String sql1 = "select found_rows() field1";
+		q = session
+				.createSQLQuery(sql1)
+				.addScalar("field1", new IntegerType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+
+		List<ValueObject> reportDataList1 = q.list();
+		reports.addAll(reportDataList1);
+		if (reports.isEmpty())
+			return null;
+	
+		return reports;
+
+	}
+
+	//@Override
+	public List<ValueObject> runOvveridenReportForBrand(Date fromDate,
+			Date toDate, String brand) {
+		Integer clinetId = getClinetIdIdByName(brand);
+		String sqlStr = "select l.brandName as field1,l.store as field2,l.date as field3, userName as field4 from lbl_audit l where clientId= ?";
+		boolean isSuperAdmin = true;
+		
+		StringBuffer sql = new StringBuffer(sqlStr);
+		if (fromDate != null && toDate != null)
+			if (isSuperAdmin) {
+				sql.append(" AND l.date BETWEEN ? AND ?");
+			} else {
+				sql.append(" AND l.date BETWEEN ? AND ?");
+			}
+		Session session = sessionFactory.getCurrentSession();
+
+		Query q = session
+				.createSQLQuery(sql.toString())
+				.addScalar("field1", new StringType())
+				.addScalar("field2", new StringType())
+				.addScalar("field3", new StringType())
+				.addScalar("field4", new StringType())
+				
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+		q.setInteger(0, clinetId);
+		
+		if (fromDate != null && toDate != null) {
+			q.setDate(1, fromDate);
+			q.setDate(2, toDate);
+		}
+		List<ValueObject> reports = q.list();
+
+		String sql1 = "select found_rows() field1";
+		q = session
+				.createSQLQuery(sql1)
+				.addScalar("field1", new IntegerType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+
+		List<ValueObject> reportDataList1 = q.list();
+		reports.addAll(reportDataList1);
+		if (reports.isEmpty())
+			return null;
+	
+		return reports;
+	}
+
+
+	public List<ValueObject> runOvveridenBrandsReport(Date fromDate, Date toDate) {
+		
+		String sqlStr = "select l.brandName as field1,l.store as field2,l.date as field3, userName as field4 from lbl_audit l";
+		boolean isSuperAdmin = true;
+		
+		StringBuffer sql = new StringBuffer(sqlStr);
+		if (fromDate != null && toDate != null)
+			if (isSuperAdmin) {
+				sql.append(" WHERE l.date BETWEEN ? AND ?");
+			} else {
+				sql.append(" AND l.date BETWEEN ? AND ?");
+			}
+		Session session = sessionFactory.getCurrentSession();
+
+		Query q = session
+				.createSQLQuery(sql.toString())
+				.addScalar("field1", new StringType())
+				.addScalar("field2", new StringType())
+				.addScalar("field3", new StringType())
+				.addScalar("field4", new StringType())
+				
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+		
+		
+		if (fromDate != null && toDate != null) {
+			q.setDate(0, fromDate);
+			q.setDate(1, toDate);
+		}
+		List<ValueObject> reports = q.list();
+
+		String sql1 = "select found_rows() field1";
+		q = session
+				.createSQLQuery(sql1)
+				.addScalar("field1", new IntegerType())
+				.setResultTransformer(
+						Transformers.aliasToBean(ValueObject.class));
+
+		List<ValueObject> reportDataList1 = q.list();
+		reports.addAll(reportDataList1);
+		if (reports.isEmpty())
+			return null;
+	
+		return reports;
+	}
+	
+	
 
 }

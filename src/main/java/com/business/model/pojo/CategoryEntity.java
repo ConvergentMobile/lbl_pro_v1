@@ -23,6 +23,8 @@ public class CategoryEntity {
 	private String categoryCode;
 	@Column(name="category_name")
 	private String categoryName;
+	
+	
 	public Integer getId() {
 		return id;
 	}

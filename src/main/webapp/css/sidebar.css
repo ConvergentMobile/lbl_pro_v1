@@ -3,8 +3,8 @@
 .sidebar {
 	width: 38%;
 	overflow: hidden;
-	padding-top: 13px;
-	padding-bottom: 1px;
+	padding-top: 0px;
+	padding-bottom: 12px;
 	float: right;
 	position: relative;
 	z-index: 1000;
@@ -17,7 +17,7 @@
 }
 
 .sb_title {
-	height: 44px;
+	height: 51px;
 	background-color: #576777;
 	color: #fff;
 
@@ -26,7 +26,6 @@
 	border-radius: 5px 0 0 0;	
 }
 .sb_title.no-bg{
-	margin: -6px 0 6px;
 	background: none
 	}
 
@@ -76,11 +75,11 @@
 	padding: 5px 20px 0;
 	}
 .sb_buttons_center{
-	padding: 11px 0 7px;
+	padding: 20px 0 17px;
 	text-align: center
 	}
 .sb_buttons_center-2{
-	padding: 0px 0 4px;
+	padding: 19px 0 0px;
 	text-align: center
 	}
 
@@ -385,7 +384,7 @@
 }
 
 .form_wrapper_01 {
-	padding: 13px 0 37px 0;
+	padding: 15px 50px 0 0;
 }
 
 .grid_02 {
@@ -410,7 +409,7 @@
 
 .grid_02 select {
 	padding: 7px; 
-	width: 180px;
+	width: 170px;
 	border-color: #b7b7b7; 
 	background-color: #f5f6f7;
 	background-image: none;
@@ -423,19 +422,19 @@
 }
 
 .grid_02_1 input[type=text]{
-	width: 90%
+	width: 170px;
 	}
 
-.grid_02 .input_date_01 {
+.input_date_01 {
 	padding: 0px 37px 0px 7px; 
 	width: 75px!important;
 	_border-color: #b7b7b7; 
-	background: #f5f6f7 url(../images/ico_date_2.png) right 50% no-repeat;
+	background: #f5f6f7 url(../images/ico_date_2.png) right 50% no-repeat!important;
 }
 
-.grid_02 .input_date_01:hover, .grid_02 .input_date_01:focus {
+.input_date_01:hover, .input_date_01:focus {
 	border-color: #50515c;
-	background: #fff url(../images/ico_date_2_o.png) right 50% no-repeat;
+	background: #fff url(../images/ico_date_2_o.png) right 50% no-repeat!important;
 }
 
 .grid_02 label {
@@ -456,7 +455,6 @@
 	height: 37px;
 	text-align: center;
 	display: inline-block;
-	margin: 0 auto;
 }
 
 
@@ -576,4 +574,5 @@ table.grid_04 tr.even td {
 table.grid_04 tr:hover td {
 	background-color: #d3f2fa;
 }
+
 

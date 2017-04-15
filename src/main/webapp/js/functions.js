@@ -34,7 +34,60 @@ $(document).ready(function(){
     railVisible: true,
     alwaysVisible: true
   });
+  
+  $("#id_brand_mgn_wrapper").mCustomScrollbar({
+		axis: 'yx',
+		theme: 'dark-3'
+	});
+  $("#business_wrapper").mCustomScrollbar({
+		axis: 'yx',
+		theme: 'dark-3',
+		
+	});
+  $("#enhance_wrapper").mCustomScrollbar({
+		axis: 'yx',
+		theme: 'dark-3',
+		
+	});
+  $("#social_wrapper").mCustomScrollbar({
+		axis: 'yx',
+		theme: 'dark-3',
+		
+	});
+  $("#payment_wrapper").mCustomScrollbar({
+		axis: 'yx',
+		theme: 'dark-3',
+		
+	});
 
+  
+  
+  $("#hours_wrapper").mCustomScrollbar({
+		axis: 'yx',
+		theme: 'dark-3',
+		
+	});
+  $("#location_wrapper").mCustomScrollbar({
+		axis: 'yx',
+		theme: 'dark-3',
+		
+	});
+  $("#id_change_tacking").mCustomScrollbar({
+		axis: 'yx',
+		theme: 'dark-3'
+	});
+  
+  $("#id_brand_cgs_wrappers").mCustomScrollbar({
+		axis: 'yx',
+		theme: 'dark-3'
+	});
+
+  $('#id_custom_submissions').slimScroll({
+	    height: '512px',
+	    distance: '6px',
+	    railVisible: true,
+	    alwaysVisible: true
+	    });
   $('#id_corp_keywords').slimScroll({
     height: '390px',
     distance: '6px',
@@ -47,6 +100,12 @@ $(document).ready(function(){
 		railVisible: true,
 		alwaysVisible: true
 		});
+	  $('#id_report_renewal').slimScroll({
+		    height: '539px',
+		    distance: '6px',
+		    railVisible: true,
+		    alwaysVisible: true
+		    });  
 	$('#id_business_listings').slimScroll({
 		height: '515px',
 		distance: '6px',
@@ -60,7 +119,7 @@ $(document).ready(function(){
 		alwaysVisible: true
 		});	
 	$('#id_listing_activity').slimScroll({
-		height: '209px',
+		height: '265px',
 		distance: '6px',
 		railVisible: true,
 		alwaysVisible: true
@@ -71,14 +130,20 @@ $(document).ready(function(){
 		railVisible: true,
 		alwaysVisible: true
 		});
+	/*$('#id_report_listings').slimScroll({
+	    height: '328px',
+	    distance: '6px',
+	    railVisible: true,
+	    alwaysVisible: true
+	    });*/
 	$('#id_user_accounts').slimScroll({
-		height: '245px',
+		height: '300px',
 		distance: '6px',
 		railVisible: true,
 		alwaysVisible: true
 		});
 	$('#id_user_accounts-2').slimScroll({
-		height: '581px',
+		height: '500px',
 		distance: '6px',
 		railVisible: true,
 		alwaysVisible: true
@@ -91,7 +156,8 @@ $(document).ready(function(){
 		});
 	$('#location_profile').slimScroll({
 		height: '750px',
-		distance: '15px',
+		distance: '110px',
+	  
 		railVisible: true,
 		alwaysVisible: true
 		});
@@ -108,14 +174,40 @@ $(document).ready(function(){
     railVisible: true,
     alwaysVisible: true
   });
+  $('#id_view_listings').slimScroll({
+	    height: '175px',
+	    distance: '6px',
+	    railVisible: true,
+	    alwaysVisible: true
+	    });
+ /* $('#id_brand_mgn').slimScroll({
 
+	  
+	 
+	    height: '145px',
+	    distance: '6px',
+	   
+	    railVisible: true,
+	    alwaysVisible: true
+	    });*/
+  $('#id_invest_mgn2').slimScroll({
+	    height: '397px',
+	    distance: '6px',
+	    railVisible: true,
+	    alwaysVisible: true
+	    });
   $('#id_entity_keywords').slimScroll({
     height: '150px',
     distance: '6px',
     railVisible: true,
     alwaysVisible: true
   });  
-  
+/*  $('#id_category_convers').slimScroll({
+	    height: '135px',
+	    distance: '6px',
+	    railVisible: true,
+	    alwaysVisible: true
+	    });*/
 
   $('#id_corp_msg').slimScroll({
     height: '110px',
@@ -214,6 +306,19 @@ $(document).ready(function(){
   	width:	 13,
   	height:	 13
   });
+  $('#id_accuracy_report').slimScroll({
+	    height: '182px',
+	    distance: '6px',
+	    railVisible: true,
+	    alwaysVisible: true
+	    });
+
+	  $('#id_citation_report').slimScroll({
+	    height: '243px',
+	    distance: '6px',
+	    railVisible: true,
+	    alwaysVisible: true
+	    });
 
   $('.ul_scroll_list input[type=radio]').change(function(){
     if ($(this).is(":checked")) {
@@ -237,6 +342,12 @@ $(document).ready(function(){
       $('.ul_phone_numbers .chk_light').screwDefaultButtons("uncheck");
     }
   });
+  $('#id_citation_report').slimScroll({
+	    height: '243px',
+	    distance: '6px',
+	    railVisible: true,
+	    alwaysVisible: true
+	    });
   
   $('.ul_phone_numbers .chk_light').change(function(){
     if (this.checked) {
@@ -278,7 +389,7 @@ function set_equal_heights() {
  
  if (h_content >= h_sidebar) {
    // alert(h_content)
-   $('#id_sidebar').css('min-height', (h_content - 13) + "px");
+   $('#id_sidebar').css('min-height', (h_content - 125) + "px");
  } else {
    $('#id_content').css('min-height', (h_sidebar - 1) + "px");
  }

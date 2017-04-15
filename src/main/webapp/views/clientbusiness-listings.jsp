@@ -25,7 +25,8 @@
 <script src="js/jquery.bpopup.min.js"></script>
 <script src="js/jquery.jsort.0.4.min.js"></script>
 <script src="js/jquery.session.js"></script>
-
+<link rel="stylesheet" href="js/jquery.mCustomScrollbar.css">
+<script src="js/jquery.mCustomScrollbar.js"></script>
 <style type="text/css">
 #passcss
  { 
@@ -489,7 +490,7 @@ function validateExtension(v)
 	<div class="pp-body">
 		<div class="export">
 			<select name="service" id="serviceName">
-				<option value="">Choose Tempate</option>
+				<option value="">Choose Template</option>
 				<option value="Bing">Bing</option>
 				<option value="Google">Google</option>
 				<option value="Master_Template">Master Template</option>
@@ -648,7 +649,7 @@ function validateExtension(v)
 			<li class="si_business_listings  selected"><a href="clientbusinesslisting.htm">Business Listings</a></li>
 			<li class="si_error_listings"><a href="listingClient-error.htm">Listing Errors</a></li>
 			<li class="si_reports"><a href="client-reports.htm">Reports</a></li>
-			<li class="si_toolbox"><a href="clntToolbox.htm">Convergent Toolbox</a></li>
+			<!--<li class="si_toolbox"><a href="clntToolbox.htm">Convergent Toolbox</a></li>  -->
 		</ul>
 		<!-- // left side navigation --> 
 		<!-- content area -->
@@ -757,14 +758,14 @@ function validateExtension(v)
 				<!-- // box --> 
 					<div id="business_listings_id" align="center">
 					 <core:if test="${numOfPages gt 1}">
-							<span id="page_first" class="next"><a href="#" onclick="listingsPagination(1);">first</a> </span>&nbsp;
-							<span id="page_prev"><a href="#" onclick="paginationPre();">prev</a> </span>&nbsp;
+							<span id="page_first" class="next"><a href="#" onclick="listingsPagination(1);" style="font-size: 14px ; font-weight: 600">first</a> </span>&nbsp;
+							<span id="page_prev"><a href="#" onclick="paginationPre();" style="font-size: 14px ; font-weight: 600">prev</a> </span>&nbsp;
 							
-							<span id="pageNums">
+							<span id="pageNums" style="font-size: 14px ; font-weight: 600">
 							
 							</span>
-							<span id="page_next"><a href="#" onclick="paginationNext(${numOfPages});">next</a> </span>&nbsp;
-							<span id="page_last"><a href="#" onclick="listingsPagination(${numOfPages});">last</a> </span>&nbsp;
+							<span id="page_next"><a href="#" onclick="paginationNext(${numOfPages});" style="font-size: 14px ; font-weight: 600">next</a> </span>&nbsp;
+							<span id="page_last"><a href="#" onclick="listingsPagination(${numOfPages});" style="font-size: 14px ; font-weight: 600">last</a> </span>&nbsp;
 					</core:if>
 				</div>
 				<div class="buttons-center">
