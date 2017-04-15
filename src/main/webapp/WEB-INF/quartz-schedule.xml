@@ -1,0 +1,89 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+
+	<bean id="runMeTask" class="com.lbl.scheduler.SubmissionTask" />
+
+	<!-- Spring Quartz -->
+	<bean name="runMeJob" class="org.springframework.scheduling.quartz.JobDetailBean">
+
+		<property name="jobClass" value="com.lbl.scheduler.SubmissionJob" />
+
+		<property name="jobDataAsMap">
+			<map>
+				<entry key="runMeTask" value-ref="runMeTask" />
+			</map>
+		</property>
+
+	</bean>
+
+
+	<!-- Cron Trigger, run every 5 seconds -->
+	<bean id="cronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+
+		<property name="jobDetail" ref="runMeJob" />
+		<!--<property name="cronExpression" value="0 0/2 * * * ?" /> every day 
+			at 1z AM -->
+		<property name="cronExpression" value="0 0 0 1 * ?" />
+
+	</bean>
+
+	<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="jobDetails">
+			<list>
+				<ref bean="runMeJob" />
+			</list>
+		</property>
+
+		<property name="triggers">
+			<list>
+				<ref bean="cronTrigger" />
+			</list>
+		</property>
+	</bean>
+	
+	
+	
+	<bean id="gmbTask" class="com.lbl.scheduler.GMBSchedulerTask" />
+
+	<!-- Spring Quartz -->
+	<bean name="gmbJob" class="org.springframework.scheduling.quartz.JobDetailBean">
+
+		<property name="jobClass" value="com.lbl.scheduler.GMBSchedulerJob" />
+
+		<property name="jobDataAsMap">
+			<map>
+				<entry key="runMeTask" value-ref="gmbTask" />
+			</map>
+		</property>
+
+	</bean>
+
+
+	<!-- Cron Trigger, run every 5 seconds -->
+	<bean id="cronGMB" class="org.springframework.scheduling.quartz.CronTriggerBean">
+
+		<property name="jobDetail" ref="gmbJob" />
+		<!--<property name="cronExpression" value="0 0/2 * * * ?" /> every day 
+			at 1z AM -->
+		<property name="cronExpression" value="0 21 17 ? * *" />
+
+	</bean>
+
+	<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="jobDetails">
+			<list>
+				<ref bean="gmbJob" />
+			</list>
+		</property>
+
+		<property name="triggers">
+			<list>
+				<ref bean="cronGMB" />
+			</list>
+		</property>
+	</bean>
+
+</beans>

@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="testReport2" pageWidth="792" pageHeight="612" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="752" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="cd2fb64c-f956-4b84-87a8-f2f80854920c">
+	<property name="ireport.zoom" value="1.4641000000000086"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="88"/>
+	<style name="H1" mode="Transparent" forecolor="#FFFFFF" vAlign="Top" fontSize="18"/>
+	<style name="Brand Name" mode="Transparent" forecolor="#232B2F" fill="Solid" fontSize="10" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false"/>
+	<style name="Page Title" forecolor="#232B2F" fontSize="20" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#727272"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F9F6F6" vAlign="Middle">
+		<box>
+			<topPen lineWidth="0.5" lineColor="#727272"/>
+			<bottomPen lineWidth="0.5" lineColor="#727272"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#F9F6F6">
+		<pen lineWidth="1.0"/>
+		<box>
+			<topPen lineWidth="0.5" lineColor="#727272"/>
+			<bottomPen lineWidth="0.5" lineColor="#727272"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<topPen lineWidth="0.5" lineColor="#727272"/>
+			<bottomPen lineWidth="0.5" lineColor="#727272"/>
+		</box>
+	</style>
+		<style name="inBusinessRed">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$F{field22}.equals("R")]]></conditionExpression>
+			<style forecolor="#FF0000"/>
+		</conditionalStyle>
+	</style>
+	<style name="inAddressRed">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$F{field17}.equals("R")]]></conditionExpression>
+			<style forecolor="#FF0000"/>
+		</conditionalStyle>
+	</style>
+	<style name="inCityRed">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$F{field23}.equals("R")]]></conditionExpression>
+			<style forecolor="#FF0000"/>
+		</conditionalStyle>
+	</style>
+	<style name="inStateRed">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$F{field25}.equals("R")]]></conditionExpression>
+			<style forecolor="#FF0000"/>
+		</conditionalStyle>
+	</style>
+	<style name="inZipRed">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$F{field24}.equals("R")]]></conditionExpression>
+			<style forecolor="#FF0000"/>
+		</conditionalStyle>
+	</style>
+	<style name="inPhoneRed">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$F{field21}.equals("R")]]></conditionExpression>
+			<style forecolor="#FF0000"/>
+		</conditionalStyle>
+	</style>
+		<style name="inwebsiteRed">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$F{field26}.equals("R")]]></conditionExpression>
+			<style forecolor="#FF0000"/>
+		</conditionalStyle>
+	</style>
+	<parameter name="brandName" class="java.lang.String"/>
+	<parameter name="logoDir" class="java.lang.String"/>
+	<parameter name="brandId" class="java.lang.Integer"/>
+	<parameter name="logoListing" class="java.lang.String"/>
+	<parameter name="storeId" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="lat" class="java.lang.Float"/>
+	<parameter name="lon" class="java.lang.Float"/>
+	<queryString>
+		<![CDATA[select b.companyName field1, b.locationAddress field2, b.locationCity field3, b.locationState field4, b.locationZipcode field5, b.locationPhone field6, b.webAddress field7,
+(select ar.averageAccuracy from accuracyreport ar where store = $P{storeId}) field8,
+cr.businessname field9, cr.address field10, cr.city field11, cr.state field12, cr.zip field13,  cr.phone field14, cr.website field15, cr.directory field16,  field17, field21, field22, field23 ,field24 , field25, field26
+
+from checkreport cr, business b
+where b.store = $P{storeId}
+AND b.clientId=$P{brandId} AND b.store = cr.store AND b.clientId = cr.brandId]]>
+	</queryString>
+	<field name="field1" class="java.lang.Object">
+		<fieldDescription><![CDATA[field1]]></fieldDescription>
+	</field>
+	<field name="field10" class="java.lang.Object">
+		<fieldDescription><![CDATA[field10]]></fieldDescription>
+	</field>
+	<field name="field11" class="java.lang.Object">
+		<fieldDescription><![CDATA[field11]]></fieldDescription>
+	</field>
+	<field name="field12" class="java.lang.Object">
+		<fieldDescription><![CDATA[field12]]></fieldDescription>
+	</field>
+	<field name="field13" class="java.lang.Object">
+		<fieldDescription><![CDATA[field13]]></fieldDescription>
+	</field>
+	<field name="field14" class="java.lang.Object">
+		<fieldDescription><![CDATA[field14]]></fieldDescription>
+	</field>
+	<field name="field15" class="java.lang.Object">
+		<fieldDescription><![CDATA[field15]]></fieldDescription>
+	</field>
+	<field name="field16" class="java.lang.Object">
+		<fieldDescription><![CDATA[field16]]></fieldDescription>
+	</field>
+	<field name="field17" class="java.lang.Object">
+		<fieldDescription><![CDATA[field17]]></fieldDescription>
+	</field>
+	<field name="field18" class="java.lang.Object">
+		<fieldDescription><![CDATA[field18]]></fieldDescription>
+	</field>
+	<field name="field19" class="java.lang.Object">
+		<fieldDescription><![CDATA[field19]]></fieldDescription>
+	</field>
+	<field name="field2" class="java.lang.Object">
+		<fieldDescription><![CDATA[field2]]></fieldDescription>
+	</field>
+	<field name="field20" class="java.lang.Object">
+		<fieldDescription><![CDATA[field20]]></fieldDescription>
+	</field>
+	<field name="field3" class="java.lang.Object">
+		<fieldDescription><![CDATA[field3]]></fieldDescription>
+	</field>
+	<field name="field4" class="java.lang.Object">
+		<fieldDescription><![CDATA[field4]]></fieldDescription>
+	</field>
+	<field name="field5" class="java.lang.Object">
+		<fieldDescription><![CDATA[field5]]></fieldDescription>
+	</field>
+	<field name="field6" class="java.lang.Object">
+		<fieldDescription><![CDATA[field6]]></fieldDescription>
+	</field>
+	<field name="field7" class="java.lang.Object">
+		<fieldDescription><![CDATA[field7]]></fieldDescription>
+	</field>
+	<field name="field8" class="java.lang.Object">
+		<fieldDescription><![CDATA[field8]]></fieldDescription>
+	</field>
+	<field name="field9" class="java.lang.Object">
+		<fieldDescription><![CDATA[field9]]></fieldDescription>
+	</field>
+	<field name="field21" class="java.lang.Object">
+		<fieldDescription><![CDATA[field21]]></fieldDescription>
+	</field>
+	<field name="field22" class="java.lang.Object">
+		<fieldDescription><![CDATA[field22]]></fieldDescription>
+	</field>
+	<field name="field23" class="java.lang.Object">
+		<fieldDescription><![CDATA[field23]]></fieldDescription>
+	</field>
+	<field name="field24" class="java.lang.Object">
+		<fieldDescription><![CDATA[field24]]></fieldDescription>
+	</field>
+	<field name="field25" class="java.lang.Object">
+		<fieldDescription><![CDATA[field25]]></fieldDescription>
+	</field>
+	<field name="field26" class="java.lang.Object">
+		<fieldDescription><![CDATA[field26]]></fieldDescription>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="106" splitType="Stretch">
+			<image scaleImage="FillFrame">
+				<reportElement x="0" y="0" width="42" height="61" uuid="66fbdcf5-7879-4867-a5d6-c7c1a1428d8b"/>
+				<imageExpression><![CDATA[$P{logoDir}]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement style="Brand Name" x="54" y="27" width="297" height="34" uuid="99a6787e-5da3-479a-9e06-3abe4aab59c5"/>
+				<textElement markup="none">
+					<font size="20" isBold="true"/>
+				</textElement>
+				<text><![CDATA[LOCAL BUSINESS LISTINGS]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="0" y="71" width="752" height="35" forecolor="#FFFFFF" backcolor="#CC2F12" uuid="2f78f110-2525-4721-821d-c949fe33e05f"/>
+				<graphicElement>
+					<pen lineWidth="0.0"/>
+				</graphicElement>
+			</rectangle>
+			<image>
+				<reportElement x="10" y="80" width="21" height="23" uuid="8846d501-bdb6-477f-b0d0-976ae4c7b2f7"/>
+				<imageExpression><![CDATA[$P{logoListing}]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement style="H1" mode="Transparent" x="45" y="76" width="170" height="30" uuid="70a85199-cd28-4df6-876e-a14652bd2ce7"/>
+				<textElement markup="styled">
+					<font size="18"/>
+				</textElement>
+				<text><![CDATA[LISTING ACTIVITY]]></text>
+			</staticText>
+			<textField>
+				<reportElement style="Brand Name" mode="Transparent" x="236" y="79" width="325" height="22" forecolor="#FFFFFF" uuid="7e2bc045-027b-458c-96a1-a059d01e4d1e"/>
+				<textElement markup="none">
+					<font size="14" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{brandName} + "  #" + $P{storeId}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="223" y="79" width="1" height="20" forecolor="#DE7865" uuid="c125813e-d2ce-4fe2-84db-77d223a68199"/>
+			</line>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="155" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="0" width="752" height="148" backcolor="#F5F5F5" uuid="cbbddf4c-08f2-4547-ad50-8d1ee69f375b"/>
+				<graphicElement>
+					<pen lineWidth="0.0"/>
+				</graphicElement>
+			</rectangle>
+			<componentElement>
+				<reportElement x="0" y="0" width="527" height="148" uuid="224c3795-a9e0-410e-ac03-2076463cf56d"/>
+				<mp:map xmlns:mp="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" evaluationTime="Report">
+					<mp:latitudeExpression><![CDATA[$P{lat}]]></mp:latitudeExpression>
+					<mp:longitudeExpression><![CDATA[$P{lon}]]></mp:longitudeExpression>
+					<mp:zoomExpression><![CDATA[15]]></mp:zoomExpression>
+					<mp:markerData>
+						<dataset/>
+						<mp:item>
+							<mp:itemProperty name="latitude">
+								<valueExpression><![CDATA[$P{lat}]]></valueExpression>
+							</mp:itemProperty>
+							<mp:itemProperty name="longitude">
+								<valueExpression><![CDATA[$P{lon}]]></valueExpression>
+							</mp:itemProperty>
+						</mp:item>
+					</mp:markerData>
+				</mp:map>
+			</componentElement>
+			<textField>
+				<reportElement x="546" y="50" width="190" height="98" uuid="65b28c00-b0c5-4c89-897f-94c7b62e1aa4"/>
+				<textElement>
+					<font size="11"/>
+					<paragraph lineSpacing="Single" lineSpacingSize="2.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{field2}
++ "\n" + $F{field3} + ", " + $F{field4} + " " + $F{field5}
++ "\n" + $F{field6}
++ "\n" + $F{field7}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="546" y="5" width="111" height="23" uuid="3b01fc9e-8efb-4807-9d6b-c244a2f9a119"/>
+				<textElement verticalAlignment="Bottom">
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[Location Accuracy:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="657" y="5" width="79" height="24" uuid="a7f6952f-59e3-4a44-a460-6adc17370a95"/>
+				<textElement verticalAlignment="Bottom">
+					<font size="18" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{field8}.toString() + "%"]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="546" y="38" width="190" height="1" forecolor="#CCCCCC" uuid="4a1706ad-1f40-4bb4-bb51-c416b5b1b290"/>
+			</line>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="49" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="27" width="752" height="22" forecolor="#FFF899" backcolor="#FFF899" uuid="d99770bd-d4f7-43b6-aaa7-30a413775bfd"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="0" y="28" width="65" height="20" uuid="7aa413e4-bf1f-44d9-98fa-b6e6921bd363"/>
+				<box topPadding="2" leftPadding="5"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[LBL Pro]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="0" y="0" width="752" height="26" backcolor="#F5F5F5" uuid="dd4219d1-edf3-4fbf-8f71-8c5e80b3be96"/>
+				<graphicElement>
+					<pen lineWidth="0.0"/>
+				</graphicElement>
+			</rectangle>
+			<textField>
+				<reportElement x="611" y="28" width="141" height="20" uuid="1332a56a-b0f8-4681-89ed-5594dfb246af"/>
+				<box topPadding="2" leftPadding="5"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{field7}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="509" y="5" width="102" height="16" uuid="826c1f15-4b61-4ca6-90eb-0394143dc871"/>
+				<box leftPadding="5"/>
+				<textElement>
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Phone]]></text>
+			</staticText>
+			<line>
+				<reportElement positionType="FixRelativeToBottom" x="0" y="48" width="752" height="1" forecolor="#CCCCCC" uuid="5c6f3fc8-1594-406b-b385-e4885977025d"/>
+			</line>
+			<textField>
+				<reportElement x="455" y="28" width="54" height="20" uuid="705bbbb6-289b-4775-966f-89267297b46e"/>
+				<box topPadding="2" leftPadding="5"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{field5}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement positionType="FixRelativeToBottom" x="0" y="26" width="752" height="1" forecolor="#CCCCCC" uuid="50211438-3c14-4b14-b72a-deb352dd1e9d"/>
+			</line>
+			<staticText>
+				<reportElement x="0" y="5" width="65" height="16" uuid="8a01b217-6afe-4861-8f06-5db0f74a9f21"/>
+				<box leftPadding="5"/>
+				<textElement>
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Directory]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="401" y="5" width="54" height="16" uuid="8715f663-69de-4acd-ae0b-5377a633dc5a"/>
+				<box leftPadding="5"/>
+				<textElement>
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[State]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="65" y="5" width="105" height="16" uuid="5bd26d4b-54b4-498d-bfaa-bc02ba2cd9f1"/>
+				<box leftPadding="5"/>
+				<textElement>
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Business Name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="455" y="5" width="54" height="16" uuid="a7044d2b-ea6f-4a05-908b-4767b1c34ed4"/>
+				<box leftPadding="5"/>
+				<textElement>
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Zip]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="509" y="28" width="102" height="20" uuid="cbb273af-ca3b-48c5-abf6-f4b25cac7fa0"/>
+				<box topPadding="2" leftPadding="5"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["(" + $F{field6}.toString().substring(0, 3 ) + ") " + $F{field6}.toString().substring(3, 6)
++ "-" + $F{field6}.toString().substring(6)]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="611" y="5" width="141" height="16" uuid="6b451426-567d-49dc-9881-a5d1730c343f"/>
+				<box leftPadding="5"/>
+				<textElement>
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Web Address]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="170" y="5" width="165" height="16" uuid="fd6bab5b-29d2-4bb4-9744-9e30fddb23ea"/>
+				<box leftPadding="5"/>
+				<textElement>
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Address]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="335" y="28" width="66" height="20" uuid="24325cfb-9ecb-4b02-96e5-8e9324dcdfe1"/>
+				<box topPadding="2" leftPadding="5"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{field3}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="170" y="28" width="165" height="20" uuid="534352ec-4471-495e-96e8-153f4d231505"/>
+				<box topPadding="2" leftPadding="5"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{field2}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="401" y="28" width="54" height="20" uuid="e25caf51-7b44-4e63-bd0c-c2eed11aaa20"/>
+				<box topPadding="2" leftPadding="5"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{field4}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="65" y="28" width="105" height="20" uuid="46d960ba-73ed-40ca-a2b5-1160f7fe9505"/>
+				<box topPadding="2" leftPadding="5"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{field1}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="335" y="5" width="66" height="16" uuid="b2835775-2bd4-4c6d-98f6-296ce6ba78ba"/>
+				<box leftPadding="5"/>
+				<textElement>
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[City]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="18" splitType="Stretch">
+			<elementGroup>
+				<textField>
+					<reportElement style="inStateRed" x="401" y="1" width="54" height="16" isPrintInFirstWholeBand="true" uuid="4e017965-ef03-4521-8712-7d62e742a687"/>
+					<box topPadding="0" leftPadding="5">
+						<bottomPen lineWidth="1.0" lineColor="#727272"/>
+					</box>
+					<textElement>
+						<font size="10"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{field12}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="1" width="65" height="16" isPrintInFirstWholeBand="true" isPrintWhenDetailOverflows="true" uuid="692c0b3e-6779-40aa-a1dd-1594618d3c7a"/>
+					<box topPadding="0" leftPadding="5">
+						<bottomPen lineWidth="1.0" lineColor="#727272"/>
+					</box>
+					<textElement>
+						<font size="10"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{field16}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement mode="Transparent" style="inBusinessRed" x="65" y="1" width="105" height="16" isPrintInFirstWholeBand="true" uuid="af73bcb6-9a5b-4808-ae60-8a979c62d0f9"/>
+					<box topPadding="0" leftPadding="5">
+						<bottomPen lineWidth="1.0" lineColor="#727272"/>
+					</box>
+					<textElement>
+						<font size="10"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{field9}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement style="inZipRed" x="455" y="1" width="54" height="16" isPrintInFirstWholeBand="true" uuid="c4603f53-d2b4-4f2a-80bb-25c5bb3f4e14"/>
+					<box topPadding="0" leftPadding="5">
+						<bottomPen lineWidth="1.0" lineColor="#727272"/>
+					</box>
+					<textFieldExpression><![CDATA[$F{field13}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement style="inPhoneRed"  x="509" y="1" width="102" height="16" isPrintInFirstWholeBand="true" uuid="f374bc13-3db3-4b94-b1b7-1795c7bdc4e2"/>
+					<box topPadding="0" leftPadding="5">
+						<bottomPen lineWidth="1.0" lineColor="#727272"/>
+					</box>
+					<textFieldExpression><![CDATA[$F{field14}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement style="inCityRed"  x="335" y="1" width="66" height="16" isPrintInFirstWholeBand="true" uuid="038b0e5f-5d86-41b2-8bd2-ee29446c9e3e"/>
+					<box topPadding="0" leftPadding="5">
+						<bottomPen lineWidth="1.0" lineColor="#727272"/>
+					</box>
+					<textFieldExpression><![CDATA[$F{field11}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="false">
+					<reportElement style="inAddressRed" x="170" y="1" width="165" height="16" isPrintInFirstWholeBand="true" uuid="d951616e-a8ea-4465-88da-7a4f112bbf2b"/>
+					<box topPadding="0" leftPadding="5">
+						<bottomPen lineWidth="1.0" lineColor="#727272"/>
+					</box>
+					<textElement>
+						<font size="10"/>
+						
+					</textElement>
+					<textFieldExpression><![CDATA[$F{field10}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement style="inwebsiteRed" x="611" y="1" width="141" height="16" isPrintInFirstWholeBand="true" uuid="a7a3412c-6da2-42e0-8375-ae955a5ed7a9"/>
+					<box topPadding="0" leftPadding="5">
+						<bottomPen lineWidth="1.0" lineColor="#727272"/>
+					</box>
+					<textFieldExpression><![CDATA[$F{field15}]]></textFieldExpression>
+				</textField>
+			</elementGroup>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="1" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="43" splitType="Stretch">
+			<staticText>
+				<reportElement style="Brand Name" positionType="FixRelativeToBottom" x="0" y="26" width="381" height="16" uuid="2d038d9a-2e47-489f-a61d-5db992caace6"/>
+				<box topPadding="0"/>
+				<textElement markup="none">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[LOCAL BUSINESS LISTINGS]]></text>
+			</staticText>
+			<textField>
+				<reportElement positionType="FixRelativeToBottom" x="652" y="26" width="100" height="16" uuid="99751fc7-f497-4563-84bf-488348f737ac"/>
+				<box topPadding="0"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="2" splitType="Stretch"/>
+	</summary>
+</jasperReport>

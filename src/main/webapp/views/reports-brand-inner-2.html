@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Local Business Listings | Reports</title>
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="css/navigation.css">
+<link rel="stylesheet" href="css/common.css">
+<link rel="stylesheet" href="css/grids.css">
+<link rel="stylesheet" href="css/sidebar.css">
+<link rel="stylesheet" href="css/bpopUp.css">
+<link rel="stylesheet" href="css/jquery-ui.css">
+ <link rel="stylesheet" href="css/style.css">
+<style type="text/css">
+.dsp_None{
+display: none;
+}
+ .loading {
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    top:0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index:9999;
+    font-size: 20px;
+    text-align: center;
+    padding-top: 200px;
+    color: #fff;
+}
+</style>
+
+</head>
+<body id="office" class="mw980">
+<!-- page wrapper -->
+<div class="popup" id="direcorywarningpopup" style="display: none;">
+	<div class="pp-header">
+		<!-- <div class="close"></div> -->
+		<span class="buttonIndicator b-close"><span>X</span></span> <span>Warning!!</span>
+	</div>
+	<div class="pp-subheader"></div>
+	<div class="pp-body">
+		<div class="buttons">Please select store and directory</div>
+	</div>
+</div>
+ <div class="popup" id="datewarningpopup" style="display: none;">
+	<div class="pp-header">
+		<!-- <div class="close"></div> -->
+		<span class="buttonIndicator b-close"><span>X</span></span> <span>Warning!!</span>
+	</div>
+	<div class="pp-subheader"></div>
+	<div class="pp-body">
+		<div class="buttons">Please select Date</div>
+	</div>
+</div>
+<div class="popup" id="warningpopup" style="display: none;">
+	<div class="pp-header">
+		<!-- <div class="close"></div> -->
+		<span class="buttonIndicator b-close"><span>X</span></span> <span>Warning!!</span>
+	</div>
+	<div class="pp-subheader"></div>
+	<div class="pp-body">
+		<div class="buttons">Please select Brand and Store </div>
+	</div>
+</div>
+<div class="popup" id="storewarningpopup" style="display: none;">
+	<div class="pp-header">
+		<!-- <div class="close"></div> -->
+		<span class="buttonIndicator b-close"><span>X</span></span> <span>Warning!!</span>
+	</div>
+	<div class="pp-subheader"></div>
+	<div class="pp-body">
+		<div class="buttons">Please select Brand </div>
+	</div>
+</div>
+</head>
+<body id="office" class="mw980">
+<div class="popup" id="upload"
+		style="display: none; width: 60%; height: 60%; margin-left: 262px;">
+		<div class="pp-header">
+			<span class="buttonIndicator b-close"><span>X</span></span>
+		</div>
+		<div class="pp-body">
+			<table width="100%" class="grid grid_13">
+				<colgroup>
+					<col width="15%" />
+					<col width="15%" />
+					<col width="12%" />
+					<col width="10%" />
+					<col width="10%" />
+					<col width="11%" />
+				</colgroup>
+				<thead id="businessTableHeaders">
+					<tr>
+						<th class="th_04"><div>Business Name</div></th>
+						<th class="th_05"><div>Address</div></th>
+						<th class="th_06"><div>City</div></th>
+						<th class="th_07"><div>State</div></th>
+						<th class="th_08"><div>Zip</div></th>
+						<th class="th_09"><div>Phone</div></th>
+					</tr>
+				</thead>
+			</table>
+			<table id="businessTable" width="100%" height="60%"
+				class="grid grid_13">
+				<colgroup>
+					<col width="15%" />
+					<col width="15%" />
+					<col width="12%" />
+					<col width="10%" />
+					<col width="10%" />
+					<col width="11%" />
+				</colgroup>
+				<tbody id="businessInfo">
+					<core:forEach items="${uploadReports}" var="bean" varStatus="i">
+						<tr class="odd">
+							<td class="td_04"><div>
+									<core:out value="${bean.companyName}"></core:out>
+								</div></td>
+							<td class="td_05"><div>
+									<core:out value="${bean.locationAddress}"></core:out>
+								</div></td>
+							<td class="td_06"><div>
+									<core:out value="${bean.locationCity}"></core:out>
+								</div></td>
+							<td class="td_07"><div>
+									<core:out value="${bean.locationState}"></core:out>
+								</div></td>
+							<td class="td_08"><div>
+									<core:out value="${bean.locationZipCode}"></core:out>
+								</div></td>
+							<td class="td_09"><div>
+									<core:out value="${bean.locationPhone}"></core:out>
+								</div></td>
+						</tr>
+					</core:forEach>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<div class="popup" id="distrreport"
+		style="display: none; width: 60%; height: 60%; margin-left: 262px;">
+		<div class="pp-header">
+			<span class="buttonIndicator b-close"><span>X</span></span>
+		</div>
+		<div class="pp-body">
+			<table width="100%" class="grid grid_13">
+				<colgroup>
+					<col width="18%" />
+					<col width="18%" />
+					<col width="17%" />
+					<col width="20%" />
+				</colgroup>
+				<thead id="businessTableHeaders">
+					<tr>
+						<th class="th_04"><div>Brand/Listing</div></th>
+						<th class="th_05"><div>OfficeId</div></th>
+						<th class="th_06"><div>Provider</div></th>
+						<th class="th_07"><div>Last Submission</div></th>
+					</tr>
+				</thead>
+			</table>
+			<table id="businessTable" width="100%" height="60%"
+				class="grid grid_13">
+				<colgroup>
+					<col width="18%" />
+					<col width="18%" />
+					<col width="17%" />
+					<col width="20%" />
+				</colgroup>
+				<tbody id="businessInfo">
+					<core:forEach items="${DistributionReports}" var="bean" varStatus="i">
+						<tr class="odd">
+							<td class="td_04"><div>
+									<core:out value="${bean.brandName}"></core:out>
+								</div></td>
+							<td class="td_05"><div>
+									<core:out value="${bean.clientId}"></core:out>
+								</div></td>
+							<td class="td_06"><div>
+									<core:out value="${bean.partner}"></core:out>
+								</div></td>
+							<td class="td_07"><div>
+									<core:out value="${bean.date}"></core:out>
+								</div></td>
+						</tr>
+					</core:forEach>
+				</tbody>
+			</table>
+		</div>
+	</div>
+<!-- page wrapper -->
+<div class="wrapper"> 
+	<!-- header -->
+	<div class="header">	
+	<a href="dash-board.htm" class="logo_lbl">Local Business Listings</a>
+			<ul class="top_nav">
+				<li class="home"><a href="dash-board.htm">Home</a></li>
+				<li class="help"><a href="help.htm">Help</a></li>
+				<li class="signout"><a href="logout.htm">Signout</a></li>
+				<li class="welcome">
+					<p>
+						Hello, <br> ${userName}
+					</p>
+				</li>
+			</ul>
+	</div>
+	<!-- // header --> 
+	<!-- content wrapper -->
+	<div class="content_wrapper no-sidebar"> 
+		<!-- left side navigation -->
+		<ul class="ul_left_nav">
+				<li class="si_dashboard"><a href="dash-board.htm">Dashboard</a></li>
+				<li class="si_business_listings "><a href="business-listings.htm">Business Listings</a></li>
+				<li class="si_error_listings"><a href="listing-error.htm">Listing
+						Errors</a></li>
+				<li class="si_upload_export"><a href="upload-export.htm">Upload/Export</a></li>
+				<li class="si_reports selected"><a href="reports.htm">Reports</a></li>
+			<li class="si_admin"><a href="admin-listings.htm">CM admin</a></li>
+			<li class="si_mobile_profile "><a href="manage-account.htm">Manage Account</a></li>
+		<!-- 	<li class="si_schduler"><a href="scheduler.htm">Schedule</a></li> -->
+			<!--<li class="si_toolbox"><a href="getConvergentToolbox.htm">Convergent Toolbox</a></li>-->
+			</ul>
+		<!-- // left side navigation --> 
+		<!-- content area -->
+		<div class="content" id="id_content" style="min-height: 804px;">
+    	<div class="nav_pointer pos_01"></div>
+		  <!-- subheader -->
+			<div class="subheader clearfix">
+				<h1>REPORTS</h1>
+				<a href="" class="back">< Back to Reporting Criteria</a>
+				<span>Export Report</span>
+				<a href="" class="ico_pdf">PDF</a>
+				<p>Convergent Mobile</p>
+			</div>
+			<!-- // subheader -->
+		  <input name="uploadreportpopup" value="" id="uploadreportpopup" type="hidden">
+		  <form id="reportsForm" action="/lbl_pro/reports.htm" method="post">
+			<div class="inner_box">
+			<!-- box -->
+			<!-- title -->
+			<div class="box box_red_title box_report">
+				<div class="box_title mb9">
+				<h2>Google My Business Insights – Brand</h2>
+			</div>
+			<!-- // title -->
+			<!-- subtitle -->
+			<div class="box_subtitle_lightgray">
+			  <p><strong>H&R Block</strong>, All Locations <span class="divider"></span> Jan 1, 2017 - Jan 31, 2017</p>
+			</div>
+			<div class="box_subtitle_darkgray">
+			  <div class="filter-listings" >
+			  	from <input type="text" class="input_date_01 hasDatepicker"> to <input type="text" class="input_date_01 hasDatepicker">
+			  	<select name="" id="">
+			  		<option value="">State</option>			  		
+			  	</select>
+			  	<a href="" class="btr_button">FIlter Listings</a>
+			  </div>
+			</div>
+			<!-- // subtitle -->
+			<!-- wide_column -->
+			  <div class="wide_column_wrapper report_container">
+				<div class="description" id="id_report_01">
+
+					<div class="box-report-graph">
+						<h2>How customers search for you business</h2>
+						<div class="left-col">
+							<!-- place for graphic -->
+						</div>
+						<div class="right-col">
+							<p class="red-title">Direct: <strong>29</strong></p>
+							<p>Customers who find your listing searching for your business name or address</p>
+							<p class="blue-title">Discovery: <strong>685</strong></p>
+							<p>Customers who find your listing searching for a category, product, or service</p>
+						</div>
+						<div class="clearfix"></div>
+					</div>
+
+					<div style="padding: 0 0 20px; background: #d7dbe0;">
+						<div class="table-top10" style="width: 100%;">
+							<h2>Top 10 Locations</h2>
+							<table class="grid grid_17" width="100%">
+								<colgroup>
+									<col width="17%">
+									<col width="30%">
+									<col width="8%">
+									<col width="15%">
+									<col width="15%">
+									<col width="15%">
+								</colgroup>
+								<thead>
+									<tr>
+										<th class="th_01"><div>Store #</div></th>
+										<th class="th_02"><div>City</div></th>
+										<th class="th_02"><div>State</div></th>
+										<th class="th_02"><div>Direct</div></th>
+										<th class="th_02"><div>Discovery</div></th>
+										<th class="th_05"><div>Total</div></th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr class="odd">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+									<tr class="even">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+									<tr class="odd">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+									<tr class="even">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+									<tr class="odd">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+									<tr class="even">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+									<tr class="odd">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+									<tr class="even">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+									<tr class="odd">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+									<tr class="even">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<div class="table-bot10" style="width: 100%;">
+							<h2>Bottom 10 Locations</h2>
+							<table class="grid grid_17" width="100%">
+								<colgroup>
+									<col width="17%">
+									<col width="30%">
+									<col width="8%">
+									<col width="15%">
+									<col width="15%">
+									<col width="15%">
+								</colgroup>
+								<thead>
+									<tr>
+										<th class="th_01"><div>Store #</div></th>
+										<th class="th_02"><div>City</div></th>
+										<th class="th_02"><div>State</div></th>
+										<th class="th_02"><div>Direct</div></th>
+										<th class="th_02"><div>Discovery</div></th>
+										<th class="th_05"><div>Total</div></th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr class="odd">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+									<tr class="even">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+									<tr class="odd">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+									<tr class="even">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+									<tr class="odd">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+									<tr class="even">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+									<tr class="odd">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+									<tr class="even">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+									<tr class="odd">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+									<tr class="even">
+										<td class="td_01"><div>123451234512</div></td>
+										<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+										<td class="td_03"><div>VA</div></td>
+										<td class="td_04"><div>123</div></td>
+										<td class="td_05"><div>123</div></td>
+										<td class="td_06"><div>123</div></td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<div class="clearfix"></div>
+					</div>
+					<div class="box-report-graph">
+						<h2>Where customers view your business on Google</h2>
+						<h3>The Google services that customers use to find your business</h3>
+						<div class="left-col">
+							<!-- place for graphic -->
+						</div>
+						<div class="right-col">
+							<table class="grid grid_25">
+								<tr>
+									<td><input type="checkbox"></td>
+									<td>Listing on Search </td>
+									<td>234</td>
+								</tr>
+								<tr>
+									<td><input type="checkbox"></td>
+									<td>Listing on Maps </td>
+									<td>567</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td><strong>Total Views</strong></td>
+									<td>234</td>
+								</tr>
+							</table>
+
+						</div>
+						<div class="clearfix"></div>
+					</div>
+					<div style="padding: 0 0 20px; background: #d7dbe0;">
+					<div class="table-top10" style="width: 100%;">
+						<h2>Top 10 Locations</h2>
+						<table class="grid grid_17" width="100%">
+							<colgroup>
+								<col width="17%">
+								<col width="30%">
+								<col width="8%">
+								<col width="15%">
+								<col width="15%">
+								<col width="15%">
+							</colgroup>
+							<thead>
+								<tr>
+									<th class="th_01"><div>Store #</div></th>
+									<th class="th_02"><div>City</div></th>
+									<th class="th_02"><div>State</div></th>
+									<th class="th_02"><div>Direct</div></th>
+									<th class="th_02"><div>Discovery</div></th>
+									<th class="th_05"><div>Total</div></th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div class="table-bot10" style="width: 100%;">
+						<h2>Bottom 10 Locations</h2>
+						<table class="grid grid_17" width="100%">
+							<colgroup>
+								<col width="17%">
+								<col width="30%">
+								<col width="8%">
+								<col width="15%">
+								<col width="15%">
+								<col width="15%">
+							</colgroup>
+							<thead>
+								<tr>
+									<th class="th_01"><div>Store #</div></th>
+									<th class="th_02"><div>City</div></th>
+									<th class="th_02"><div>State</div></th>
+									<th class="th_02"><div>Direct</div></th>
+									<th class="th_02"><div>Discovery</div></th>
+									<th class="th_05"><div>Total</div></th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+							</tbody>
+						</table>
+						</div>
+						<div class="clearfix"></div>
+					</div>
+
+					<div class="box-report-graph">
+						<h2>Customer actions</h2>
+						<h3>The most common actions that customers take on your listing</h3>
+						<div class="left-col">
+							<!-- place for graphic -->
+						</div>
+						<div class="right-col">
+							<table class="grid grid_25">
+								<tr>
+									<td><input type="checkbox"></td>
+									<td>Visit Your Website </td>
+									<td>234</td>
+								</tr>
+								<tr>
+									<td><input type="checkbox"></td>
+									<td>Request Directions  </td>
+									<td>567</td>
+								</tr>
+								<tr>
+									<td><input type="checkbox"></td>
+									<td>Call You  </td>
+									<td>234</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td><strong>Total Actions</strong></td>
+									<td>890</td>
+								</tr>
+							</table>
+
+						</div>
+						<div class="clearfix"></div>
+					</div>
+
+					<div class="table-top10" style="width: 100%;">
+						<h2>Top 10 Locations</h2>
+						<table class="grid grid_17" width="100%">
+							<colgroup>
+								<col width="17%">
+								<col width="30%">
+								<col width="9%">
+								<col width="11%">
+								<col width="11%">
+								<col width="11%">
+								<col width="11%">
+							</colgroup>
+							<thead>
+								<tr>
+									<th class="th_01"><div>Store #</div></th>
+									<th class="th_02"><div>City</div></th>
+									<th class="th_02"><div>State</div></th>
+									<th class="th_02"><div>Website</div></th>
+									<th class="th_02"><div>Directions</div></th>
+									<th class="th_02"><div>Phone</div></th>
+									<th class="th_05"><div>Total</div></th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div class="table-bot10" style="width: 100%;">
+						<h2>Bottom 10 Locations</h2>
+						<table class="grid grid_17" width="100%">
+							<colgroup>
+								<col width="17%">
+								<col width="30%">
+								<col width="9%">
+								<col width="11%">
+								<col width="11%">
+								<col width="11%">
+								<col width="11%">
+							</colgroup>
+							<thead>
+								<tr>
+									<th class="th_01"><div>Store #</div></th>
+									<th class="th_02"><div>City</div></th>
+									<th class="th_02"><div>State</div></th>
+									<th class="th_02"><div>Website</div></th>
+									<th class="th_02"><div>Directions</div></th>
+									<th class="th_02"><div>Phone</div></th>
+									<th class="th_05"><div>Total</div></th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="odd">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+								<tr class="even">
+									<td class="td_01"><div>123451234512</div></td>
+									<td class="td_02"><div>Aberdeen Proving Grounds</div></td>
+									<td class="td_03"><div>VA</div></td>
+									<td class="td_04"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_05"><div>123</div></td>
+									<td class="td_06"><div>123</div></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					</div>
+
+					<div class="clearfix"></div>
+				</div>
+			  </div>
+			  <!-- // wide_column -->
+			</div>
+			<!-- // box -->
+			
+		  </div>
+		</form></div>
+		<!-- // content area --> 
+		
+	<div class="clearfix"></div>
+	<!-- // content wrapper --> 
+	<!-- footer -->
+	<div class="footer">
+		<div class="powered">Powered by</div>
+	</div>
+	<!-- // footer --> 
+</div>
+<!-- // page wrapper -->
+<div class="popup-shader" style="display: none"></div>
+<div class="popup" style="display: none">
+	<div class="pp-header">
+		<div class="close"></div>
+		Upload File
+	</div>
+	<div class="pp-subheader">Make sure you are using our <a href="#">bulk upload template</a> for your data</div>
+	<div class="pp-body">
+		<div class="upload">
+			<a href="#" class="btn_grey_2">Choose file</a>
+			<span>No file selected</span>
+			<a href="#" class="btn_dark_blue_2">Upload</a>
+		</div>
+	</div>
+</div>
+<div class="popup" style="display:none">
+	<div class="pp-header">
+		<div class="close"></div>
+		Upload File
+	</div>
+	<div class="pp-body">
+		<div class="result success">Upload complete, results can be seen in Business Listings.</div>
+		<div class="result-details">
+			<ul>
+				<li><span>1234</span> Listings Uploaded</li>
+				<li><span>1234</span> Listings Completed</li>
+				<li class="red"><span>19</span> Listings with Errors</li>
+			</ul>
+			<a href="#" class="btn_dark_blue_2">View Listings</a>
+		</div>
+	</div>
+</div>
+<div class="popup" style="display: none">
+	<div class="pp-header">
+		<div class="close"></div>
+		Upload File
+	</div>
+	<div class="pp-subheader">Make sure you are using our <a href="#">bulk upload template</a> for your data</div>
+	<div class="pp-body">
+		<div class="result error">Upload incomplete. Error code: 123451234512678</div>
+		<div class="upload">
+			<a href="#" class="btn_grey_2">Choose file</a>
+			<span>No file selected</span>
+			<a href="#" class="btn_dark_blue_2">Upload</a>
+		</div>
+	</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="testReport2" pageWidth="792" pageHeight="612" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="752" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="cd2fb64c-f956-4b84-87a8-f2f80854920c">
+	<property name="ireport.zoom" value="1.4641000000000086"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="383"/>
+	<style name="inRed">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[! $F{address}.equals( $F{locationAddress} )]]></conditionExpression>
+			<style mode="Opaque" forecolor="#FF0000"/>
+		</conditionalStyle>
+	</style>
+	<style name="H1" mode="Transparent" forecolor="#FFFFFF" vAlign="Top" fontSize="18"/>
+	<style name="Brand Name" mode="Transparent" forecolor="#232B2F" fill="Solid" fontSize="10" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false"/>
+	<style name="Page Title" forecolor="#232B2F" fontSize="20" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#727272"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F9F6F6" vAlign="Middle">
+		<box>
+			<topPen lineWidth="0.5" lineColor="#727272"/>
+			<bottomPen lineWidth="0.5" lineColor="#727272"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#F9F6F6">
+		<pen lineWidth="1.0"/>
+		<box>
+			<topPen lineWidth="0.5" lineColor="#727272"/>
+			<bottomPen lineWidth="0.5" lineColor="#727272"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<topPen lineWidth="0.5" lineColor="#727272"/>
+			<bottomPen lineWidth="0.5" lineColor="#727272"/>
+		</box>
+	</style>
+	<subDataset name="chartDS" uuid="b46d8169-0e23-4d3f-b387-c6c4ca244ce0">
+		<parameter name="brandName" class="java.lang.String"/>
+		<queryString>
+			<![CDATA[SELECT citationCount field10, date field11, "" field12
+ FROM lbl.citation_graph
+where brandName = $P{brandName}]]>
+		</queryString>
+		<field name="field10" class="java.lang.Integer"/>
+		<field name="field11" class="java.sql.Timestamp"/>
+		<field name="field12" class="java.lang.String"/>
+	</subDataset>
+	<parameter name="logoCitation" class="java.lang.String"/>
+	<parameter name="brandName" class="java.lang.String"/>
+	<parameter name="logoDir" class="java.lang.String"/>
+	<parameter name="brandId" class="java.lang.Integer"/>
+	<parameter name="storeId" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="subDS1" class="java.util.Collection"/>
+	<queryString>
+		<![CDATA[select store field1, businesName field2, address field3, city field4, state field5, zip field6, phone field7, pathCount field8
+from citation_report
+where brandId = $P{brandId}]]>
+	</queryString>
+	<field name="field1" class="java.lang.String"/>
+	<field name="field2" class="java.lang.String"/>
+	<field name="field3" class="java.lang.String"/>
+	<field name="field4" class="java.lang.String"/>
+	<field name="field5" class="java.lang.String"/>
+	<field name="field6" class="java.lang.String"/>
+	<field name="field7" class="java.lang.String"/>
+	<field name="field8" class="java.lang.Integer"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="106" splitType="Stretch">
+			<image scaleImage="FillFrame">
+				<reportElement x="0" y="0" width="42" height="61" uuid="66fbdcf5-7879-4867-a5d6-c7c1a1428d8b"/>
+				<imageExpression><![CDATA[$P{logoDir}]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement style="Brand Name" x="54" y="27" width="297" height="34" uuid="99a6787e-5da3-479a-9e06-3abe4aab59c5"/>
+				<textElement markup="none">
+					<font size="20" isBold="true"/>
+				</textElement>
+				<text><![CDATA[LOCAL BUSINESS LISTINGS]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="0" y="61" width="752" height="35" forecolor="#FFFFFF" backcolor="#CC2F12" uuid="2f78f110-2525-4721-821d-c949fe33e05f"/>
+				<graphicElement>
+					<pen lineWidth="0.0"/>
+				</graphicElement>
+			</rectangle>
+			<image>
+				<reportElement x="10" y="73" width="21" height="23" uuid="8846d501-bdb6-477f-b0d0-976ae4c7b2f7"/>
+				<imageExpression><![CDATA[$P{logoCitation}]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement x="42" y="60" width="253" height="30" uuid="97fca423-f808-48c7-814a-8f35baa1fd4e"/>
+				<textElement>
+					<font size="18"/>
+				</textElement>
+				<text><![CDATA[CITATIONS REPORT]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="335" y="61" width="146" height="29" uuid="f7be4cb6-b745-457d-ab68-af08a8b03621"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{brandName} + "#" + $P{storeId}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="316" y="64" width="1" height="20" forecolor="#DE7865" uuid="c125813e-d2ce-4fe2-84db-77d223a68199"/>
+			</line>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="213" splitType="Stretch">
+			<timeSeriesChart>
+				<chart isShowLegend="false">
+					<reportElement x="10" y="12" width="660" height="201" uuid="1dace371-0aa8-4fd6-b0a1-85fd6c038051"/>
+					<chartTitle>
+						<font size="14"/>
+						<titleExpression><![CDATA["Total Citations"]]></titleExpression>
+					</chartTitle>
+					<chartSubtitle/>
+					<chartLegend/>
+				</chart>
+				<timeSeriesDataset>
+					<dataset>
+						<datasetRun subDataset="chartDS" uuid="d3ee9842-9946-4a8d-8591-b030721b7a72">
+							<datasetParameter name="brandName">
+								<datasetParameterExpression><![CDATA[$P{brandName}]]></datasetParameterExpression>
+							</datasetParameter>
+							<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($P{subDS1})]]></dataSourceExpression>
+						</datasetRun>
+					</dataset>
+					<timeSeries>
+						<seriesExpression><![CDATA[$F{field12}]]></seriesExpression>
+						<timePeriodExpression><![CDATA[$F{field11}]]></timePeriodExpression>
+						<valueExpression><![CDATA[$F{field10}]]></valueExpression>
+					</timeSeries>
+				</timeSeriesDataset>
+				<timeSeriesPlot>
+					<plot/>
+					<timeAxisFormat>
+						<axisFormat/>
+					</timeAxisFormat>
+					<valueAxisFormat>
+						<axisFormat/>
+					</valueAxisFormat>
+				</timeSeriesPlot>
+			</timeSeriesChart>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="49" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="22" width="752" height="26" backcolor="#F5F5F5" uuid="dd4219d1-edf3-4fbf-8f71-8c5e80b3be96"/>
+				<graphicElement>
+					<pen lineWidth="0.0"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="509" y="32" width="102" height="16" uuid="826c1f15-4b61-4ca6-90eb-0394143dc871"/>
+				<box leftPadding="5"/>
+				<textElement>
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Phone]]></text>
+			</staticText>
+			<line>
+				<reportElement positionType="FixRelativeToBottom" x="0" y="48" width="752" height="1" forecolor="#CCCCCC" uuid="5c6f3fc8-1594-406b-b385-e4885977025d"/>
+			</line>
+			<line>
+				<reportElement positionType="FixRelativeToBottom" x="0" y="26" width="752" height="1" forecolor="#CCCCCC" uuid="50211438-3c14-4b14-b72a-deb352dd1e9d"/>
+			</line>
+			<staticText>
+				<reportElement x="0" y="32" width="65" height="16" uuid="8a01b217-6afe-4861-8f06-5db0f74a9f21"/>
+				<box leftPadding="5"/>
+				<textElement>
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Store #]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="401" y="32" width="54" height="16" uuid="8715f663-69de-4acd-ae0b-5377a633dc5a"/>
+				<box leftPadding="5"/>
+				<textElement>
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[State]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="65" y="32" width="105" height="16" uuid="5bd26d4b-54b4-498d-bfaa-bc02ba2cd9f1"/>
+				<box leftPadding="5"/>
+				<textElement>
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Business Name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="455" y="32" width="54" height="16" uuid="a7044d2b-ea6f-4a05-908b-4767b1c34ed4"/>
+				<box leftPadding="5"/>
+				<textElement>
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Zip]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="611" y="32" width="141" height="16" uuid="6b451426-567d-49dc-9881-a5d1730c343f"/>
+				<box leftPadding="5"/>
+				<textElement>
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Citations By Location]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="170" y="32" width="165" height="16" uuid="fd6bab5b-29d2-4bb4-9744-9e30fddb23ea"/>
+				<box leftPadding="5"/>
+				<textElement>
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Address]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="335" y="32" width="66" height="16" uuid="b2835775-2bd4-4c6d-98f6-296ce6ba78ba"/>
+				<box leftPadding="5"/>
+				<textElement>
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[City]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="24" splitType="Stretch">
+			<elementGroup>
+				<textField>
+					<reportElement x="401" y="4" width="54" height="16" isPrintInFirstWholeBand="true" uuid="4e017965-ef03-4521-8712-7d62e742a687"/>
+					<box topPadding="0" leftPadding="5">
+						<bottomPen lineWidth="1.0" lineColor="#727272"/>
+					</box>
+					<textElement>
+						<font size="10"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{field5}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="4" width="65" height="16" isPrintInFirstWholeBand="true" isPrintWhenDetailOverflows="true" uuid="692c0b3e-6779-40aa-a1dd-1594618d3c7a"/>
+					<box topPadding="0" leftPadding="5">
+						<bottomPen lineWidth="1.0" lineColor="#727272"/>
+					</box>
+					<textElement>
+						<font size="10"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{field1}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="65" y="4" width="105" height="16" isPrintInFirstWholeBand="true" uuid="af73bcb6-9a5b-4808-ae60-8a979c62d0f9"/>
+					<box topPadding="0" leftPadding="5">
+						<bottomPen lineWidth="1.0" lineColor="#727272"/>
+					</box>
+					<textElement>
+						<font size="10"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{field2}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="455" y="4" width="54" height="16" isPrintInFirstWholeBand="true" uuid="c4603f53-d2b4-4f2a-80bb-25c5bb3f4e14"/>
+					<box topPadding="0" leftPadding="5">
+						<bottomPen lineWidth="1.0" lineColor="#727272"/>
+					</box>
+					<textFieldExpression><![CDATA[$F{field6}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="509" y="4" width="102" height="16" isPrintInFirstWholeBand="true" uuid="f374bc13-3db3-4b94-b1b7-1795c7bdc4e2"/>
+					<box topPadding="0" leftPadding="5">
+						<bottomPen lineWidth="1.0" lineColor="#727272"/>
+					</box>
+					<textFieldExpression><![CDATA["(" + $F{field7}.substring(0, 3 ) + ") " + $F{field7}.substring(3, 6)
++ "-" + $F{field7}.substring(6)]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="335" y="4" width="66" height="16" isPrintInFirstWholeBand="true" uuid="038b0e5f-5d86-41b2-8bd2-ee29446c9e3e"/>
+					<box topPadding="0" leftPadding="5">
+						<bottomPen lineWidth="1.0" lineColor="#727272"/>
+					</box>
+					<textFieldExpression><![CDATA[$F{field4}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="false">
+					<reportElement x="170" y="4" width="165" height="16" isPrintInFirstWholeBand="true" uuid="d951616e-a8ea-4465-88da-7a4f112bbf2b"/>
+					<box topPadding="0" leftPadding="5">
+						<bottomPen lineWidth="1.0" lineColor="#727272"/>
+					</box>
+					<textElement>
+						<font size="10"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{field3}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="611" y="4" width="141" height="16" isPrintInFirstWholeBand="true" uuid="a7a3412c-6da2-42e0-8375-ae955a5ed7a9"/>
+					<box topPadding="0" leftPadding="5">
+						<bottomPen lineWidth="1.0" lineColor="#727272"/>
+					</box>
+					<textFieldExpression><![CDATA[$F{field8}]]></textFieldExpression>
+				</textField>
+			</elementGroup>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="6" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="43" splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="2" splitType="Stretch"/>
+	</summary>
+</jasperReport>

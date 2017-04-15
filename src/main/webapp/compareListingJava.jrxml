@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="testReport2" pageWidth="792" pageHeight="612" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="752" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="cd2fb64c-f956-4b84-87a8-f2f80854920c">
+	<property name="ireport.zoom" value="1.4641000000000086"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="64"/>
+	<style name="H1" mode="Transparent" forecolor="#FFFFFF" vAlign="Top" fontSize="18"/>
+	<style name="Brand Name" mode="Transparent" forecolor="#232B2F" fill="Solid" fontSize="10" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false"/>
+	<style name="Page Title" forecolor="#232B2F" fontSize="20" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#727272"/>
+		</box>
+	</style>
+		<style name="inBusinessRed">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$F{field22}.equals("R")]]></conditionExpression>
+			<style forecolor="#FF0000"/>
+		</conditionalStyle>
+	</style>
+	<style name="inAddressRed">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$F{field27}.equals("R")]]></conditionExpression>
+			<style forecolor="#FF0000"/>
+		</conditionalStyle>
+	</style>
+		<style name="inCityRed">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$F{field23}.equals("R")]]></conditionExpression>
+			<style forecolor="#FF0000"/>
+		</conditionalStyle>
+	</style>
+	<style name="inStateRed">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$F{field25}.equals("R")]]></conditionExpression>
+			<style forecolor="#FF0000"/>
+		</conditionalStyle>
+	</style>
+	<style name="inZipRed">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$F{field24}.equals("R")]]></conditionExpression>
+			<style forecolor="#FF0000"/>
+		</conditionalStyle>
+	</style>
+	<style name="inPhoneRed">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$F{field21}.equals("R")]]></conditionExpression>
+			<style forecolor="#FF0000"/>
+		</conditionalStyle>
+	</style>
+		<style name="inwebsiteRed">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$F{field26}.equals("R")]]></conditionExpression>
+			<style forecolor="#FF0000"/>
+		</conditionalStyle>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F9F6F6" vAlign="Middle">
+		<box>
+			<topPen lineWidth="0.5" lineColor="#727272"/>
+			<bottomPen lineWidth="0.5" lineColor="#727272"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#F9F6F6">
+		<pen lineWidth="1.0"/>
+		<box>
+			<topPen lineWidth="0.5" lineColor="#727272"/>
+			<bottomPen lineWidth="0.5" lineColor="#727272"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<topPen lineWidth="0.5" lineColor="#727272"/>
+			<bottomPen lineWidth="0.5" lineColor="#727272"/>
+		</box>
+	</style>
+	<subDataset name="chartDS" uuid="98e3e4ba-c50f-43fe-b4f4-1cb3fe88ec16">
+		<parameter name="store" class="java.lang.String"/>
+		<queryString>
+			<![CDATA[/*
+select "Accurate" field17, yahooAccuracy field8 from accuracyreport where store = $P{store}
+union
+select "Error" field17, (100 - yahooAccuracy) field8 from accuracyreport where store = $P{store}
+*/
+
+select field17, field8 from accuracyreport where store = $P{store}]]>
+		</queryString>
+		<field name="field17" class="java.lang.Object">
+			<fieldDescription><![CDATA[field17]]></fieldDescription>
+		</field>
+		<field name="field8" class="java.lang.Object">
+			<fieldDescription><![CDATA[field8]]></fieldDescription>
+		</field>
+	</subDataset>
+	<parameter name="brandName" class="java.lang.String"/>
+	<parameter name="logoCompare" class="java.lang.String"/>
+	<parameter name="logoDir" class="java.lang.String"/>
+	<parameter name="brandId" class="java.lang.Integer"/>
+	<parameter name="storeId" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="lat" class="java.lang.Float"/>
+	<parameter name="lon" class="java.lang.Float"/>
+	<parameter name="directory" class="java.lang.String"/>
+	<parameter name="lat_d" class="java.lang.Float"/>
+	<parameter name="lon_d" class="java.lang.Float"/>
+	<parameter name="subDS1" class="java.util.Collection"/>
+	<parameter name="accuracy" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select b.companyName field1, b.locationAddress field2, b.locationCity field3, b.locationState field4, b.locationZipcode field5, b.locationPhone field6, b.webAddress field7,
+(select ar.yahooAccuracy from accuracyreport ar where store = $P{storeId} and directory=$P{directory})  field8,
+(select 100 - ar.yahooAccuracy from accuracyreport ar where store = $P{storeId} and directory=$P{directory})  field17,
+cr.businessname field9, cr.address field10, cr.city field11, cr.state field12, cr.zip field13,  cr.phone field14, cr.website field15, cr.directory field16, field21, field22, field23 ,field24 , field25, field26,field27
+
+from checkreport cr, business b
+where b.store = $P{storeId} and b.clientId=$P{brandId}
+and b.store = cr.store and b.clientId = cr.brandId
+and cr.directory = $P{directory}]]>
+	</queryString>
+	<field name="field1" class="java.lang.String"/>
+	<field name="field2" class="java.lang.String"/>
+	<field name="field3" class="java.lang.String"/>
+	<field name="field4" class="java.lang.String"/>
+	<field name="field5" class="java.lang.String"/>
+	<field name="field6" class="java.lang.String"/>
+	<field name="field7" class="java.lang.String"/>
+	<field name="field8" class="java.lang.Integer"/>
+	<field name="field17" class="java.lang.Long"/>
+	<field name="field9" class="java.lang.String"/>
+	<field name="field10" class="java.lang.String"/>
+	<field name="field11" class="java.lang.String"/>
+	<field name="field12" class="java.lang.String"/>
+	<field name="field13" class="java.lang.String"/>
+	<field name="field14" class="java.lang.String"/>
+	<field name="field15" class="java.lang.String"/>
+	<field name="field16" class="java.lang.String"/>
+	<field name="field21" class="java.lang.Object">
+		<fieldDescription><![CDATA[field21]]></fieldDescription>
+	</field>
+	<field name="field22" class="java.lang.Object">
+		<fieldDescription><![CDATA[field22]]></fieldDescription>
+	</field>
+	<field name="field23" class="java.lang.Object">
+		<fieldDescription><![CDATA[field23]]></fieldDescription>
+	</field>
+	<field name="field24" class="java.lang.Object">
+		<fieldDescription><![CDATA[field24]]></fieldDescription>
+	</field>
+	<field name="field25" class="java.lang.Object">
+		<fieldDescription><![CDATA[field25]]></fieldDescription>
+	</field>
+	<field name="field26" class="java.lang.Object">
+		<fieldDescription><![CDATA[field26]]></fieldDescription>
+	</field>
+	<field name="field27" class="java.lang.Object">
+		<fieldDescription><![CDATA[field27]]></fieldDescription>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="106" splitType="Stretch">
+			<image scaleImage="FillFrame">
+				<reportElement x="0" y="0" width="42" height="61" uuid="66fbdcf5-7879-4867-a5d6-c7c1a1428d8b"/>
+				<imageExpression><![CDATA[$P{logoDir}]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement style="Brand Name" x="54" y="27" width="297" height="34" uuid="99a6787e-5da3-479a-9e06-3abe4aab59c5"/>
+				<textElement markup="none">
+					<font size="20" isBold="true"/>
+				</textElement>
+				<text><![CDATA[LOCAL BUSINESS LISTINGS]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="-33" y="71" width="752" height="35" forecolor="#FFFFFF" backcolor="#CC2F12" uuid="2f78f110-2525-4721-821d-c949fe33e05f"/>
+				<graphicElement>
+					<pen lineWidth="0.0"/>
+				</graphicElement>
+			</rectangle>
+			<image>
+				<reportElement x="10" y="80" width="21" height="23" uuid="8846d501-bdb6-477f-b0d0-976ae4c7b2f7"/>
+				<imageExpression><![CDATA[$P{logoCompare}]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement style="H1" mode="Transparent" x="45" y="76" width="281" height="30" uuid="70a85199-cd28-4df6-876e-a14652bd2ce7"/>
+				<textElement markup="styled">
+					<font size="18"/>
+				</textElement>
+				<text><![CDATA[COMPARE LISTING ACCURACY]]></text>
+			</staticText>
+			<textField>
+				<reportElement style="Brand Name" mode="Transparent" x="351" y="78" width="260" height="22" forecolor="#FFFFFF" uuid="7e2bc045-027b-458c-96a1-a059d01e4d1e"/>
+				<textElement markup="none">
+					<font size="14" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{brandName} + "  #" + $P{storeId}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="340" y="80" width="1" height="20" forecolor="#DE7865" uuid="c125813e-d2ce-4fe2-84db-77d223a68199"/>
+			</line>
+			<textField>
+				<reportElement style="Brand Name" mode="Transparent" x="622" y="78" width="80" height="22" forecolor="#FFFFFF" uuid="52e13347-9f39-4595-9317-86d84d5fb2ad"/>
+				<textElement markup="none">
+					<font size="14" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{directory}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="184" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="0" width="362" height="148" backcolor="#F5F5F5" uuid="cbbddf4c-08f2-4547-ad50-8d1ee69f375b"/>
+				<graphicElement>
+					<pen lineWidth="0.0"/>
+				</graphicElement>
+			</rectangle>
+			<componentElement>
+				<reportElement x="362" y="9" width="357" height="168" uuid="9c8c704e-58c2-4388-b926-9a57bd7497a8"/>
+				<mp:map xmlns:mp="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" evaluationTime="Report" >
+					<mp:latitudeExpression><![CDATA[$P{lat_d}]]></mp:latitudeExpression>
+					<mp:longitudeExpression><![CDATA[$P{lon_d}]]></mp:longitudeExpression>
+					<mp:zoomExpression><![CDATA[15]]></mp:zoomExpression>
+					<mp:markerData>
+						<dataset/>
+						<mp:item>
+							<mp:itemProperty name="latitude">
+								<valueExpression><![CDATA[$P{lat}]]></valueExpression>
+							</mp:itemProperty>
+							<mp:itemProperty name="longitude">
+								<valueExpression><![CDATA[$P{lon}]]></valueExpression>
+							</mp:itemProperty>
+						</mp:item>
+					</mp:markerData>
+				</mp:map>
+			</componentElement>
+			<componentElement>
+				<reportElement x="0" y="7" width="351" height="170" uuid="224c3795-a9e0-410e-ac03-2076463cf56d"/>
+				<mp:map xmlns:mp="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" evaluationTime="Report" >
+					<mp:latitudeExpression><![CDATA[$P{lat}]]></mp:latitudeExpression>
+					<mp:longitudeExpression><![CDATA[$P{lon}]]></mp:longitudeExpression>
+					<mp:zoomExpression><![CDATA[15]]></mp:zoomExpression>
+					<mp:markerData>
+						<dataset/>
+						<mp:item>
+							<mp:itemProperty name="latitude">
+								<valueExpression><![CDATA[$P{lat}]]></valueExpression>
+							</mp:itemProperty>
+							<mp:itemProperty name="longitude">
+								<valueExpression><![CDATA[$P{lon}]]></valueExpression>
+							</mp:itemProperty>
+						</mp:item>
+					</mp:markerData>
+				</mp:map>
+			</componentElement>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="5" splitType="Stretch">
+			<line>
+				<reportElement positionType="FixRelativeToBottom" x="0" y="0" width="752" height="2" forecolor="#CCCCCC" uuid="50211438-3c14-4b14-b72a-deb352dd1e9d"/>
+			</line>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="207" splitType="Stretch">
+			<elementGroup/>
+			<textField>
+				<reportElement x="0" y="61" width="165" height="20" uuid="24325cfb-9ecb-4b02-96e5-8e9324dcdfe1"/>
+				<box topPadding="2" leftPadding="5"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{field3} + ", " + $F{field4} + " " + $F{field5}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="41" width="165" height="20" uuid="534352ec-4471-495e-96e8-153f4d231505"/>
+				<box topPadding="2" leftPadding="5"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{field2}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="21" width="105" height="20" uuid="46d960ba-73ed-40ca-a2b5-1160f7fe9505"/>
+				<box topPadding="2" leftPadding="5"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{field1}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="81" width="102" height="20" uuid="cbb273af-ca3b-48c5-abf6-f4b25cac7fa0"/>
+				<box topPadding="2" leftPadding="5"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["(" + $F{field6}.toString().substring(0, 3 ) + ") " + $F{field6}.toString().substring(3, 6)
++ "-" + $F{field6}.toString().substring(6)]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="101" width="141" height="20" uuid="1332a56a-b0f8-4681-89ed-5594dfb246af"/>
+				<box topPadding="2" leftPadding="5"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{field7}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="inBusinessRed" x="589" y="20" width="155" height="16" uuid="c9403828-7e5e-4c33-99b9-16ae650dfd0b"/>
+				<textFieldExpression><![CDATA[$F{field9}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="inAddressRed" x="589" y="36" width="155" height="16" uuid="f0ca98fb-c7a0-4026-9b61-e9dfdf3991a4"/>
+				<textFieldExpression><![CDATA[$F{field10}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="inZipRed" isPrintRepeatedValues="false" x="589" y="52" width="155" height="18" uuid="7b425783-09b4-467a-be40-925fe518fa70"/>
+				<textFieldExpression><![CDATA[$F{field11} + ", " + $F{field12} + " " + $F{field13}]]></textFieldExpression>
+			</textField>
+			<pieChart>
+				<chart isShowLegend="true">
+					<reportElement x="223" y="0" width="314" height="197" uuid="00bb8c1d-4379-4b93-a4cc-38b6793001d8"/>
+					<chartTitle>
+						<font size="12"/>
+						<titleExpression><![CDATA["Accuracy Score" + "\n" +
+$P{accuracy} + "%"]]></titleExpression>
+					</chartTitle>
+					<chartSubtitle/>
+					<chartLegend/>
+				</chart>
+				<pieDataset maxCount="3">
+					<dataset>
+						<datasetRun subDataset="chartDS" uuid="2b33cb81-e3d9-4b81-a2de-3fafc0e858b5">
+							<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($P{subDS1})]]></dataSourceExpression>
+						</datasetRun>
+					</dataset>
+					<keyExpression><![CDATA[$F{field17}]]></keyExpression>
+					<valueExpression><![CDATA[$F{field8}]]></valueExpression>
+					<labelExpression><![CDATA[$F{field8}.toString() + "%"]]></labelExpression>
+				</pieDataset>
+				<piePlot isShowLabels="true">
+					<plot>
+						<seriesColor seriesOrder="0" color="#006600"/>
+						<seriesColor seriesOrder="1" color="#FF0000"/>
+					</plot>
+					<itemLabel/>
+				</piePlot>
+			</pieChart>
+			<textField>
+				<reportElement  style="inwebsiteRed" x="589" y="85" width="155" height="20" uuid="601af381-f7f4-4009-ac6a-d6e83e39562f"/>
+				<textFieldExpression><![CDATA[$F{field15}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="inPhoneRed" x="589" y="70" width="100" height="15" uuid="fd480f46-b40f-4677-acdb-2d915142612a"/>
+				<textFieldExpression><![CDATA[$F{field14}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

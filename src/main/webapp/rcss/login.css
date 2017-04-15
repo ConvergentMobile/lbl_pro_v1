@@ -1,0 +1,200 @@
+/* login.css */
+
+.block-3 {
+	margin: 0px 0px 25px;
+	padding: 35px 60px;
+	width: 190px;
+	background: none repeat scroll 0% 0% rgb(255, 255, 255);
+	border-radius: 7px;
+	box-shadow: 0px 0px 5px rgb(170, 170, 170);
+}
+.block-3 > img {
+	float: right;
+}
+.block-3 .header {
+	margin: 0px 0px 23px;
+	font: 32px/32px OpenSansLight, "Trebuchet MS", Arial, Helvetica, sans-serif;
+}
+.block-3 .body {
+	font-size: 14px;
+	line-height: 19px;
+}
+.login-form {
+	color: rgb(92, 106, 111);
+	font-size: 14px;
+}
+.login-form h2 {
+	color: rgb(58, 72, 93);
+}
+.login-form input[type="text"] {
+	display: block;
+	margin: 0px 0px 12px;
+	padding: 10px 10px 10px 80px;
+	width: 350px;
+	height: 44px;
+	font: 16px/44px OpenSansRegular, "Trebuchet MS", Arial, Helvetica, sans-serif;
+	border: 1px solid rgb(136, 148, 154);
+}
+.login-form input.login {
+	background: url('../images/icon-login.png') no-repeat scroll 19px 14px rgb(255, 255, 255);
+}
+.login-form input.pass {
+	background: url('../images/icon-pass.png') no-repeat scroll 19px 14px rgb(255, 255, 255);
+}
+.login-form input[type="submit"] {
+	display: inline-block;
+	margin: 10px 0px 22px;
+	width: 175px;
+	height: 47px;
+	color: rgb(255, 255, 255);
+	font: 16px/47px OpenSansSemibold, "Trebuchet MS", Arial, Helvetica, sans-serif;
+	text-transform: uppercase;
+	background: url('../images/bg-12.png') repeat-x scroll 0% 0% rgb(58, 72, 93);
+	border: 1px solid rgb(61, 75, 97);
+	border-radius: 3px;
+	cursor: pointer;
+}
+.login-form .forgot {
+	display: block;
+	color: rgb(234, 4, 55);
+	line-height: 34px;
+}
+#page {
+}
+#header {
+	position: relative;
+	padding: 0px 0px 0px 179px;
+	height: 117px;
+	background: url('../images/bg_header_02.png') repeat-x scroll center bottom rgb(255, 255, 255);
+	z-index: 2;
+}
+#header .logo_lbl {
+	position: absolute;
+	top: 0px;
+	left: 5px;
+	padding: 40px 0px 0px 119px;
+	height: 62px;
+	color: rgb(35, 43, 47);
+	font-size: 39px;
+	line-height: 39px;
+	text-decoration: none;
+	text-transform: uppercase;
+	background: url('../images/logo_lbl.png') no-repeat scroll 0% 0% transparent;
+}
+#body {
+	padding: 0px 0px 0px 179px;
+	border-top: 1px solid rgb(223, 225, 227);
+}
+.login #body {
+	position: relative;
+	padding: 0px;
+	background: url('../images/bg-11.png') no-repeat scroll 21px 65px rgb(196, 202, 209);
+	z-index: 9;
+}
+.login #body > .inner {
+	margin: 0px auto;
+	width: 1080px;
+}
+.login #body > .inner > .content {
+	float: left;
+	width: 700px;
+	height: auto;
+	box-shadow: none;
+}
+.login #body > .inner > .content .inner {
+	padding: 27px 60px 23px 205px;
+	text-align: center;
+}
+.login #body > .inner > .sidebar {
+	float: left;
+	margin: 0px 0px -180px;
+	padding: 30px 0px 0px;
+	width: 340px;
+	height: auto;
+	background: none repeat scroll 0% 0% transparent;
+}
+#footer {
+	position: relative;
+	padding: 28px 35% 28px 179px;
+	color: rgb(205, 209, 210);
+	font-size: 20px;
+	line-height: 23px;
+}
+#footer a.powered {
+	position: absolute;
+	top: 31px;
+	right: 46px;
+	padding: 0px 133px 0px 0px;
+	height: 32px;
+	color: rgb(149, 156, 163);
+	font-size: 11px;
+	line-height: 32px;
+	background: url('../images/logo-2.png') no-repeat scroll right center transparent;
+}
+.login #footer {
+	padding: 0px;
+	position: relative;
+	color: rgb(255, 255, 255);
+	background: none repeat scroll 0% 0% rgb(44, 59, 76);
+}
+.login #footer .inner {
+	margin: 0px auto;
+	padding: 28px 220px 28px 0px;
+	width: 455px;
+}
+.login #footer h2 {
+	margin: 0px 0px 22px;
+	padding: 0px;
+}
+.login #footer p {
+	font-size: 15px;
+	line-height: 20px;
+}
+.login #footer a.powered {
+	position: absolute;
+	top: 230px;
+	right: 30px;
+	margin: 0px;
+	display: inline-block;
+	background: url('../images/logo_convergent_foot.png') no-repeat scroll right center transparent;
+}
+
+a {
+	color: rgb(91, 107, 113);
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
+}
+html {
+	height: 100%;
+	min-height: 100%;
+}
+body {
+	margin: 0px;
+	padding: 0px;
+	min-width: 1200px;
+	min-height: 100%;
+	color: rgb(74, 85, 91);
+	font: 15px/22px OpenSansRegular, "Trebuchet MS", Arial, Helvetica, sans-serif;
+	background: none repeat scroll 0% 0% rgb(44, 59, 76);
+}
+h2 {
+	margin: 0px 0px 15px;
+	padding: 0px 0px 0px 25px;
+	color: rgb(255, 255, 255);
+	font-size: 24px;
+	line-height: 30px;
+	text-transform: uppercase;
+}
+input[type="text"] {
+	padding: 5px 12px;
+	color: rgb(76, 89, 95);
+	border: 1px solid rgb(183, 183, 183);
+}
+p {
+	margin-bottom: 19px;
+}
+.clearer {
+	clear: both;
+}
