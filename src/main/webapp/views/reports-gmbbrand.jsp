@@ -42,9 +42,10 @@
 <link rel="stylesheet" href="js/select2.css">
 <script src="js/select2.js"></script>
 
-<script type="text/javascript" src="js/canvasjs.min.js"></script>
 <script src="js/select2.js"></script>
 <script src="js/select2.min.js"></script>
+
+<script type="text/javascript" src="js/canvasjs.min.js"></script>
 <script>
 	jQuery(document).ready(function() {
 		jQuery(".selectjs").select2();
@@ -61,8 +62,7 @@
 			$("#datewarningpopup").bPopup();
 		} else {
 			document.location.href = "runExcelReport.htm?state=" + state
-					+ "&&brand=" + brandname + "&&brand=" + brandname
-					+ "&&start=" + startDate + "&&end=" + enddate;
+					+ "&&brand=" + brandname + "&&start=" + startDate + "&&end=" + enddate;
 		}
 	}
 
@@ -86,6 +86,7 @@
 	});
 
 	function filterReport() {
+		$(".loading").show();
 		var startDate = $('#startDate').val();
 		var enddate = $("#endDate").val();
 		var brandname = $('#brandVal').val();
@@ -95,9 +96,7 @@
 			$("#datewarningpopup").bPopup();
 		} else {
 			document.location.href = "runGMBBrand.htm?state=" + state
-					+ "&&brand=" + brandname + "&&brand=" + brandname
-					+ "&&start=" + startDate + "&&end=" + enddate;
-
+					+ "&&brand=" + brandname+ "&&start=" + startDate + "&&end=" + enddate;
 		}
 
 	}
@@ -132,6 +131,11 @@
 </style>
 </head>
 <body id="office" class="mw980">
+
+		<div class="loading dsp_None">
+			<img src="images/loading.gif" /> <br /> loading!
+		</div>
+
 	<!-- page wrapper -->
 
 	<div class="popup" id="datewarningpopup" style="display: none;">
@@ -210,24 +214,21 @@
 					<a href="reports.htm" class="back">< Back to Reporting Criteria</a>
 					<span>Export Report</span> <a href="#" class="ico_xls" onclick="runExcelReport()">Excel</a>
 					<p>Convergent Mobile</p>
-					
-				<a class="ico_pdf" href="http://api.html2pdfrocket.com/pdf?value=http://${url}&apikey=109e93d8-268f-495a-ad47-45fcaac321c3&FileName=${brand}&JavascriptDelay=3000&HeaderUrl=http://23.23.203.174/lbl_pro/pdfheader.htm">PDF</a> 
-
+					<a class="ico_pdf" href="http://api.html2pdfrocket.com/pdf?value=http://${url}&apikey=ff60aa04-d396-44bc-a262-e75b163071bc&FileName=${reportName}&JavascriptDelay=3000&MarginBottom=15&MarginLeft=0.25&MarginRight=0.25&MarginTop=0.25&PageWidth=215.9&PageHeight=279.4&FooterUrl=http://23.23.203.174/lbl_pro/pdfheader.htm">PDF</a>
 				</div>
 				<!-- // subheader -->
 				<input name="uploadreportpopup" value="" id="uploadreportpopup"
 					type="hidden">
 				<form id="reportsForm" action="/lbl_pro/reports.htm" method="post">
 					<div class="inner_box">
-						<!-- box -->
-						<!-- title -->
+
 						<div class="box box_red_title box_report">
 							<div class="box_title mb9">
 								<h2>Google My Business Insights – Brand</h2>
 							</div>
 							<!-- // title -->
 							
-				
+					
 
 							<!-- subtitle -->
 							<div class="box_subtitle_lightgray">
@@ -277,10 +278,36 @@
 							</div>
 							<!-- // subtitle -->
 							<!-- wide_column -->
+				
 							<div class="wide_column_wrapper report_container"
 								style="height: auto;">
-								<div class="description" id="id_report_01">
 
+									<div class="box-report-graph">
+										<h2>Search Trends</h2>
+										<div style="width:100%; min-height: 250px; float: left;margin: 0 0% 0 0;" id="searchTrendsContainer">
+											<!-- place for graphic -->
+										</div>
+
+									</div>
+									
+									<div class="box-report-graph">
+										<h2>View Trends</h2>
+										<div style="width:100%; min-height: 250px; float: left;margin: 0 0% 0 0;" id="viewTrendsContainer">
+											<!-- place for graphic -->
+										</div>
+
+									</div>
+									
+									<div class="box-report-graph">
+										<h2>Action Trends</h2>
+										<div style="width:100%; min-height: 250px; float: left;margin: 0 0% 0 0;" id="actionTrendsContainer">
+											<!-- place for graphic -->
+										</div>
+
+									</div>
+
+									
+									<div class="clearfix"></div>
 									<div class="box-report-graph">
 										<h2>How customers search for YOUR LOCATIONS</h2>
 										<div class="left-col" id="searchContainer">
@@ -303,7 +330,7 @@
 										</div>
 										<div class="clearfix"></div>
 									</div>
-
+									<div class="clearfix"></div>
 									<div style="padding: 0 0 20px; background: #d7dbe0;">
 										<div class="table-top10" style="width: 100%;">
 											<h2>Top 10 Locations</h2>
@@ -623,9 +650,87 @@
 											</tbody>
 										</table>
 									</div>
+									
+									
+								
+									
+									<div class="box-report-graph">
+										<h2>Bing Analytics</h2>
+										<h3>Bing Impressions</h3>
+										<div style="width:100%; min-height: 250px; float: left;margin: 0 0 50px 0;" id="bingAnalyticsContainer">
+											<!-- place for graphic -->
+										</div>
+
+									</div>
+									
+										<div class="table-top10" style="width: 100%;">
+										<h2>Top 10 Locations</h2>
+										<table class="grid grid_17" width="100%">
+											<colgroup>
+												<col width="25%">
+												<col width="25%">
+												<col width="25%">
+												<col width="25%">
+											</colgroup>
+											<thead>
+												<tr>
+													<th class="th_01"><div>Store #</div></th>
+													<th class="th_02"><div>City</div></th>
+													<th class="th_02"><div>State</div></th>
+													<th class="th_05"><div>Total</div></th>
+												</tr>
+											</thead>
+											<tbody>
+												<core:forEach items="${topAnalytics}" var="ttAnalytics"
+													varStatus="loopStatus">
+													<tr class="${loopStatus.index % 2 == 0 ? 'even' : 'odd'}">
+														<td class="td_01"><div>${ttAnalytics.store}</div></td>
+														<td class="td_02"><div>${ttAnalytics.city}</div></td>
+														<td class="td_02"><div>${ttAnalytics.state}</div></td>
+														<td class="td_02"><div><fmt:formatNumber type="number"
+																maxFractionDigits="3" value="${ttAnalytics.impressionCount}"/></div></td>
+													</tr>
+												</core:forEach>
+											</tbody>
+										</table>
+									</div>
+									
+											<div class="table-top10" style="width: 100%;">
+										<h2>Bottom 10 Locations</h2>
+										<table class="grid grid_17" width="100%">
+											<colgroup>
+												<col width="25%">
+												<col width="25%">
+												<col width="25%">
+												<col width="25%">
+											</colgroup>
+											<thead>
+												<tr>
+													<th class="th_01"><div>Store #</div></th>
+													<th class="th_02"><div>City</div></th>
+													<th class="th_02"><div>State</div></th>
+													<th class="th_05"><div>Total</div></th>
+												</tr>
+											</thead>
+											<tbody>
+												<core:forEach items="${bAnalytics}" var="bAnalytic"
+													varStatus="loopStatus">
+													<tr class="${loopStatus.index % 2 == 0 ? 'even' : 'odd'}">
+														<td class="td_01"><div>${bAnalytic.store}</div></td>
+														<td class="td_02"><div>${bAnalytic.city}</div></td>
+														<td class="td_02"><div>${bAnalytic.state}</div></td>
+														<td class="td_02"><div><fmt:formatNumber type="number"
+																maxFractionDigits="3" value="${bAnalytic.impressionCount}"/></div></td>
+													</tr>
+												</core:forEach>
+											</tbody>
+										</table>
+									</div>
+									
 								</div>
 
 								<div class="clearfix"></div>
+								
 							</div>
 						</div>
 						<!-- // wide_column -->
@@ -649,8 +754,7 @@
 	<script type="text/javascript">
 	
 		var nd = ${noDataMessage};
-		
-		
+	
 		if(nd){
 			$("#gmbpopup").bPopup();
 		}
@@ -695,9 +799,9 @@
 
 				var list2 = ${mapsHistory};
 
-				$.each(list2, function(index1, value1) {
+				$.each(list2, function(index12, value12) {
 					//alert( index + ": " + value.toString() );
-					dpsView2.push(value1);
+					dpsView2.push(value12);
 				});
 
 				var dpsActions1 = [];
@@ -705,22 +809,21 @@
 				var dpsActions3 = [];
 
 				var list3 = ${websitesHistory};
-				$.each(list3, function(index3, value3) {
+				$.each(list3, function(index13, value13) {
 					//alert( index + ": " + value.toString() );
-					dpsActions1.push(value3);
+					dpsActions1.push(value13);
 				});
 
-				var list4 = ${directionsHistory}
-				;
-				$.each(list4, function(index4, value4) {
+				var list4 = ${directionsHistory};
+				$.each(list4, function(index14, value14) {
 					//alert( index + ": " + value.toString() );
-					dpsActions2.push(value4);
+					dpsActions2.push(value14);
 				});
 				var list5 =${callsHistory};
 
-				$.each(list5, function(index5, value5) {
+				$.each(list5, function(index15, value15) {
 					//alert( index + ": " + value.toString() );
-					dpsActions3.push(value5);
+					dpsActions3.push(value15);
 				});
 
 				var dirVal = $("#directVal").val();
@@ -785,21 +888,21 @@
 						type : "area",
 						color : "#ffbe00",
 						markerSize : 0,
-						label : "",
 						dataPoints : dpsView2
 					} ],
-					legend : {
+					legend: {
 						fontSize : 20,
-						cursor : "pointer",
-						itemclick : function(e) {
-							if (typeof (e.dataSeries.visible) === "undefined"
-									|| e.dataSeries.visible) {
-								e.dataSeries.visible = false;
-							} else {
-								e.dataSeries.visible = true;
-							}
-						}
-					}
+			            cursor:"pointer",
+			            itemclick : function(e){
+			              if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible){
+			                e.dataSeries.visible = false;
+			              }
+			              else{
+			                e.dataSeries.visible = true;
+			              }
+			              viewChart.render();
+			            }
+			          }
 				});
 
 				var actionsChart = new CanvasJS.Chart("actionsContainer", {
@@ -855,13 +958,219 @@
 							} else {
 								e.dataSeries.visible = true;
 							}
+							actionsChart.render();
 						}
 					}
 				});
+				
+			 	var preSearchTrends = [];
+				var curSearchTrends = [];
 
-				chart.render();
+				var listspt = ${searchPreTrends};
+				$.each(listspt, function(index3, value3) {
+					preSearchTrends.push(value3);
+				}); 
+				
+				var listsct = ${searchCurTrends};
+				$.each(listsct, function(index4, value4) {
+					curSearchTrends.push(value4);
+				}); 
+				
+				var searchTrends = new CanvasJS.Chart("searchTrendsContainer",
+				{
+		            animationEnabled: true,
+		            axisY : {
+						gridColor : "white",
+						tickColor : "white",
+					},
+					data: [ 
+					{
+						type: "column",	
+						name: "Previous Year",
+						showInLegend: true, 
+						markerSize : 0,
+						dataPoints :preSearchTrends 
+					},
+					{
+						type: "column",	
+						name: "Current Year",
+						showInLegend: true,
+						markerSize : 0,
+						dataPoints:curSearchTrends
+					}
+					],
+					legend : {
+						fontSize : 20,
+						cursor : "pointer",
+						itemclick : function(e) {
+							if (typeof (e.dataSeries.visible) === "undefined"
+									|| e.dataSeries.visible) {
+								e.dataSeries.visible = false;
+							} else {
+								e.dataSeries.visible = true;
+							}
+						}
+					},
+		        });
+			
+			    var preViewTrends = [];
+				var curViewTrends = [];
+
+				var listvpt = ${viewPreTrends};
+				$.each(listvpt, function(index5, value5) {
+					preViewTrends.push(value5);
+				}); 
+				
+				var listvct = ${viewCurTrends};
+				$.each(listvct, function(index6, value6) {
+					curViewTrends.push(value6);
+				}); 
+				
+				var viewTrends = new CanvasJS.Chart("viewTrendsContainer",
+						{
+				            animationEnabled: true,
+				            axisY : {
+								gridColor : "white",
+								tickColor : "white",
+							},
+							axisY2: {
+								gridColor : "white",
+								tickColor : "white",
+							},
+							data: [ 
+							{
+								type: "column",	
+								name: "Previous Year",
+								showInLegend: true, 
+								markerSize : 0,
+								dataPoints : preViewTrends 
+							},
+							{
+								type: "column",	
+								name: "Current Year",
+								showInLegend: true,
+								markerSize : 0,
+								dataPoints: curViewTrends
+							}
+							],
+							legend : {
+								fontSize : 20,
+								cursor : "pointer",
+								itemclick : function(e) {
+									if (typeof (e.dataSeries.visible) === "undefined"
+											|| e.dataSeries.visible) {
+										e.dataSeries.visible = false;
+									} else {
+										e.dataSeries.visible = true;
+									}
+								}
+							},
+				        });
+
+			 	
+				var preActionTrends = [];
+				var curActionTrends = [];
+
+				var listapt = ${actionPreTrends};
+				$.each(listapt, function(index7, value7) {
+					//alert( index + ": " + value.toString() );
+					preActionTrends.push(value7);
+				}); 
+				
+				var listact = ${actionCurTrends};
+				$.each(listact, function(index8, value8) {
+					//alert( index + ": " + value.toString() );
+					curActionTrends.push(value8);
+				}); 
+				
+				var actionTrends = new CanvasJS.Chart("actionTrendsContainer",
+						{
+				            animationEnabled: true,
+				            axisY : {
+								gridColor : "white",
+								tickColor : "white",
+							},
+							axisY2: {
+								gridColor : "white",
+								tickColor : "white",
+							},
+							data: [ 
+							{
+								type: "column",	
+								name: "Previous Year",
+								showInLegend: true, 
+								markerSize : 0,
+								dataPoints : preActionTrends 
+							},
+							{
+								type: "column",	
+								name: "Current Year",
+								showInLegend: true,
+								markerSize : 0,
+								dataPoints: curActionTrends
+							}
+							],
+							legend : {
+								fontSize : 20,
+								cursor : "pointer",
+								itemclick : function(e) {
+									if (typeof (e.dataSeries.visible) === "undefined"
+											|| e.dataSeries.visible) {
+										e.dataSeries.visible = false;
+									} else {
+										e.dataSeries.visible = true;
+									}
+								}
+							},
+				        }); 
+
+			 	var anlyticsData = [];
+	
+				var analyticsList = ${anlytics};
+				$.each(analyticsList, function(indexA1, valueA1) {
+					anlyticsData.push(valueA1);
+				});
+				
+				 var bingAnalytics = new CanvasJS.Chart("bingAnalyticsContainer",
+						    {
+							 animationEnabled : true,
+								axisX : {
+									minimum: min,
+				    	        	maximum: max,
+				    	        	valueFormatString: "MMM/DD",
+									interval:1,
+									labelAngle: -45,
+									labelAutoFit: true,
+									intervalType: "week",
+								},
+								axisY : {
+									interval : 500,
+									gridColor : "white",
+									tickColor : "white",
+								},
+						      data: [
+						      {
+								type : "area",
+								color : "#5DC2F9",
+								markerSize : 0,
+								label : "",
+						        
+						        dataPoints:anlyticsData
+						      }
+						      ]
+						    });
+
+				bingAnalytics.render(); 
+
+				
+				viewTrends.render();
+			    searchTrends.render();
+				actionTrends.render(); 
+				
 				viewChart.render();
 				actionsChart.render();
+				chart.render();
+
 			}
 		},3000);
 	</script>

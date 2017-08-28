@@ -681,26 +681,25 @@ public class GMBClient {
 		String[] dates = getStartandEndDates(2);
 
 		java.util.Date formattedDate = getFormattedDate(dates[1]);
-		System.out.println("clientId: " + formattedDate
-				+ ", formatted Date is:" + formattedDate);	
-		
+		System.out.println("clientId: " + clientId + ", formatted Date is:"
+				+ formattedDate);
+
 		List<java.util.Date> datesList = new ArrayList<java.util.Date>();
 		datesList.add(formattedDate);
-		
+
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(formattedDate);
 		cal.add(Calendar.DAY_OF_MONTH, -1);
 		java.util.Date date2 = cal.getTime();
-		
 		datesList.add(date2);
 	
+
 		// delete records for exising dates
 		for (int i = 0; i < datesList.size(); i++) {
 			service.deleteExistingRecords(clientId, datesList.get(i));
 		}
 		
 		for (String store : stores) {
-
 			Location location = locationMap.get(store);
 
 			// System.out.println("GMB store is: "+ storeCode);
@@ -761,7 +760,7 @@ public class GMBClient {
 
 				time.setStartTime(startDate);
 				time.setEndTime(endDate);
-				// System.out.println(startDate + "---" + endDate);
+				//System.out.println(startDate + "---" + endDate);
 				request.getBasicRequest().setTimeRange(time);
 
 				try {
@@ -785,8 +784,13 @@ public class GMBClient {
 							for (int k = 0; k < metricValues.size(); k++) {
 								MetricValue metricValue = metricValues.get(k);
 
-								if (metricValue.getMetric().equalsIgnoreCase(
-										"QUERIES_DIRECT")) {
+								String metric = metricValue.getMetric();
+								/*System.out.println("=====>" + metricValue
+										+ "  <<<<==== ==> " + metric);*/
+
+								if (metric != null
+										&& metric
+												.equalsIgnoreCase("QUERIES_DIRECT")) {
 									List<DimensionalMetricValue> dimensionalValues = metricValue
 											.getDimensionalValues();
 									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
@@ -803,8 +807,9 @@ public class GMBClient {
 												value);
 									}
 
-								} else if (metricValue.getMetric()
-										.equalsIgnoreCase("QUERIES_INDIRECT")) {
+								} else if (metric != null
+										&& metric
+												.equalsIgnoreCase("QUERIES_INDIRECT")) {
 									List<DimensionalMetricValue> dimensionalValues = metricValue
 											.getDimensionalValues();
 									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
@@ -820,8 +825,9 @@ public class GMBClient {
 												startTime.substring(0, 10),
 												value);
 									}
-								} else if (metricValue.getMetric()
-										.equalsIgnoreCase("VIEWS_SEARCH")) {
+								} else if (metric != null
+										&& metric
+												.equalsIgnoreCase("VIEWS_SEARCH")) {
 									List<DimensionalMetricValue> dimensionalValues = metricValue
 											.getDimensionalValues();
 									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
@@ -837,8 +843,9 @@ public class GMBClient {
 												startTime.substring(0, 10),
 												value);
 									}
-								} else if (metricValue.getMetric()
-										.equalsIgnoreCase("VIEWS_MAPS")) {
+								} else if (metric != null
+										&& metric
+												.equalsIgnoreCase("VIEWS_MAPS")) {
 									List<DimensionalMetricValue> dimensionalValues = metricValue
 											.getDimensionalValues();
 									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
@@ -853,8 +860,9 @@ public class GMBClient {
 										mapsMap.put(startTime.substring(0, 10),
 												value);
 									}
-								} else if (metricValue.getMetric()
-										.equalsIgnoreCase("ACTIONS_WEBSITE")) {
+								} else if (metric != null
+										&& metric
+												.equalsIgnoreCase("ACTIONS_WEBSITE")) {
 									List<DimensionalMetricValue> dimensionalValues = metricValue
 											.getDimensionalValues();
 									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
@@ -870,8 +878,9 @@ public class GMBClient {
 												startTime.substring(0, 10),
 												value);
 									}
-								} else if (metricValue.getMetric()
-										.equalsIgnoreCase("ACTIONS_PHONE")) {
+								} else if (metric != null
+										&& metric
+												.equalsIgnoreCase("ACTIONS_PHONE")) {
 									List<DimensionalMetricValue> dimensionalValues = metricValue
 											.getDimensionalValues();
 									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
@@ -887,9 +896,9 @@ public class GMBClient {
 												startTime.substring(0, 10),
 												value);
 									}
-								} else if (metricValue.getMetric()
-										.equalsIgnoreCase(
-												"ACTIONS_DRIVING_DIRECTIONS")) {
+								} else if (metric != null
+										&& metric
+												.equalsIgnoreCase("ACTIONS_DRIVING_DIRECTIONS")) {
 									List<DimensionalMetricValue> dimensionalValues = metricValue
 											.getDimensionalValues();
 									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
@@ -1235,13 +1244,16 @@ public class GMBClient {
 			 * for (String[] strings : listofWeeks) {
 			 * System.out.println(strings[0] + "==" + strings[1]); }
 			 */
-			String[] startandEndDates = getStartandEndDates(2);
+			String[] startandEndDates = getStartandEndDates(538);
 
 			System.out.println(startandEndDates[1] + "startandEndDates"
 					+ startandEndDates[0]);
-			
-			java.util.Date formattedDate = getFormattedDate(startandEndDates[1]);
-			System.out.println(formattedDate);
+
+			/*
+			 * java.util.Date formattedDate =
+			 * getFormattedDate(startandEndDates[1]);
+			 * System.out.println(formattedDate);
+			 */
 
 			/*
 			 * java.util.Date formattedDate = getFormattedDate("2016-12-12");
@@ -1287,8 +1299,6 @@ public class GMBClient {
 
 		return dates;
 	}
-	
-	
 
 	public static List<String[]> getListofDates(int daysToLess) {
 		SimpleDateFormat formatter = new SimpleDateFormat(

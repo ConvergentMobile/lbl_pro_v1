@@ -2,6 +2,8 @@ package com.business.web.bean;
 
 import java.sql.Date;
 
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
+
 
 /**
  * 
@@ -40,8 +42,21 @@ public class UsersBean {
 	private Integer channelID;
 	private String viewOnly;
 	
-	
-	
+	private String cImagePath;
+	private String bImagePath;
+
+	public String getcImagePath() {
+		return cImagePath;
+	}
+	public void setcImagePath(String cImagePath) {
+		this.cImagePath = cImagePath;
+	}
+	public String getbImagePath() {
+		return bImagePath;
+	}
+	public void setbImagePath(String bImagePath) {
+		this.bImagePath = bImagePath;
+	}
 	public String getViewOnly() {
 		return viewOnly;
 	}

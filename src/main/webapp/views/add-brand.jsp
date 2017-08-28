@@ -373,7 +373,11 @@ function diableReadOnlyForAddLocation(id){
 									<tr>
 					<td class="td_01"><div><label for="channel-name">Channel Name</label></div></td>
 					<td class="td_02"><div class="brands"><!-- <input type="text" value="Convergent Mobil" id="channel-name" name="channel-name"> -->
-					                   <spring:input path="channelName" id="channel-name"  /></div></td>
+					                   <spring:input path="channelName" id="channel-name"  /> 
+					                   <input type="file" id="UploadFileName" name="channelImage" class="btn_grey_2" value="Upload ChannelImage" />
+					               </div></td>
+
+					             
 				</tr>
 				<tr>
 					<td class="td_01"><div><label for="brand-name">Brand Name</label></div></td>

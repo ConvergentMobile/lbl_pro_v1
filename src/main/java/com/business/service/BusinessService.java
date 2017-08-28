@@ -7,6 +7,8 @@ import java.util.Set;
 
 import com.business.common.dto.AccuracyDTO;
 import com.business.common.dto.AccuracyGraphDTO;
+import com.business.common.dto.BingAnalyticsDTO;
+import com.business.common.dto.BingReportDTO;
 import com.business.common.dto.BrandInfoDTO;
 import com.business.common.dto.CategoryDTO;
 import com.business.common.dto.ChangeTrackingDTO;
@@ -17,7 +19,6 @@ import com.business.common.dto.CustomSubmissionsDTO;
 import com.business.common.dto.ExportReportDTO;
 import com.business.common.dto.ForgotPasswordDto;
 import com.business.common.dto.InsightsGraphDTO;
-import com.business.common.dto.InsightsHistory;
 import com.business.common.dto.LblErrorDTO;
 import com.business.common.dto.LocalBusinessDTO;
 import com.business.common.dto.PartnerDTO;
@@ -88,9 +89,9 @@ public interface BusinessService {
 
 	public Integer getChannelIdByName(String channelName);
 
-	public Integer saveChannel(String channelName, Date startDate);
+	public Integer saveChannel(String channelName, Date startDate, String imagePath);
 
-	public boolean updateChannel(String channelName, Date startDate, Integer channelID);
+	public boolean updateChannel(String channelName, Date startDate, Integer channelID, String imagePath);
 
 	public BrandInfoDTO getBrandByBrandNameAndPartner(String brandName, String submission);
 
@@ -262,7 +263,7 @@ public interface BusinessService {
 	public void deleteUSer(int parseInt);
 
 	public boolean saveBrand(String brandName, Date startDate, String locationsInvoiced, String submisions,
-			Integer channelID, String partnerActive, Integer clientId, int brandId, String email);
+			Integer channelID, String partnerActive, Integer clientId, int brandId, String email, String imagePath);
 
 	public boolean updateBrand(Integer brandID, String brandName, Date startDate, String locationsInvoiced,
 			String submission, Integer channelID, String partnerActive, Integer clientId, Integer id, String email);
@@ -317,7 +318,7 @@ public interface BusinessService {
 
 	public boolean updateBrand(Integer brandID, String brandName, Date startDate, String inactive,
 			String locationsInvoiced, String submission, Integer channelID, String partnerActive, Integer clientId,
-			Integer id, String email);
+			Integer id, String email, String imagePath);
 
 	public String getGoogleCategory(String category1);
 
@@ -359,6 +360,10 @@ public interface BusinessService {
 	public void deleteBusinessInfoByStoreAndClient(UploadBusinessBean uploadBean);
 
 	public void updateErrorBusinessInfoByAddressVerfication(LblErrorDTO errorDTO);
+	
+
+	public void updateErrorInfoBySmartyStreets(UploadBusinessBean uploadBean);
+	
 
 	Map<Integer, List<ChangeTrackingDTO>> getBusinessListing(List<String> listofStores, String brand, Date fromDate,
 			Date toDate);
@@ -567,6 +572,23 @@ public interface BusinessService {
 
 	public void deleteExistingRecords(Integer clientId,
 			java.util.Date formattedEndDate);
+
+	public Map<String, String> getChannelImageBytes(String brand);
+
+	public List<InsightsGraphDTO> getMonthlyReportData(String brand, String type);
+
+	public List<InsightsGraphDTO> getMonthlyTrends(String brand, String state);
+
+	public List<BingReportDTO> getAnlytics(String brand, String state, Date startDate,
+			Date endDate);
+
+	public List<BingReportDTO> getAnlyticsForStore(String brand, String store,
+			Date startDate, Date endDate);
+
+	public Map<String, List<BingAnalyticsDTO>> getTopandBottomAnalytics(
+			String brand, String state, Date startDate, Date endDate);
+
+	
 
 
 }

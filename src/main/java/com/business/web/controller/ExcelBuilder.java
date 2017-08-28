@@ -11,7 +11,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.swing.text.StyledEditorKit.BoldAction;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -25,9 +24,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.view.document.AbstractExcelView;
 
 import com.business.common.dto.LocalBusinessDTO;
-import com.business.common.util.LBLConstants;
 import com.business.service.BusinessService;
-import com.whitespark.ws.ScrapUtil;
 
 /***
  * 
@@ -95,7 +92,6 @@ public class ExcelBuilder extends AbstractExcelView {
 
 	private void acxiomCanTemplateTemplateData(HSSFWorkbook workbook,
 			List<LocalBusinessDTO> listOfBusiness) {
-
 
 		// create a new Excel sheet
 		HSSFSheet sheet = workbook.createSheet("errorInfo");
@@ -169,24 +165,27 @@ public class ExcelBuilder extends AbstractExcelView {
 		header.createCell(50).setCellValue("AdditionalPhoneNumberCodes");
 		header.createCell(51).setCellValue("DisplayName");
 		header.createCell(52).setCellValue("CorporateName");
-		
+
 		// create data rows
 		int rowCount = 1;
 
 		for (LocalBusinessDTO obj : listOfBusiness) {
 			HSSFRow aRow = sheet.createRow(rowCount++);
 			String countryCode = obj.getCountryCode();
-			if(countryCode !=null && countryCode.length()>0 &&  countryCode.equalsIgnoreCase("CA")){
+			if (countryCode != null && countryCode.length() > 0
+					&& countryCode.equalsIgnoreCase("CA")) {
 				aRow.createCell(0).setCellValue(obj.getClientId());
 				Date uploadedTime = obj.getUploadedTime();
-				if(uploadedTime==null){
-					uploadedTime=new Date();
+				if (uploadedTime == null) {
+					uploadedTime = new Date();
 				}
 				aRow.createCell(1).setCellValue(uploadedTime);
 				aRow.createCell(2).setCellValue(obj.getCompanyName());
 				aRow.createCell(3).setCellValue(obj.getActionCode());
-				aRow.createCell(4).setCellValue(obj.getPrimaryContactFirstName());
-				aRow.createCell(5).setCellValue(obj.getPrimaryContactLastName());
+				aRow.createCell(4).setCellValue(
+						obj.getPrimaryContactFirstName());
+				aRow.createCell(5)
+						.setCellValue(obj.getPrimaryContactLastName());
 				aRow.createCell(6).setCellValue("");
 				aRow.createCell(7).setCellValue(obj.getContactTitle());
 				aRow.createCell(8).setCellValue(obj.getLocationAddress());
@@ -212,7 +211,8 @@ public class ExcelBuilder extends AbstractExcelView {
 				aRow.createCell(28).setCellValue(obj.getBrands());
 				aRow.createCell(29).setCellValue(getInfoGroupHours(obj));
 				aRow.createCell(30).setCellValue(getAcxiomPaymentTypes(obj));
-				aRow.createCell(31).setCellValue(getAcxiomLanguages(obj.getLanguages()));
+				aRow.createCell(31).setCellValue(
+						getAcxiomLanguages(obj.getLanguages()));
 				aRow.createCell(32).setCellValue("");
 				aRow.createCell(33).setCellValue("");
 				aRow.createCell(34).setCellValue("");
@@ -228,7 +228,8 @@ public class ExcelBuilder extends AbstractExcelView {
 				aRow.createCell(44).setCellValue("");
 				aRow.createCell(45).setCellValue("");
 				aRow.createCell(46).setCellValue("");
-				aRow.createCell(47).setCellValue(obj.getProfessionalAssociations());
+				aRow.createCell(47).setCellValue(
+						obj.getProfessionalAssociations());
 				aRow.createCell(48).setCellValue("");
 				aRow.createCell(49).setCellValue(obj.getAdditionalNumber());
 				aRow.createCell(50).setCellValue("");
@@ -236,12 +237,10 @@ public class ExcelBuilder extends AbstractExcelView {
 				aRow.createCell(52).setCellValue("");
 
 			}
-						
 
 		}
 		logger.info("Total Rows : " + rowCount);
 
-	
 	}
 
 	private String getAcxiomPaymentTypes(LocalBusinessDTO localBusinessDTO) {
@@ -286,15 +285,14 @@ public class ExcelBuilder extends AbstractExcelView {
 				&& "Y".equalsIgnoreCase(localBusinessDTO.getPayPal())) {
 			creditCards.append("P");
 		}
-		
+
 		String cards = creditCards.toString();
-		
+
 		return cards;
 	}
 
 	private void acxiomUsTemplateTemplateData(HSSFWorkbook workbook,
 			List<LocalBusinessDTO> listOfBusiness) {
-
 
 		// create a new Excel sheet
 		HSSFSheet sheet = workbook.createSheet("errorInfo");
@@ -324,9 +322,9 @@ public class ExcelBuilder extends AbstractExcelView {
 		header.getCell(10).setCellStyle(style);
 		header.createCell(11).setCellValue("Mailing_State");
 		header.getCell(11).setCellStyle(style);
-		
+
 		header.createCell(12).setCellValue("Mailing Zip Code");
-		
+
 		header.createCell(13).setCellValue("Landmark_Address");
 		header.getCell(13).setCellStyle(style);
 		header.createCell(14).setCellValue("Landmark_City");
@@ -420,17 +418,19 @@ public class ExcelBuilder extends AbstractExcelView {
 		for (LocalBusinessDTO obj : listOfBusiness) {
 			HSSFRow aRow = sheet.createRow(rowCount++);
 			String countryCode = obj.getCountryCode();
-			if(countryCode !=null && countryCode.length()>0 &&  countryCode.equalsIgnoreCase("US")){
+			if (countryCode != null && countryCode.length() > 0
+					&& countryCode.equalsIgnoreCase("US")) {
 				aRow.createCell(0).setCellValue("");
 				aRow.createCell(1).setCellValue(obj.getClientId());
 				aRow.createCell(2).setCellValue(obj.getStore());
 				aRow.createCell(3).setCellValue("");
 				aRow.createCell(4).setCellValue(obj.getCompanyName());
-				StringBuffer locationAddressSuite=new StringBuffer();
+				StringBuffer locationAddressSuite = new StringBuffer();
 				locationAddressSuite.append(obj.getLocationAddress());
 				locationAddressSuite.append(", ");
 				locationAddressSuite.append(obj.getSuite());
-				aRow.createCell(5).setCellValue(locationAddressSuite.toString());
+				aRow.createCell(5)
+						.setCellValue(locationAddressSuite.toString());
 				aRow.createCell(6).setCellValue(obj.getLocationCity());
 				aRow.createCell(7).setCellValue(obj.getLocationState());
 				aRow.createCell(8).setCellValue(obj.getLocationZipCode());
@@ -451,8 +451,10 @@ public class ExcelBuilder extends AbstractExcelView {
 				aRow.createCell(23).setCellValue(obj.getSyph5());
 				aRow.createCell(24).setCellValue("");
 				aRow.createCell(25).setCellValue("");
-				aRow.createCell(26).setCellValue(obj.getPrimaryContactFirstName());
-				aRow.createCell(27).setCellValue(obj.getPrimaryContactLastName());
+				aRow.createCell(26).setCellValue(
+						obj.getPrimaryContactFirstName());
+				aRow.createCell(27).setCellValue(
+						obj.getPrimaryContactLastName());
 				aRow.createCell(28).setCellValue("");
 				aRow.createCell(29).setCellValue(obj.getContactTitle());
 				aRow.createCell(30).setCellValue(obj.getContactEmail());
@@ -485,7 +487,8 @@ public class ExcelBuilder extends AbstractExcelView {
 				aRow.createCell(57).setCellValue(obj.getAdditionalNumber());
 				aRow.createCell(58).setCellValue("");
 				aRow.createCell(59).setCellValue("");
-				aRow.createCell(60).setCellValue(obj.getProfessionalAssociations());
+				aRow.createCell(60).setCellValue(
+						obj.getProfessionalAssociations());
 				aRow.createCell(61).setCellValue("");
 				aRow.createCell(62).setCellValue("");
 				aRow.createCell(63).setCellValue(obj.getLanguages());
@@ -496,9 +499,11 @@ public class ExcelBuilder extends AbstractExcelView {
 				aRow.createCell(68).setCellValue("");
 				aRow.createCell(69).setCellValue("");
 				aRow.createCell(70).setCellValue("");
-				aRow.createCell(71).setCellValue(obj.getProfessionalAssociations());
+				aRow.createCell(71).setCellValue(
+						obj.getProfessionalAssociations());
 				aRow.createCell(72).setCellValue("");
-				aRow.createCell(73).setCellValue(getAcxiomLanguages(obj.getLanguages()));
+				aRow.createCell(73).setCellValue(
+						getAcxiomLanguages(obj.getLanguages()));
 				aRow.createCell(74).setCellValue(obj.getAlternativeName());
 				aRow.createCell(75).setCellValue(obj.getAnchorOrHostBusiness());
 				aRow.createCell(76).setCellValue("");
@@ -523,15 +528,12 @@ public class ExcelBuilder extends AbstractExcelView {
 				aRow.createCell(95).setCellValue("");
 				aRow.createCell(96).setCellValue(obj.getBusinessDescription());
 			}
-	
-			
 
 		}
 		logger.info("Total Rows : " + rowCount);
 
-	
 	}
-	
+
 	private void yextTemplateData(HSSFWorkbook workbook,
 			List<LocalBusinessDTO> listOfBusiness) {
 
@@ -2265,6 +2267,7 @@ public class ExcelBuilder extends AbstractExcelView {
 		CellStyle style = workbook.createCellStyle();
 		Font font = workbook.createFont();
 		font.setFontName("Calibri");
+		font.setFontHeight((short) 280);
 		font.setBoldweight(Font.BOLDWEIGHT_BOLD);
 		style.setFont(font);
 		// create header row
@@ -2276,101 +2279,120 @@ public class ExcelBuilder extends AbstractExcelView {
 		header.getCell(1).setCellStyle(style);
 		header.createCell(2).setCellValue("Alternative Name");
 		header.getCell(2).setCellStyle(style);
-		header.createCell(3).setCellValue("Address Line 1");
+		header.createCell(3).setCellValue("IsChainBusiness");
 		header.getCell(3).setCellStyle(style);
-		header.createCell(4).setCellValue("Address Line 2");
+		header.createCell(4).setCellValue("BusinessOwnerEmail");
 		header.getCell(4).setCellStyle(style);
-		header.createCell(5).setCellValue("City");
+		header.createCell(5).setCellValue("Address Line 1");
 		header.getCell(5).setCellStyle(style);
-		header.createCell(6).setCellValue("State");
+		header.createCell(6).setCellValue("Address Line 2");
 		header.getCell(6).setCellStyle(style);
-		header.createCell(7).setCellValue("Zip Code");
+		header.createCell(7).setCellValue("City");
 		header.getCell(7).setCellStyle(style);
-		header.createCell(8).setCellValue("Country Code");
+		header.createCell(8).setCellValue("State");
 		header.getCell(8).setCellStyle(style);
-		header.createCell(9).setCellValue("Main Phone");
+		header.createCell(9).setCellValue("Zip Code");
 		header.getCell(9).setCellStyle(style);
-		header.createCell(10).setCellValue("Category");
+		header.createCell(10).setCellValue("Country Code");
 		header.getCell(10).setCellStyle(style);
-		header.createCell(11).setCellValue("Latitude");
-		header.createCell(12).setCellValue("Longitude");
-		header.createCell(13).setCellValue("Website");
-		header.createCell(14).setCellValue("Description");
-		header.createCell(15).setCellValue("Company tagline");
-		header.createCell(16).setCellValue("Logo");
-		header.createCell(17).setCellValue("Photos");
-		header.createCell(18).setCellValue("Menu URL");
-		header.createCell(19).setCellValue("Facebook address");
-		header.createCell(20).setCellValue("Twitter address");
-		header.createCell(21).setCellValue("Open 24 Hours");
-		header.createCell(22).setCellValue("Operating Hours");
-		header.createCell(23).setCellValue("Mobile Phone");
-		header.createCell(24).setCellValue("Fax Number");
-		header.createCell(25).setCellValue("Toll-free Number");
-		header.createCell(26).setCellValue("Email");
-		header.createCell(27).setCellValue("Payment type");
-		header.createCell(28).setCellValue("Parking Option");
-		header.createCell(29).setCellValue("Year established");
-		header.createCell(30).setCellValue("Brands carried");
-		header.createCell(31).setCellValue("Professional affiliations");
-		header.createCell(32).setCellValue("Hide Address");
-		header.createCell(33).setCellValue("Delete From Account");
+		header.createCell(11).setCellValue("Main Phone");
+		header.getCell(11).setCellStyle(style);
+		header.createCell(12).setCellValue("Category");
+		header.getCell(12).setCellStyle(style);
+		header.createCell(13).setCellValue("Primary Category");
+		header.getCell(13).setCellStyle(style);
+		header.createCell(14).setCellValue("Latitude");
+		header.getCell(14).setCellStyle(style);
+		header.createCell(15).setCellValue("Longitude");
+		header.getCell(15).setCellStyle(style);
+		header.createCell(16).setCellValue("Website");
+		header.getCell(16).setCellStyle(style);
+		header.createCell(17).setCellValue("Open 24 Hours");
+		header.getCell(17).setCellStyle(style);
+		header.createCell(18).setCellValue("Operating Hours");
+		header.getCell(18).setCellStyle(style);
+		header.createCell(19).setCellValue("Special Hours");
+		header.getCell(19).setCellStyle(style);
+		header.createCell(20).setCellValue("Photos");
+		header.getCell(20).setCellStyle(style);
+		header.createCell(21).setCellValue("Menu URL");
+		header.getCell(21).setCellStyle(style);
+		header.createCell(22).setCellValue("Online Order URL");
+		header.getCell(22).setCellStyle(style);
+		header.createCell(23).setCellValue("Facebook address");
+		header.getCell(23).setCellStyle(style);
+		header.createCell(24).setCellValue("Twitter address");
+		header.getCell(24).setCellStyle(style);
+		header.createCell(25).setCellValue("Email");
+		header.getCell(25).setCellStyle(style);
+		header.createCell(26).setCellValue("Status");
+		header.getCell(26).setCellStyle(style);
+		header.createCell(27).setCellValue("Hide Address");
+		header.getCell(27).setCellStyle(style);
+		header.createCell(28).setCellValue("Delete From Account");
+		header.getCell(28).setCellStyle(style);
+		header.createCell(29).setCellValue("NPI");
+		header.getCell(29).setCellStyle(style);
+		header.createCell(30).setCellValue("Hotel Amenities");
+		header.getCell(30).setCellStyle(style);
+		header.createCell(31).setCellValue("Hotel Star Rating");
+		header.getCell(31).setCellStyle(style);
+		header.createCell(32).setCellValue("Indicative Price of one meal");
+		header.getCell(32).setCellStyle(style);
+		header.createCell(33).setCellValue("PublishLink");
+		header.getCell(33).setCellStyle(style);
 
 		// create data rows
 		int rowCount = 1;
 		for (LocalBusinessDTO obj : listOfBusiness) {
+
+			String primaryCategory = "";
+			String categorySyph = obj.getCategorySyph();
+			if (categorySyph != null && categorySyph.contains(",")) {
+				primaryCategory.substring(0, primaryCategory.indexOf(","));
+			}
+
 			HSSFRow aRow = sheet.createRow(rowCount++);
 			aRow.createCell(0).setCellValue(obj.getStore());
 			aRow.createCell(1).setCellValue(obj.getCompanyName());
 			aRow.createCell(2).setCellValue(obj.getAlternativeName());
-			aRow.createCell(3).setCellValue(obj.getLocationAddress());
-			aRow.createCell(4).setCellValue(obj.getSuite());
-			aRow.createCell(5).setCellValue(obj.getLocationCity());
-			aRow.createCell(6).setCellValue(obj.getLocationState());
-			aRow.createCell(7).setCellValue(obj.getLocationZipCode());
-			aRow.createCell(8).setCellValue(obj.getCountryCode());
-			aRow.createCell(9).setCellValue(obj.getLocationPhone());
-			aRow.createCell(10).setCellValue(obj.getCategorySyph());
-			aRow.createCell(11).setCellValue("");
-			aRow.createCell(12).setCellValue("");
-			aRow.createCell(13).setCellValue(obj.getWebAddress());
-			aRow.createCell(14).setCellValue(obj.getBusinessDescription());
-			aRow.createCell(15).setCellValue(obj.getTagline());
-			aRow.createCell(16).setCellValue(obj.getLogoLink());
-			aRow.createCell(17).setCellValue("");
-			aRow.createCell(18).setCellValue("");
-			aRow.createCell(19).setCellValue(obj.getFacebookLink());
-			aRow.createCell(20).setCellValue(obj.getTwitterLink());
-			boolean is24hours = is24hours(obj);
-			if (is24hours) {
-				aRow.createCell(21).setCellValue("Y");
-			} else {
-				aRow.createCell(21).setCellValue("");
-			}
+			aRow.createCell(3).setCellValue("Y");
+			aRow.createCell(4).setCellValue("");
+			aRow.createCell(5).setCellValue(obj.getLocationAddress());
+			aRow.createCell(6).setCellValue(obj.getSuite());
+			aRow.createCell(7).setCellValue(obj.getLocationCity());
+			aRow.createCell(8).setCellValue(obj.getLocationState());
+			aRow.createCell(9).setCellValue(obj.getLocationZipCode());
+			aRow.createCell(10).setCellValue(obj.getCountryCode());
 
+			aRow.createCell(11).setCellValue(obj.getLocationPhone());
+			aRow.createCell(12).setCellValue(categorySyph);
+			aRow.createCell(13).setCellValue(primaryCategory);
+
+			aRow.createCell(14).setCellValue("");
+			aRow.createCell(15).setCellValue("");
+			aRow.createCell(16).setCellValue(obj.getWebAddress());
+			aRow.createCell(17).setCellValue("N");
+			
 			String hours = getHours(obj);
-			StringBuffer hour = new StringBuffer();
-			hour.append("Store");
-			hour.append("#");
-			hour.append(" ");
-			hour.append(obj.getStore());
-			hour.append(" ");
-			hour.append("-");
-			hour.append(" ");
-			hour.append(hours);
-			String hoo = hour.toString();
-			aRow.createCell(22).setCellValue(hours);
-			aRow.createCell(23).setCellValue(obj.getMobileNumber());
-			aRow.createCell(24).setCellValue(obj.getFax());
-			aRow.createCell(25).setCellValue(obj.getTollFree());
-			aRow.createCell(26).setCellValue(obj.getLocationEmail());
-			aRow.createCell(27).setCellValue(getPaymentTypes(obj));
+			aRow.createCell(18).setCellValue(hours);
+			aRow.createCell(19).setCellValue("");
+			aRow.createCell(20).setCellValue(obj.getLogoLink());
+			aRow.createCell(21).setCellValue("");
+			aRow.createCell(22).setCellValue("");
+			aRow.createCell(23).setCellValue(obj.getFacebookLink());
+			aRow.createCell(24).setCellValue(obj.getTwitterLink());
+			aRow.createCell(25).setCellValue("");
+			aRow.createCell(26).setCellValue("Open");
+			aRow.createCell(27).setCellValue("N");
 			aRow.createCell(28).setCellValue("");
-			aRow.createCell(29).setCellValue(obj.getYearEstablished());
-			aRow.createCell(30).setCellValue(obj.getClient());
-			aRow.createCell(31).setCellValue(obj.getProfessionalAssociations());
-			aRow.createCell(32).setCellValue(obj.getADDRESSPRIVACYFLAG());
+			aRow.createCell(29).setCellValue("");
+			aRow.createCell(30).setCellValue("");
+			aRow.createCell(31).setCellValue("");
+			aRow.createCell(32).setCellValue("");
 			aRow.createCell(33).setCellValue("");
+
+			
 		}
 		logger.info("Total Rows : " + rowCount);
 	}
@@ -2693,6 +2715,7 @@ public class ExcelBuilder extends AbstractExcelView {
 		logger.info("Total Rows : " + rowCount);
 
 	}
+
 	private void infogroupTemplateData(HSSFWorkbook workbook,
 			List<LocalBusinessDTO> listOfBusiness) {
 
@@ -2725,7 +2748,7 @@ public class ExcelBuilder extends AbstractExcelView {
 		header.createCell(16).setCellValue("Landmark State/Province");
 		header.createCell(17).setCellValue("Landmark Zip/Postal Code");
 		header.createCell(18).setCellValue("Business Description");
-        header.createCell(19).setCellValue("Toll Free");
+		header.createCell(19).setCellValue("Toll Free");
 		header.createCell(20).setCellValue("Additional Number");
 		header.createCell(21).setCellValue("Fax");
 		header.createCell(22).setCellValue("Mobile Number");
@@ -2738,7 +2761,8 @@ public class ExcelBuilder extends AbstractExcelView {
 		header.createCell(29).setCellValue("Primary Contact First Name");
 		header.createCell(30).setCellValue("Primary Contact Last Name");
 		header.createCell(31).setCellValue("Primary Contact Actual Title");
-		header.createCell(32).setCellValue("Primary Contact Standardized Title");
+		header.createCell(32)
+				.setCellValue("Primary Contact Standardized Title");
 		header.createCell(33).setCellValue("Primary Contact Credential");
 		header.createCell(34).setCellValue("Primary Contact Email");
 		header.createCell(35).setCellValue("Is Professional Record?");
@@ -2813,9 +2837,11 @@ public class ExcelBuilder extends AbstractExcelView {
 		header.createCell(104).setCellValue("LGBT Friendly");
 		header.createCell(105).setCellValue("Meta Tag Data");
 		header.createCell(106).setCellValue("Golf Courses");
-		header.createCell(107).setCellValue("Golf Courses - Semi-Private HOO for public");
+		header.createCell(107).setCellValue(
+				"Golf Courses - Semi-Private HOO for public");
 		header.createCell(108).setCellValue("Golf Courses - Caddy Service");
-		header.createCell(109).setCellValue("Golf Courses - Championship Course");
+		header.createCell(109).setCellValue(
+				"Golf Courses - Championship Course");
 		header.createCell(110).setCellValue("Golf Courses - Valet Parking");
 		header.createCell(111).setCellValue("Hotels");
 		header.createCell(112).setCellValue("Hotels - Elevator");
@@ -2835,8 +2861,10 @@ public class ExcelBuilder extends AbstractExcelView {
 		header.createCell(126).setCellValue("Landmark Info - Admission Fee");
 		header.createCell(127).setCellValue("New Car Dealer");
 		header.createCell(128).setCellValue("Recreational");
-		header.createCell(129).setCellValue("Recreational - # of tents/RV sites");
-		header.createCell(130).setCellValue("Recreational - Sheltered Picnic Areas");
+		header.createCell(129).setCellValue(
+				"Recreational - # of tents/RV sites");
+		header.createCell(130).setCellValue(
+				"Recreational - Sheltered Picnic Areas");
 		header.createCell(131).setCellValue("Recreational - Swimming Areas");
 		header.createCell(132).setCellValue("Recreational - Fishing Areas");
 		header.createCell(133).setCellValue("Recreational - Boating Areas");
@@ -2868,7 +2896,7 @@ public class ExcelBuilder extends AbstractExcelView {
 		header.createCell(159).setCellValue("Index");
 		header.createCell(160).setCellValue("CMR#");
 		header.createCell(161).setCellValue("Provided Infogroup ID");
-		
+
 		// create data row
 		int rowCount = 1;
 
@@ -3036,11 +3064,12 @@ public class ExcelBuilder extends AbstractExcelView {
 			aRow.createCell(159).setCellValue(obj.getStore());
 			aRow.createCell(160).setCellValue("");
 			aRow.createCell(161).setCellValue("");
-			
+
 		}
 		logger.info("Total Rows : " + rowCount);
 
 	}
+
 	private static String getInfoGroupHours(LocalBusinessDTO localBusinessDTO) {
 		StringBuffer workingHours = new StringBuffer();
 		String mondayOpen = localBusinessDTO.getMondayOpen();
@@ -3066,7 +3095,7 @@ public class ExcelBuilder extends AbstractExcelView {
 
 		if ("CLOSE".equalsIgnoreCase(sunOpen)
 				|| "CLOSE".equalsIgnoreCase(sunClose)) {
-			 workingHours.append("Sun Closed,  ");
+			workingHours.append("Sun Closed,  ");
 		} else if (sunOpen != null && sunOpen.trim().length() > 0
 				&& sunClose != null && sunClose.trim().length() > 0) {
 
@@ -3125,7 +3154,7 @@ public class ExcelBuilder extends AbstractExcelView {
 		}
 		if ("CLOSE".equalsIgnoreCase(mondayOpen)
 				|| "CLOSE".equalsIgnoreCase(mondayClose)) {
-			 workingHours.append("Mon Closed, ");
+			workingHours.append("Mon Closed, ");
 		}
 
 		else if (mondayOpen != null && mondayOpen.trim().length() > 0
@@ -3182,7 +3211,7 @@ public class ExcelBuilder extends AbstractExcelView {
 		}
 		if ("CLOSE".equalsIgnoreCase(tuesdayOpen)
 				|| "CLOSE".equalsIgnoreCase(tuuesdayClose)) {
-			 workingHours.append("Tue Closed, ");
+			workingHours.append("Tue Closed, ");
 		} else if (tuesdayOpen != null && tuesdayOpen.trim().length() > 0
 				&& tuuesdayClose != null && tuuesdayClose.trim().length() > 0) {
 
@@ -3294,7 +3323,7 @@ public class ExcelBuilder extends AbstractExcelView {
 
 		if ("CLOSE".equalsIgnoreCase(thursdayOpen)
 				|| "CLOSE".equalsIgnoreCase(thursdayClose)) {
-			 workingHours.append("Thu Closed, ");
+			workingHours.append("Thu Closed, ");
 		} else if (thursdayOpen != null && thursdayOpen.trim().length() > 0
 				&& thursdayClose != null && thursdayClose.trim().length() > 0) {
 			String time = null;
@@ -3351,7 +3380,7 @@ public class ExcelBuilder extends AbstractExcelView {
 
 		if ("CLOSE".equalsIgnoreCase(fridayOpen)
 				|| "CLOSE".equalsIgnoreCase(fridayClose)) {
-			 workingHours.append("Fri Closed, ");
+			workingHours.append("Fri Closed, ");
 		} else if (fridayOpen != null && fridayOpen.trim().length() > 0
 				&& fridayClose != null && fridayClose.trim().length() > 0) {
 
@@ -3407,7 +3436,7 @@ public class ExcelBuilder extends AbstractExcelView {
 
 		if ("CLOSE".equalsIgnoreCase(satOpen)
 				|| "CLOSE".equalsIgnoreCase(satClose)) {
-			 workingHours.append("Sat Closed, ");
+			workingHours.append("Sat Closed, ");
 		} else if (satOpen != null && satOpen.trim().length() > 0
 				&& satClose != null && satClose.trim().length() > 0) {
 
@@ -3511,7 +3540,7 @@ public class ExcelBuilder extends AbstractExcelView {
 		header.createCell(28).setCellValue("GOOGLEPLUS");
 		header.createCell(29).setCellValue("YELP");
 		header.createCell(30).setCellValue("FOURSQUARE");
-		
+
 		// create data rows
 		int rowCount = 1;
 
@@ -3548,15 +3577,12 @@ public class ExcelBuilder extends AbstractExcelView {
 			aRow.createCell(28).setCellValue(obj.getGooglePlusLink());
 			aRow.createCell(29).setCellValue(obj.getYelpLink());
 			aRow.createCell(30).setCellValue(obj.getFoursquareLink());
-			
+
 		}
 		logger.info("Total Rows : " + rowCount);
 
-	}	
+	}
 
-		
-		
-			
 	public String getAcxiomLanguages(String languages) {
 		StringBuffer language = new StringBuffer();
 		if (StringUtils.containsIgnoreCase(languages, "Chinese")) {
@@ -3585,6 +3611,7 @@ public class ExcelBuilder extends AbstractExcelView {
 		}
 		return language.toString();
 	}
+
 	public static String getLocalezeHours(LocalBusinessDTO localBusinessDTO) {
 		StringBuffer workingHours = new StringBuffer();
 		String mondayOpen = localBusinessDTO.getMondayOpen();
@@ -3671,50 +3698,51 @@ public class ExcelBuilder extends AbstractExcelView {
 		return hours;
 
 	}
+
 	private static String getLanguages(LocalBusinessDTO localBusinessDTO) {
-		StringBuffer languageSpoken=new StringBuffer();
+		StringBuffer languageSpoken = new StringBuffer();
 		String language = localBusinessDTO.getLanguages();
-		language=language.trim();
+		language = language.trim();
 		String[] split = language.split(",");
-		if(split.length==0){
+		if (split.length == 0) {
 			languageSpoken.append("EN");
-		}else{
+		} else {
 			for (String languages : split) {
-				if(languages.equalsIgnoreCase("English")){
+				if (languages.equalsIgnoreCase("English")) {
 					languageSpoken.append("EN");
 				}
-				if(languages.equalsIgnoreCase("Spanish")){
+				if (languages.equalsIgnoreCase("Spanish")) {
 					languageSpoken.append("ES");
 				}
-				if(languages.equalsIgnoreCase("French")){
+				if (languages.equalsIgnoreCase("French")) {
 					languageSpoken.append("FR");
 				}
-				if(languages.equalsIgnoreCase("German")){
+				if (languages.equalsIgnoreCase("German")) {
 					languageSpoken.append("DE");
 				}
-				if(languages.equalsIgnoreCase("Italian")){
+				if (languages.equalsIgnoreCase("Italian")) {
 					languageSpoken.append("IT");
 				}
-				if(languages.equalsIgnoreCase("Portuguese")){
+				if (languages.equalsIgnoreCase("Portuguese")) {
 					languageSpoken.append("PT");
 				}
-				if(languages.equalsIgnoreCase("Russian")){
+				if (languages.equalsIgnoreCase("Russian")) {
 					languageSpoken.append("RU");
 				}
-				if(languages.equalsIgnoreCase("Chinese")){
+				if (languages.equalsIgnoreCase("Chinese")) {
 					languageSpoken.append("ZH");
 				}
-				if(languages.equalsIgnoreCase("Japanese")){
+				if (languages.equalsIgnoreCase("Japanese")) {
 					languageSpoken.append("JA");
 				}
-				if(languages.equalsIgnoreCase("Korean")){
+				if (languages.equalsIgnoreCase("Korean")) {
 					languageSpoken.append("KO");
 				}
-				if(languages.equalsIgnoreCase("Thai")){
+				if (languages.equalsIgnoreCase("Thai")) {
 					languageSpoken.append("TH");
 				}
 			}
-			
+
 		}
 		return languageSpoken.toString();
 	}

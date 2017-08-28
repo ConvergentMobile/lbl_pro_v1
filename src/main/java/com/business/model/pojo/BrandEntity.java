@@ -1,5 +1,6 @@
 package com.business.model.pojo;
 
+import java.sql.Blob;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -45,7 +46,17 @@ public class BrandEntity {
 	private String email;
 	private String inactive;
 	
-	
+	private String  imagePath;
+
+
+	public String getImagePath() {
+		return imagePath;
+	}
+
+	public void setImagePath(String imagePath) {
+		this.imagePath = imagePath;
+	}
+
 	public String getInactive() {
 		return inactive;
 	}

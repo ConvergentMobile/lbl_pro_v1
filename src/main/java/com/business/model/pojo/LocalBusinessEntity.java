@@ -130,6 +130,8 @@ public class LocalBusinessEntity {
 	private String ADDRESSPRIVACYFLAG;
 	private Integer clientId;
 
+	
+
 	private String foursquareLink;
 	private String instagramLink;
 	private String menuLink;
@@ -138,6 +140,15 @@ public class LocalBusinessEntity {
 	
 	private String googleAccountId;
 	private String googleLocationId;
+	private String trackingId;
+	
+	public String getTrackingId() {
+		return trackingId;
+	}
+
+	public void setTrackingId(String trackingId) {
+		this.trackingId = trackingId;
+	}
 
 	public String getGoogleAccountId() {
 		return googleAccountId;

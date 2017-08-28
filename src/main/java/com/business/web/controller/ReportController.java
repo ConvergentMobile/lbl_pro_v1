@@ -4,13 +4,17 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -30,12 +34,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.business.common.dto.BingAnalyticsDTO;
+import com.business.common.dto.BingReportDTO;
 import com.business.common.dto.ChangeTrackingDTO;
 import com.business.common.dto.ExportReportDTO;
 import com.business.common.dto.GoogleInsightsReportDTO;
 import com.business.common.dto.InsightsGraphDTO;
-import com.business.common.dto.InsightsHistory;
 import com.business.common.dto.LocalBusinessDTO;
+import com.business.common.dto.MonthlyReportDTO;
 import com.business.common.dto.RenewalReportDTO;
 import com.business.common.util.ControllerUtil;
 import com.business.common.util.DateUtil;
@@ -48,7 +54,6 @@ import com.business.service.CheckReportService;
 import com.business.service.ReportService;
 import com.business.web.bean.ReportForm;
 import com.business.web.bean.UsersBean;
-import com.ctc.wstx.io.EBCDICCodec;
 
 /**
  * @author Vasanth
@@ -86,9 +91,9 @@ public class ReportController {
 		ReportEntity selReport = null;
 		if (request.getParameter("reportId") == null
 				|| request.getParameter("reportId") == "") { // get
-																// the
-																// first
-																// report
+			// the
+			// first
+			// report
 			Iterator<ReportEntity> iterator = reports.iterator();
 			while (iterator.hasNext()) {
 				selReport = iterator.next();
@@ -330,11 +335,23 @@ public class ReportController {
 			Model model) throws IllegalStateException, SystemException {
 
 		List<String> storeForBrand = reportService.getStoreForBrand(categoryId);
-		logger.info("stores after selecting brand::" + storeForBrand);
+		// logger.info("stores after selecting brand::" + storeForBrand);
 
 		model.addAttribute("storelist", storeForBrand);
 
 		return storeForBrand.toString();
+	}
+
+	@RequestMapping(value = "/statesByBrand", method = RequestMethod.GET)
+	public @ResponseBody
+	String statesByBrand(
+			@RequestParam(value = "brandId", required = true) String brandId,
+			Model model) throws IllegalStateException, SystemException {
+
+		List<String> allStates = service.getAllStatesListByBrand(brandId);
+		logger.info("States after selecting brand::" + brandId);
+
+		return allStates.toString();
 	}
 
 	/**
@@ -882,7 +899,12 @@ public class ReportController {
 		List<String> websites = new ArrayList<String>();
 		List<String> directions = new ArrayList<String>();
 		List<String> calls = new ArrayList<String>();
+		List<String> anlytics = new ArrayList<String>();
 		Integer count = service.getInsightCountsForBrand(brand, store);
+
+		List<String> storesList = service.getStoresNames(brand);
+		java.util.Collections.sort(storesList);
+		logger.info("storesList ::" + storesList.size());
 
 		if (count != null && count == 0) {
 			model.addAttribute("noDataMessage", true);
@@ -912,13 +934,16 @@ public class ReportController {
 			directions.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
 					+ "),  y: " + 0 + " }");
 
+			anlytics.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+					+ "),  y: " + 0 + " }");
+
 			model.addAttribute("viewsHistory", views);
 			model.addAttribute("actionsHistory", maps);
 
 			model.addAttribute("websitesHistory", websites);
 			model.addAttribute("directionsHistory", directions);
 			model.addAttribute("callsHistory", calls);
-
+			model.addAttribute("anlytics", anlytics);
 			model.addAttribute("brand", brand);
 			model.addAttribute("store", store);
 			model.addAttribute("start", getFormattedDate(startDate));
@@ -935,6 +960,12 @@ public class ReportController {
 			model.addAttribute("directions", 0);
 			model.addAttribute("calls", 0);
 			model.addAttribute("actions", 0);
+			java.util.Collections.sort(storesList);
+
+			int index = storesList.indexOf(store);
+			storesList.remove(index);
+			storesList.add(0, store);
+			model.addAttribute("storeList", storesList);
 
 		} else {
 			model.addAttribute("noDataMessage", false);
@@ -942,10 +973,6 @@ public class ReportController {
 					.getInsightsDataForBrandAndStore(brand, store, startDate,
 							endDate);
 			// List<String> allStates = service.getAllStates();
-
-			List<String> storesList = service.getStoresNames(brand);
-			java.util.Collections.sort(storesList);
-			logger.info("storesList ::" + storesList.size());
 
 			Long directCount = 0L;
 			Long discoveryCount = 0L;
@@ -1024,6 +1051,23 @@ public class ReportController {
 						+ "),  y: " + callsCounts + " }");
 
 			}
+
+			List<BingReportDTO> anlyticsData = service.getAnlyticsForStore(
+					brand, store, startDate, endDate);
+
+			for (BingReportDTO bingAnalyticsDTO : anlyticsData) {
+
+				String[] date = bingAnalyticsDTO.getDate().split("-");
+				Integer year = Integer.parseInt(date[0]);
+				Integer month = Integer.parseInt(date[1]);
+				Integer day = Integer.parseInt(date[2]);
+
+				anlytics.add("{x:new Date(" + year + "," + (month - 1) + ","
+						+ day + "),  y: "
+						+ bingAnalyticsDTO.getImpressionCount() + " }");
+			}
+
+			model.addAttribute("anlytics", anlytics);
 
 			model.addAttribute("days", listofWeeks.size());
 			model.addAttribute("minYear", calStart.get(Calendar.YEAR));
@@ -1112,7 +1156,11 @@ public class ReportController {
 		List<String> websites = new ArrayList<String>();
 		List<String> directions = new ArrayList<String>();
 		List<String> calls = new ArrayList<String>();
+		List<String> anlytics = new ArrayList<String>();
 		Integer count = service.getInsightCountsForBrand(brand, "");
+		List<String> storesList = service.getStoresNames(brand);
+		java.util.Collections.sort(storesList);
+		logger.info("storesList ::" + storesList.size());
 
 		if (count != null && count == 0) {
 			model.addAttribute("noDataMessage", true);
@@ -1142,6 +1190,10 @@ public class ReportController {
 			directions.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
 					+ "),  y: " + 0 + " }");
 
+			anlytics.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+					+ "),  y: " + 0 + " }");
+
+			model.addAttribute("anlytics", anlytics);
 			model.addAttribute("viewsHistory", views);
 			model.addAttribute("actionsHistory", maps);
 
@@ -1172,10 +1224,6 @@ public class ReportController {
 					.getInsightsDataForBrandAndStore(brand, store, startDate,
 							endDate);
 			// List<String> allStates = service.getAllStates();
-
-			List<String> storesList = service.getStoresNames(brand);
-			java.util.Collections.sort(storesList);
-			logger.info("storesList ::" + storesList.size());
 
 			Long directCount = 0L;
 			Long discoveryCount = 0L;
@@ -1254,6 +1302,23 @@ public class ReportController {
 						+ "),  y: " + callsCounts + " }");
 			}
 			Calendar calStart = Calendar.getInstance();
+
+			List<BingReportDTO> anlyticsData = service.getAnlyticsForStore(
+					brand, store, startDate, endDate);
+
+			for (BingReportDTO bingAnalyticsDTO : anlyticsData) {
+
+				String[] date = bingAnalyticsDTO.getDate().split("-");
+				Integer year = Integer.parseInt(date[0]);
+				Integer month = Integer.parseInt(date[1]);
+				Integer day = Integer.parseInt(date[2]);
+
+				anlytics.add("{x:new Date(" + year + "," + (month - 1) + ","
+						+ day + "),  y: "
+						+ bingAnalyticsDTO.getImpressionCount() + " }");
+			}
+
+			model.addAttribute("anlytics", anlytics);
 
 			calStart.setTime(startDate);
 			model.addAttribute("days", listofWeeks.size());
@@ -1577,10 +1642,247 @@ public class ReportController {
 				.getInsightsBrandExcelData(brand, state, startDate, endDate);
 		model.addAttribute("startDate", start);
 		model.addAttribute("endDate", end);
+		model.addAttribute("brand", brand);
 		model.addAttribute("insightsExcelData", insightsExcelData);
 		model.addAttribute("reportName", "GmbInsights-" + brand);
 
 		return "gmbbrandexcel";
+	}
+
+	@RequestMapping(value = "/runGMBMonthlyReport.htm", method = RequestMethod.GET)
+	public String runGMBMonthlyReport(Model model, HttpServletRequest request,
+			HttpSession session) throws Exception {
+
+		String brand = request.getParameter("brand");
+		String type = request.getParameter("type");
+
+		Calendar cal = Calendar.getInstance();
+
+		Date endDate = cal.getTime();
+		cal.add(Calendar.HOUR_OF_DAY, 23);
+
+		Calendar startCal = Calendar.getInstance();
+		startCal.setTime(endDate);
+		startCal.add(Calendar.MONTH, -11);
+		Date startDate = startCal.getTime();
+
+		logger.info("startDate ::" + startDate);
+		logger.info("endDate ::" + endDate);
+
+		List<InsightsGraphDTO> insightsExcelData = service
+				.getMonthlyReportData(brand, type);
+
+		Map<String, List<InsightsGraphDTO>> excelData = new HashMap<String, List<InsightsGraphDTO>>();
+
+		if (type.equalsIgnoreCase("location")) {
+			for (InsightsGraphDTO insightsGraphDTO : insightsExcelData) {
+
+				String store = insightsGraphDTO.getStore();
+
+				if (excelData.get(store) != null) {
+					List<InsightsGraphDTO> existingStoreData = excelData
+							.get(store);
+					existingStoreData.add(insightsGraphDTO);
+					excelData.put(store, existingStoreData);
+				} else {
+					List<InsightsGraphDTO> storeData = new ArrayList<InsightsGraphDTO>();
+					storeData.add(insightsGraphDTO);
+					excelData.put(store, storeData);
+				}
+			}
+		} else {
+			for (InsightsGraphDTO insightsGraphDTO : insightsExcelData) {
+
+				String store = insightsGraphDTO.getState();
+
+				if (excelData.get(store) != null) {
+					List<InsightsGraphDTO> existingStoreData = excelData
+							.get(store);
+					existingStoreData.add(insightsGraphDTO);
+					excelData.put(store, existingStoreData);
+				} else {
+					List<InsightsGraphDTO> storeData = new ArrayList<InsightsGraphDTO>();
+					storeData.add(insightsGraphDTO);
+					excelData.put(store, storeData);
+				}
+			}
+		}
+
+		List<MonthlyReportDTO> monthlyData = new ArrayList<MonthlyReportDTO>();
+
+		List<String> lastTwelveMonths = getLastTwelveMonths();
+
+		SortedSet<String> storeorStates = new TreeSet<String>(
+				excelData.keySet());
+		// Set<String> storeorStates = excelData.keySet();
+		for (String key : storeorStates) {
+			MonthlyReportDTO dto = new MonthlyReportDTO();
+			if (type.equalsIgnoreCase("location")) {
+				dto.setStore(key);
+			} else {
+				dto.setState(key);
+			}
+			List<InsightsGraphDTO> list = excelData.get(key);
+
+			for (InsightsGraphDTO insightsGraphDTO : list) {
+
+				String[] monthAndName = getMonthName(
+						insightsGraphDTO.getDate(), lastTwelveMonths);
+				int index = Integer.valueOf(monthAndName[0]);
+				String monthName = monthAndName[1];
+				Long totalSearchCount = insightsGraphDTO.getTotalSearchCount();
+				Long totalViewCount = insightsGraphDTO.getTotalViewCount();
+				Long totalActionCount = insightsGraphDTO.getTotalActionCount();
+				if (index == 1) {
+					dto.setMonth1(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 2) {
+					dto.setMonth2(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 3) {
+					dto.setMonth3(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 4) {
+					dto.setMonth4(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 5) {
+					dto.setMonth5(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 6) {
+					dto.setMonth6(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 7) {
+					dto.setMonth7(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 8) {
+					dto.setMonth8(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 9) {
+					dto.setMonth9(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 10) {
+					dto.setMonth10(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 11) {
+					dto.setMonth11(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 12) {
+					dto.setMonth12(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+			}
+			monthlyData.add(dto);
+		}
+		model.addAttribute("excelData", monthlyData);
+		model.addAttribute("months", lastTwelveMonths);
+		model.addAttribute("reportType", type);
+
+		model.addAttribute("reportName", "GMB-MonthlyResultsBy" + type);
+
+		return "gmbmonthlyexcel";
+	}
+
+	public static void main(String[] args) {
+		// getCurrentYearMonths();
+		// String monthYear = getMonthYear(new Date());
+		String formattedDate = getFormattedDate(new Date());
+		System.out.println(formattedDate);
+
+	}
+
+	private static String getMonthYear(Date date) {
+		SimpleDateFormat monthDate = new SimpleDateFormat("MMM-yyyy");
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(date);
+		String month_year = monthDate.format(cal.getTime());
+		return month_year;
+	}
+
+	private static String[] getMonthName(Date date,
+			List<String> lastTwelveMonths) {
+
+		String[] indexAndName = new String[2];
+
+		SimpleDateFormat monthDate = new SimpleDateFormat("MMM-yyyy");
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(date);
+		// cal.add(Calendar.MONTH, -1);
+		String month_name = monthDate.format(cal.getTime());
+
+		int monthIndex = lastTwelveMonths.indexOf(month_name);
+
+		// System.out.println((12- monthIndex) + "==" + month_name);
+
+		indexAndName[0] = String.valueOf(12 - monthIndex);
+		indexAndName[1] = month_name;
+		// System.out.println(indexAndName[0] + "==" + indexAndName[1] );
+
+		return indexAndName;
+
+	}
+
+	// getLastYearMonths();
+	// getCurrentYearMonths();
+
+	static List<String> months = Arrays.asList("Jan", "Feb", "Mar", "Apr",
+			"May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+
+	private static Map<String, Long> getLastYearMonths() {
+		Map<String, Long> allDates = new LinkedHashMap<String, Long>();
+
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy");
+
+		Calendar prevYear = Calendar.getInstance();
+		prevYear.add(Calendar.YEAR, -1);
+
+		for (int i = 0; i < months.size(); i++) {
+			String year = dateFormat.format(prevYear.getTime());
+			allDates.put(months.get(i) + "-" + year, 0L);
+		}
+		// System.out.println(allDates);
+		return allDates;
+	}
+
+	private static Map<String, Long> getCurrentYearMonths() {
+		Map<String, Long> allDates = new LinkedHashMap<String, Long>();
+
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy");
+
+		Calendar prevYear = Calendar.getInstance();
+
+		for (int i = 0; i < months.size(); i++) {
+			String year = dateFormat.format(prevYear.getTime());
+			allDates.put(months.get(i) + "-" + year, 0L);
+		}
+		// System.out.println(allDates);
+		return allDates;
+	}
+
+	private static List<String> getLastTwelveMonths() {
+		List<String> allDates = new ArrayList<String>();
+
+		SimpleDateFormat monthDate = new SimpleDateFormat("MMM-yyyy");
+		Calendar cal = Calendar.getInstance();
+
+		for (int i = 1; i <= 12; i++) {
+			String month_name1 = monthDate.format(cal.getTime());
+			// System.out.println(month_name1);
+			allDates.add(month_name1);
+			cal.add(Calendar.MONTH, -1);
+		}
+		// System.out.println(allDates);
+		return allDates;
 	}
 
 	@RequestMapping(value = "/runGMBBrand.htm", method = RequestMethod.GET)
@@ -1630,11 +1932,22 @@ public class ReportController {
 		}
 		model.addAttribute("url", url);
 
+		String startYY = getYYYYMMDD(startDate);
+		String endYY = getYYYYMMDD(endDate);
+
+		model.addAttribute("reportName", brand + "-GMB-" + startYY + "-"
+				+ endYY);
+
 		List<String> views = new ArrayList<String>();
 		List<String> maps = new ArrayList<String>();
 		List<String> websites = new ArrayList<String>();
 		List<String> directions = new ArrayList<String>();
 		List<String> calls = new ArrayList<String>();
+
+		List<String> anlytics = new ArrayList<String>();
+
+	/*	List<String> topTenAnalytics = new ArrayList<String>();
+		List<String> bottomTenAnalytics = new ArrayList<String>();*/
 
 		Integer count = service.getInsightCountsForBrand(brand, "");
 		if (count != null && count == 0) {
@@ -1650,6 +1963,8 @@ public class ReportController {
 
 			model.addAttribute("yActions", 0);
 			model.addAttribute("yViews", 0);
+			model.addAttribute("ySearches", 0);
+			
 
 			views.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0 + "),  y: "
 					+ 0 + " }");
@@ -1662,8 +1977,20 @@ public class ReportController {
 			calls.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0 + "),  y: "
 					+ 0 + " }");
 
+			anlytics.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+					+ "),  y: " + 0 + " }");
+
 			directions.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
 					+ "),  y: " + 0 + " }");
+
+		/*	topTenAnalytics.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+					+ "),  y: " + 0 + " }");
+
+			bottomTenAnalytics.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+					+ "),  y: " + 0 + " }");
+
+			model.addAttribute("topAnalytics", topTenAnalytics);
+			model.addAttribute("bAnalytics", bottomTenAnalytics);*/
 
 			model.addAttribute("searchHistory", views);
 			model.addAttribute("mapsHistory", maps);
@@ -1671,6 +1998,20 @@ public class ReportController {
 			model.addAttribute("websitesHistory", websites);
 			model.addAttribute("directionsHistory", directions);
 			model.addAttribute("callsHistory", calls);
+
+			List<String> searchPreTrends = new ArrayList<String>();
+
+			searchPreTrends.add("{label: Jan,y:0}");
+
+			model.addAttribute("searchPreTrends", searchPreTrends);
+			model.addAttribute("searchCurTrends", searchPreTrends);
+
+			model.addAttribute("actionPreTrends", searchPreTrends);
+			model.addAttribute("actionCurTrends", searchPreTrends);
+
+			model.addAttribute("viewPreTrends", searchPreTrends);
+			model.addAttribute("viewCurTrends", searchPreTrends);
+			model.addAttribute("anlytics", anlytics);
 
 			model.addAttribute("brand", brand);
 			model.addAttribute("state", state);
@@ -1749,10 +2090,6 @@ public class ReportController {
 				if (callsCounts > maxCallCounts)
 					maxCallCounts = callsCounts;
 
-				// System.out.println("maxSerchCounts: "+ maxSerchCounts +
-				// ", maxCallCounts: "+ maxCallCounts);
-
-				// System.out.println("date is: "+ key);
 				String[] date = key.split("-");
 				Integer year = Integer.parseInt(date[0]);
 				Integer month = Integer.parseInt(date[1]);
@@ -1769,6 +2106,164 @@ public class ReportController {
 				calls.add("{x:new Date(" + year + "," + (month - 1) + "," + day
 						+ "),  y: " + callsCounts + " }");
 
+			}
+
+			List<InsightsGraphDTO> insightstrendData = service
+					.getMonthlyTrends(brand, state);
+
+			List<String> searchPreTrends = new ArrayList<String>();
+			List<String> searchCurTrends = new ArrayList<String>();
+
+			List<String> viewPreTrends = new ArrayList<String>();
+			List<String> viewCurTrends = new ArrayList<String>();
+
+			List<String> actionPreTrends = new ArrayList<String>();
+			List<String> actionCurTrends = new ArrayList<String>();
+
+			// Action Trends
+
+			Map<String, Long> lastYearActonMonths = getLastYearMonths();
+			Map<String, Long> currentYearActionMonths = getCurrentYearMonths();
+
+			for (InsightsGraphDTO insightsGraphDTO : insightstrendData) {
+
+				String monthYear = getMonthYear(insightsGraphDTO.getDate());
+				if (lastYearActonMonths.containsKey(monthYear)) {
+					lastYearActonMonths.put(monthYear,
+							insightsGraphDTO.getTotalActionCount());
+				}
+				if (currentYearActionMonths.containsKey(monthYear)) {
+					currentYearActionMonths.put(monthYear,
+							insightsGraphDTO.getTotalActionCount());
+				}
+			}
+			Set<String> lastYearSet = lastYearActonMonths.keySet();
+			for (String key : lastYearSet) {
+				Long value = lastYearActonMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				actionPreTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
+			}
+
+			Set<String> lcurrentYearSet = currentYearActionMonths.keySet();
+			for (String key : lcurrentYearSet) {
+				Long value = currentYearActionMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				actionCurTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
+			}
+
+			// View Trends
+			Map<String, Long> lastYearViewMonths = getLastYearMonths();
+			Map<String, Long> currentYearViewMonths = getCurrentYearMonths();
+
+			for (InsightsGraphDTO insightsGraphDTO : insightstrendData) {
+
+				String monthYear = getMonthYear(insightsGraphDTO.getDate());
+				if (lastYearViewMonths.containsKey(monthYear)) {
+					lastYearViewMonths.put(monthYear,
+							insightsGraphDTO.getTotalViewCount());
+				}
+				if (currentYearViewMonths.containsKey(monthYear)) {
+					currentYearViewMonths.put(monthYear,
+							insightsGraphDTO.getTotalViewCount());
+				}
+			}
+			Set<String> lastYearViewSet = lastYearViewMonths.keySet();
+			for (String key : lastYearViewSet) {
+				Long value = lastYearViewMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				viewPreTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
+			}
+
+			Set<String> currentYearViewSet = currentYearViewMonths.keySet();
+			for (String key : currentYearViewSet) {
+				Long value = currentYearViewMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				viewCurTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
+			}
+
+			// search Trends
+			Map<String, Long> lastYearMonths = getLastYearMonths();
+			Map<String, Long> currentYearMonths = getCurrentYearMonths();
+
+			for (InsightsGraphDTO insightsGraphDTO : insightstrendData) {
+
+				String monthYear = getMonthYear(insightsGraphDTO.getDate());
+				if (lastYearMonths.containsKey(monthYear)) {
+					lastYearMonths.put(monthYear,
+							insightsGraphDTO.getTotalSearchCount());
+				}
+				if (currentYearMonths.containsKey(monthYear)) {
+					currentYearMonths.put(monthYear,
+							insightsGraphDTO.getTotalSearchCount());
+				}
+			}
+			Set<String> lastYearsSet = lastYearMonths.keySet();
+			for (String key : lastYearsSet) {
+				Long value = lastYearMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				searchPreTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
+			}
+
+			Set<String> lcurrentYearsSet = currentYearMonths.keySet();
+			for (String key : lcurrentYearsSet) {
+				Long value = currentYearMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				searchCurTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
+			}
+
+			List<BingReportDTO> anlyticsData = service.getAnlytics(brand,
+					state, startDate, endDate);
+
+			for (BingReportDTO bingAnalyticsDTO : anlyticsData) {
+
+				String[] date = bingAnalyticsDTO.getDate().split("-");
+				Integer year = Integer.parseInt(date[0]);
+				Integer month = Integer.parseInt(date[1]);
+				Integer day = Integer.parseInt(date[2]);
+
+				anlytics.add("{x:new Date(" + year + "," + (month - 1) + ","
+						+ day + "),  y: "
+						+ bingAnalyticsDTO.getImpressionCount() + " }");
+			} 
+			if(anlyticsData!= null && anlyticsData.size() == 0) {
+				anlytics.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+						+ "),  y: " + 0 + " }");
 			}
 
 			Map<String, List<InsightsGraphDTO>> topBottomSearches = service
@@ -1860,6 +2355,18 @@ public class ReportController {
 				dto.setTotalBottomActionsCount(graphDTO.getTotalActionCount());
 				bottomTenActions.add(dto);
 			}
+
+			Map<String, List<BingAnalyticsDTO>> topAnalytics = service
+					.getTopandBottomAnalytics(brand, state, startDate, endDate);
+
+			List<BingAnalyticsDTO> tTenAnalytics = topAnalytics
+					.get("topAnalytics");
+			List<BingAnalyticsDTO> bTenAnalytics = topAnalytics
+					.get("bottomAnalytics");
+
+			model.addAttribute("topAnalytics", tTenAnalytics);
+			model.addAttribute("bAnalytics", bTenAnalytics);
+
 			Calendar calStart = Calendar.getInstance();
 
 			calStart.setTime(startDate);
@@ -1897,6 +2404,16 @@ public class ReportController {
 			model.addAttribute("websitesHistory", websites);
 			model.addAttribute("directionsHistory", directions);
 			model.addAttribute("callsHistory", calls);
+
+			model.addAttribute("searchPreTrends", searchPreTrends);
+			model.addAttribute("searchCurTrends", searchCurTrends);
+
+			model.addAttribute("actionPreTrends", actionPreTrends);
+			model.addAttribute("actionCurTrends", actionCurTrends);
+
+			model.addAttribute("viewPreTrends", viewPreTrends);
+			model.addAttribute("viewCurTrends", viewCurTrends);
+			model.addAttribute("anlytics", anlytics);
 
 			java.util.Collections.sort(allStates);
 
@@ -1953,6 +2470,22 @@ public class ReportController {
 		logger.info("state ::" + state);
 		logger.info("brand in Controller ::" + brand);
 
+		Map<String, String> channelImageBytes = service.getChannelImageBytes(brand);
+		
+/*		byte[] encoded = org.apache.commons.codec.binary.Base64
+				.encodeBase64(channelImageBytes.get("cImage"));
+		String encodedString = new String(encoded);
+
+		model.addAttribute("channelImageData", encodedString);
+		
+		byte[] bEncoded = org.apache.commons.codec.binary.Base64
+				.encodeBase64(channelImageBytes.get("bImage"));
+		String encodedBrad  = new String(bEncoded);
+
+		model.addAttribute("brandImageData", encodedBrad);*/
+		model.addAttribute("brandImage", channelImageBytes.get("bImage"));
+		model.addAttribute("channelImage", channelImageBytes.get("cImage"));
+
 		Date startDate = null;
 		Date endDate = null;
 		if (start.length() > 0 || end.length() > 0) {
@@ -1974,6 +2507,8 @@ public class ReportController {
 		List<String> websites = new ArrayList<String>();
 		List<String> directions = new ArrayList<String>();
 		List<String> calls = new ArrayList<String>();
+		List<String> anlytics = new ArrayList<String>();
+
 
 		Integer count = service.getInsightCountsForBrand(brand, "");
 		if (count != null && count == 0) {
@@ -1989,6 +2524,8 @@ public class ReportController {
 
 			model.addAttribute("yActions", 0);
 			model.addAttribute("yViews", 0);
+			model.addAttribute("ySearches", 0);
+			
 
 			views.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0 + "),  y: "
 					+ 0 + " }");
@@ -2001,6 +2538,9 @@ public class ReportController {
 			calls.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0 + "),  y: "
 					+ 0 + " }");
 
+			anlytics.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+					+ "),  y: " + 0 + " }");
+
 			directions.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
 					+ "),  y: " + 0 + " }");
 
@@ -2010,6 +2550,20 @@ public class ReportController {
 			model.addAttribute("websitesHistory", websites);
 			model.addAttribute("directionsHistory", directions);
 			model.addAttribute("callsHistory", calls);
+
+			List<String> searchPreTrends = new ArrayList<String>();
+
+			searchPreTrends.add("{label: Jan,y:0}");
+
+			model.addAttribute("searchPreTrends", searchPreTrends);
+			model.addAttribute("searchCurTrends", searchPreTrends);
+
+			model.addAttribute("actionPreTrends", searchPreTrends);
+			model.addAttribute("actionCurTrends", searchPreTrends);
+
+			model.addAttribute("viewPreTrends", searchPreTrends);
+			model.addAttribute("viewCurTrends", searchPreTrends);
+			model.addAttribute("anlytics", anlytics);
 
 			model.addAttribute("brand", brand);
 			model.addAttribute("state", state);
@@ -2109,6 +2663,176 @@ public class ReportController {
 						+ "),  y: " + callsCounts + " }");
 
 			}
+
+			Map<String, List<BingAnalyticsDTO>> topAnalytics = service
+					.getTopandBottomAnalytics(brand, state, startDate, endDate);
+
+			List<BingAnalyticsDTO> tTenAnalytics = topAnalytics
+					.get("topAnalytics");
+			List<BingAnalyticsDTO> bTenAnalytics = topAnalytics
+					.get("bottomAnalytics");
+
+			model.addAttribute("topAnalytics", tTenAnalytics);
+			model.addAttribute("bAnalytics", bTenAnalytics);
+
+			List<InsightsGraphDTO> insightstrendData = service
+					.getMonthlyTrends(brand, state);
+
+			List<String> searchPreTrends = new ArrayList<String>();
+			List<String> searchCurTrends = new ArrayList<String>();
+
+			List<String> viewPreTrends = new ArrayList<String>();
+			List<String> viewCurTrends = new ArrayList<String>();
+
+			List<String> actionPreTrends = new ArrayList<String>();
+			List<String> actionCurTrends = new ArrayList<String>();
+
+			// Action Trends
+
+			Map<String, Long> lastYearActonMonths = getLastYearMonths();
+			Map<String, Long> currentYearActionMonths = getCurrentYearMonths();
+
+			for (InsightsGraphDTO insightsGraphDTO : insightstrendData) {
+
+				String monthYear = getMonthYear(insightsGraphDTO.getDate());
+				if (lastYearActonMonths.containsKey(monthYear)) {
+					lastYearActonMonths.put(monthYear,
+							insightsGraphDTO.getTotalActionCount());
+				}
+				if (currentYearActionMonths.containsKey(monthYear)) {
+					currentYearActionMonths.put(monthYear,
+							insightsGraphDTO.getTotalActionCount());
+				}
+			}
+			Set<String> lastYearSet = lastYearActonMonths.keySet();
+			for (String key : lastYearSet) {
+				Long value = lastYearActonMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				actionPreTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
+			}
+
+			Set<String> lcurrentYearSet = currentYearActionMonths.keySet();
+			for (String key : lcurrentYearSet) {
+				Long value = currentYearActionMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				actionCurTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
+			}
+
+			// View Trends
+			Map<String, Long> lastYearViewMonths = getLastYearMonths();
+			Map<String, Long> currentYearViewMonths = getCurrentYearMonths();
+
+			for (InsightsGraphDTO insightsGraphDTO : insightstrendData) {
+
+				String monthYear = getMonthYear(insightsGraphDTO.getDate());
+				if (lastYearViewMonths.containsKey(monthYear)) {
+					lastYearViewMonths.put(monthYear,
+							insightsGraphDTO.getTotalViewCount());
+				}
+				if (currentYearViewMonths.containsKey(monthYear)) {
+					currentYearViewMonths.put(monthYear,
+							insightsGraphDTO.getTotalViewCount());
+				}
+			}
+			Set<String> lastYearViewSet = lastYearViewMonths.keySet();
+			for (String key : lastYearViewSet) {
+				Long value = lastYearViewMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				viewPreTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
+			}
+
+			Set<String> currentYearViewSet = currentYearViewMonths.keySet();
+			for (String key : currentYearViewSet) {
+				Long value = currentYearViewMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				viewCurTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
+			}
+
+			// search Trends
+			Map<String, Long> lastYearMonths = getLastYearMonths();
+			Map<String, Long> currentYearMonths = getCurrentYearMonths();
+
+			for (InsightsGraphDTO insightsGraphDTO : insightstrendData) {
+
+				String monthYear = getMonthYear(insightsGraphDTO.getDate());
+				if (lastYearMonths.containsKey(monthYear)) {
+					lastYearMonths.put(monthYear,
+							insightsGraphDTO.getTotalSearchCount());
+				}
+				if (currentYearMonths.containsKey(monthYear)) {
+					currentYearMonths.put(monthYear,
+							insightsGraphDTO.getTotalSearchCount());
+				}
+			}
+			Set<String> lastYearsSet = lastYearMonths.keySet();
+			for (String key : lastYearsSet) {
+				Long value = lastYearMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				searchPreTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
+			}
+
+			Set<String> lcurrentYearsSet = currentYearMonths.keySet();
+			for (String key : lcurrentYearsSet) {
+				Long value = currentYearMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				searchCurTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
+			}
+
+			List<BingReportDTO> anlyticsData = service.getAnlytics(brand,
+					state, startDate, endDate);
+
+			for (BingReportDTO bingAnalyticsDTO : anlyticsData) {
+
+				String[] date = bingAnalyticsDTO.getDate().split("-");
+				Integer year = Integer.parseInt(date[0]);
+				Integer month = Integer.parseInt(date[1]);
+				Integer day = Integer.parseInt(date[2]);
+
+				anlytics.add("{x:new Date(" + year + "," + (month - 1) + ","
+						+ day + "),  y: "
+						+ bingAnalyticsDTO.getImpressionCount() + " }");
+			}
+			if(anlyticsData!= null && anlyticsData.size() == 0) {
+				anlytics.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+						+ "),  y: " + 0 + " }");
+			}
+
 
 			Map<String, List<InsightsGraphDTO>> topBottomSearches = service
 					.getTopandBottomSearches(brand, state, startDate, endDate);
@@ -2236,6 +2960,16 @@ public class ReportController {
 			model.addAttribute("websitesHistory", websites);
 			model.addAttribute("directionsHistory", directions);
 			model.addAttribute("callsHistory", calls);
+
+			model.addAttribute("searchPreTrends", searchPreTrends);
+			model.addAttribute("searchCurTrends", searchCurTrends);
+
+			model.addAttribute("actionPreTrends", actionPreTrends);
+			model.addAttribute("actionCurTrends", actionCurTrends);
+
+			model.addAttribute("viewPreTrends", viewPreTrends);
+			model.addAttribute("viewCurTrends", viewCurTrends);
+			model.addAttribute("anlytics", anlytics);
 
 			java.util.Collections.sort(allStates);
 
@@ -2369,8 +3103,14 @@ public class ReportController {
 		return listofWeeks;
 	}
 
-	public String getFormattedDate(Date dateValue) {
+	public static String getFormattedDate(Date dateValue) {
 		SimpleDateFormat formatter = new SimpleDateFormat("MMM dd, YYYY");
+		String format = formatter.format(dateValue);
+		return format;
+	}
+
+	public static String getYYYYMMDD(Date dateValue) {
+		SimpleDateFormat formatter = new SimpleDateFormat("YYYYMMdd");
 		String format = formatter.format(dateValue);
 		return format;
 	}

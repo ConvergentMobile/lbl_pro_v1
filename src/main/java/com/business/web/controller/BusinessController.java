@@ -274,7 +274,7 @@ public class BusinessController {
 			Model model, HttpServletRequest request,
 			@ModelAttribute("searchBusiness") LocalBusinessDTO businessDTO,
 			HttpSession session) {
-
+		System.out.println("Start: " + new Date());
 		logger.info("start ::  login post method");
 
 		UsersDTO userDTO = service.getUserByUserNameAndPWD(bean.getUserName(),
@@ -378,6 +378,7 @@ public class BusinessController {
 		model.addAttribute("listingActivityInfo", exportReportDTOs);
 		model.addAttribute("brandsInfo", businessDTOs);
 		session.setAttribute("loginRole", "other");
+		System.out.println("end: " + new Date());
 		logger.info("end ::  login post method");
 		return "dashboard";
 	}
@@ -3147,7 +3148,7 @@ public class BusinessController {
 			Integer channelID = service.getChannelIdByName("Convergent Mobile");
 			if (channelID == 0) {
 				channelID = service.saveChannel("Convergent Mobile",
-						startDateValue);
+						startDateValue, bean.getcImagePath());
 			}
 			message = controllerUtil.saveOrUpdateBrand(bean, message,
 					startDateValue, channelID, service);

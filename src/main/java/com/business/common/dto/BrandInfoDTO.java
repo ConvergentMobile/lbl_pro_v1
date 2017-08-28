@@ -28,8 +28,17 @@ public class BrandInfoDTO {
 	private String locationCotracted;
 	private String email; 
 	private String inactive;
+	private String imagePath;
 	
 	
+	public String getImagePath() {
+		return imagePath;
+	}
+
+	public void setImagePath(String imagePath) {
+		this.imagePath = imagePath;
+	}
+
 	public String getInactive() {
 		return inactive;
 	}

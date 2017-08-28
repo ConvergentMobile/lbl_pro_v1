@@ -2,23 +2,29 @@ package com.business.common.dto;
 
 import java.util.Date;
 
-
 /**
  * 
  * It Holds the data Which is used to Transfer the data from UI to BusinessLayer
  * 
  * @author Vasanth
- *
+ * 
  */
 
 public class ChannelNameDTO {
 
 	private Integer channelID;
 	private String channelName;
-	
-	private Date   startDate;
 
-	
+	private Date startDate;
+	private String imagePath;
+
+	public String getImagePath() {
+		return imagePath;
+	}
+
+	public void setImagePath(String imagePath) {
+		this.imagePath = imagePath;
+	}
 
 	public Integer getChannelID() {
 		return channelID;
@@ -49,7 +55,5 @@ public class ChannelNameDTO {
 		return "ChannelNameDTO [channelID=" + channelID + ", channelName="
 				+ channelName + ", startDate=" + startDate + "]";
 	}
-
-	
 
 }

@@ -201,11 +201,9 @@ display: none;
 				<h1>REPORTS</h1>
 					<a href="reports.htm" class="back">< Back to Reporting Criteria</a>
 				<p>Convergent Mobile</p>
-				<a class="ico_pdf" href="http://api.html2pdfrocket.com/pdf?value=http://${url}&apikey=109e93d8-268f-495a-ad47-45fcaac321c3&FileName=${brand}-${store}&JavascriptDelay=3000">PDF</a> 
-				
 			</div>
-						
-		  <!-- // subheader -->
+			
+			<!-- // subheader -->
 		  <input name="uploadreportpopup" value="" id="uploadreportpopup" type="hidden">
 		  <form id="reportsForm" action="/lbl_pro/reports.htm" method="post">
 			<div class="inner_box">
@@ -289,7 +287,7 @@ display: none;
 						<div class="clearfix"></div>
 					</div>
 
-					<div class="box-report-graph">
+					<div class="box-report-graph ">
 						<h2>Customer actions</h2>
 						<h3>The most common actions that customers take on your listing</h3>
 						<div class="left-col" id="actionsContainer" >
@@ -314,9 +312,17 @@ display: none;
 									<td><strong><fmt:formatNumber type="number" maxFractionDigits="3" value="${actions}" /></strong></td>
 								</tr>
 							</table>
-
+							<div class="clearfix"></div>
 						</div>
+						
+						<div class="box-report-graph">
+										<h2>Bing Analytics</h2>
+										<h3>Bing Impressions</h3>
+										<div style="width:100%; min-height: 250px; float: left;margin: 0 0 50px 0;" id="bingAnalyticsContainer">
+											<!-- place for graphic -->
+										</div>
 
+									</div>
 						<div class="clearfix"></div>
 					</div>
 
@@ -555,6 +561,46 @@ $(function () {
 	    				}
 	    			}
 	    	    });
+	    
+	    
+	    var anlyticsData = [];
+		
+		var analyticsList = ${anlytics};
+		$.each(analyticsList, function(indexA1, valueA1) {
+			anlyticsData.push(valueA1);
+		});
+		
+		 var bingAnalytics = new CanvasJS.Chart("bingAnalyticsContainer",
+				    {
+					 animationEnabled : true,
+						axisX : {
+							minimum: min,
+		    	        	maximum: max,
+		    	        	valueFormatString: "MMM/DD",
+							interval:1,
+							labelAngle: -45,
+							labelAutoFit: true,
+							intervalType: "week",
+						},
+						axisY : {
+							interval : 500,
+							gridColor : "white",
+							tickColor : "white",
+						},
+				      data: [
+				      {
+						type : "area",
+						color : "#5DC2F9",
+						markerSize : 0,
+						label : "",
+				        
+				        dataPoints:anlyticsData
+				      }
+				      ]
+				    });
+
+		bingAnalytics.render();
+
 
 		chart.render();
 		viewChart.render();

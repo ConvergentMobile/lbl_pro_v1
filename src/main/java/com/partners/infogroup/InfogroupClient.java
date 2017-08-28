@@ -38,6 +38,7 @@ import com.business.common.util.UnAccentUtil;
 import com.business.service.BusinessService;
 import com.business.web.bean.InfogroupAPIBean;
 import com.business.web.bean.InfogroupAPI_AuthenticationBean;
+import com.business.web.bean.LocalBusinessBean;
 import com.google.gson.Gson;
 
 public class InfogroupClient {
@@ -101,6 +102,7 @@ public class InfogroupClient {
 			String postData = "{\"submissions\": [" + "temp" + "]}";
 			String data = "";
 			LocalBusinessDTO localBusinessDTO = localBusinessDTOs.get(i);
+
 			SubmissionUtil submissionUtil = new SubmissionUtil();
 			RenewalReportDTO renewalReportDTO = service
 					.isRenewed(localBusinessDTO.getStore(),
@@ -220,13 +222,15 @@ public class InfogroupClient {
 					infogroupAPIBean.setYouTubeorVideoLink(localBusinessDTO
 							.getYouTubeOrVideoLink());
 
-					data = data + infogroupPostDataFormat(infogroupAPIBean);
+					data = data
+							+ infogroupPostDataFormat(infogroupAPIBean,
+									localBusinessDTO);
 					data = data + ",";
 					postData = postData.replace("temp",
 							data.substring(0, data.length() - 1));
 
 					postData = postData.replaceAll("null", "");
-					postData =  postData.replaceAll("(\\r|\\n|\\r\\n)+", "");
+					postData = postData.replaceAll("(\\r|\\n|\\r\\n)+", "");
 					logger.info("Posting data to infogroup: " + postData);
 
 					CloseableHttpClient client = HttpClientBuilder.create()
@@ -272,11 +276,13 @@ public class InfogroupClient {
 				}
 			}
 		}
+
 		errorDetails.put("errorDetails", erroredStores);
 		return errorDetails;
 	}
 
-	public static String infogroupPostDataFormat(InfogroupAPIBean bean) {
+	public static String infogroupPostDataFormat(InfogroupAPIBean bean,
+			LocalBusinessDTO localBusinessDTO) {
 		String type = bean.getSubmissionType();
 		String companyName = bean.getCompanyName();
 		/*
@@ -373,8 +379,7 @@ public class InfogroupClient {
 				+ "\",\"Fax\": \"" + fax + "\",\"Financing\": \"" + financing
 				+ "\",\"Google Checkout\": \"" + googleCheckout
 				+ "\",\"Google Plus Link\": \"" + googlePlusLink
-				+ "\",\"Invoice\": \""
-				+ invoice
+				+ "\",\"Invoice\": \"" + invoice
 				+ "\",\"Keywords\": \""
 				+ keywords
 				+ "\",\"Languages\": \""
@@ -407,8 +412,7 @@ public class InfogroupClient {
 				+ "\",\"Professional Associations\": \""
 				+ professionalAssociations + "\",\"Products\": \"" + products
 				+ "\",\"Services\": \"" + services
-				+ "\",\"Operating Hours\": \""
-				+ "Mon 7:00am-6:00pm, Tue-Thu 9:00am-6:00pm"
+				+ "\",\"Operating Hours\": \"" + getHours(localBusinessDTO)
 				+ "\",\"Short Web Address\": \"" + shorWebAddress
 				+ "\",\"Store Card\": \"" + storeCard + "\",\"Suite\": \""
 				+ suite + "\",\"Toll Free\": \"" + tollFree
@@ -425,6 +429,94 @@ public class InfogroupClient {
 	 * Normalizer.normalize(products, Normalizer.Form.NFD); return
 	 * temp.replaceAll("[^\\p{ASCII}]", ""); }
 	 */
+
+	public static String getHours(LocalBusinessDTO localBusinessDTO) {
+		StringBuffer workingHours = new StringBuffer();
+		String mondayOpen = localBusinessDTO.getMondayOpen();
+		String mondayClose = localBusinessDTO.getMondayClose();
+
+		String tuesdayOpen = localBusinessDTO.getTuesdayOpen();
+		String tuuesdayClose = localBusinessDTO.getTuesdayClose();
+
+		String wedOpen = localBusinessDTO.getWednesdayOpen();
+		String wedClose = localBusinessDTO.getWednesdayClose();
+
+		String thursdayOpen = localBusinessDTO.getThursdayOpen();
+		String thursdayClose = localBusinessDTO.getThursdayClose();
+
+		String fridayOpen = localBusinessDTO.getFridayOpen();
+		String fridayClose = localBusinessDTO.getFridayClose();
+
+		String satOpen = localBusinessDTO.getSaturdayOpen();
+		String satClose = localBusinessDTO.getSaturdayClose();
+
+		String sunOpen = localBusinessDTO.getSundayOpen();
+		String sunClose = localBusinessDTO.getSundayClose();
+
+		if ("CLOSE".equalsIgnoreCase(mondayOpen)
+				|| "CLOSE".equalsIgnoreCase(mondayClose)) {
+			workingHours.append("MON CLOSE, ");
+		}
+
+		else if (mondayOpen != null && mondayOpen.trim().length() > 0
+				&& mondayClose != null && mondayClose.trim().length() > 0) {
+			workingHours.append("MON " + mondayOpen + "am-" + mondayClose
+					+ "pm, ");
+		}
+		if ("CLOSE".equalsIgnoreCase(mondayOpen)
+				|| "CLOSE".equalsIgnoreCase(mondayClose)) {
+			workingHours.append("TUE CLOSE, ");
+		} else if (tuesdayOpen != null && tuesdayOpen.trim().length() > 0
+				&& tuuesdayClose != null && tuuesdayClose.trim().length() > 0) {
+			workingHours.append("TUE " + tuesdayOpen + "am-" + tuuesdayClose
+					+ "pm, ");
+		}
+
+		if ("CLOSE".equalsIgnoreCase(wedOpen)
+				|| "CLOSE".equalsIgnoreCase(wedClose)) {
+			workingHours.append("WED CLOSE, ");
+		} else if (wedOpen != null && wedOpen.trim().length() > 0
+				&& wedClose != null && wedClose.trim().length() > 0) {
+			workingHours.append("WED " + wedOpen + "am-" + wedClose + "pm, ");
+		}
+
+		if ("CLOSE".equalsIgnoreCase(thursdayOpen)
+				|| "CLOSE".equalsIgnoreCase(thursdayClose)) {
+			workingHours.append("THU CLOSE, ");
+		} else if (tuesdayOpen != null && tuesdayOpen.trim().length() > 0
+				&& tuuesdayClose != null && tuuesdayClose.trim().length() > 0) {
+			workingHours.append("THU " + tuesdayOpen + "am-" + tuuesdayClose
+					+ "pm, ");
+		}
+
+		if ("CLOSE".equalsIgnoreCase(fridayOpen)
+				|| "CLOSE".equalsIgnoreCase(fridayClose)) {
+			workingHours.append("FRI CLOSE, ");
+		} else if (fridayOpen != null && fridayOpen.trim().length() > 0
+				&& fridayClose != null && fridayClose.trim().length() > 0) {
+			workingHours.append("FRI " + fridayOpen + "am-" + fridayClose
+					+ "pm, ");
+		}
+
+		if ("CLOSE".equalsIgnoreCase(satOpen)
+				|| "CLOSE".equalsIgnoreCase(satClose)) {
+			workingHours.append("SAT CLOSE, ");
+		} else if (satOpen != null && satOpen.trim().length() > 0
+				&& satClose != null && satClose.trim().length() > 0) {
+			workingHours.append("SAT " + satOpen + "am-" + satClose + "pm, ");
+		}
+		if ("CLOSE".equalsIgnoreCase(sunOpen)
+				|| "CLOSE".equalsIgnoreCase(sunClose)) {
+			workingHours.append("SUN CLOSE");
+		} else if (sunOpen != null && sunOpen.trim().length() > 0
+				&& sunClose != null && sunClose.trim().length() > 0) {
+			workingHours.append("SUN " + sunOpen + "am-" + sunClose + "pm");
+		}
+
+		String hours = workingHours.toString();
+		System.out.println(hours);
+		return hours;
+	}
 
 	public static boolean getAllUserInfo() {
 		boolean validate = true;

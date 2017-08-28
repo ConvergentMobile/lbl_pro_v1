@@ -419,7 +419,7 @@ function diableReadOnlyForAddLocation(id){
 																</tag:message><span style="color: red">*</span>
 																<%-- <span  style="color: red;    margin: 12px -10px 0px; font-size: 12px;display: block;">${clientId_Error}</span> --%>
 																</div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" path="clientId" id="location_information_field" readonly="" /></div></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" path="clientId" id="location_information_field" /></div></td>
 										
 										  <td class="errors">${clientId_Error}</td>
 									</tr>

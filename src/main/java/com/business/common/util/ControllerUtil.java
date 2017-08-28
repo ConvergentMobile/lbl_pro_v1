@@ -128,11 +128,11 @@ public class ControllerUtil {
 		Integer channelID = service.getChannelIdByName(bean.getChannelName());
 		if (channelID == 0) {
 			channelID = service.saveChannel(bean.getChannelName(),
-					startDateValue);
+					startDateValue, bean.getcImagePath());
 			message = "New Channel Name added successfully...";
 		} else {
 			service.updateChannel(bean.getChannelName(), startDateValue,
-					channelID);
+					channelID, bean.getcImagePath());
 			message = "Old ChannelName updated Successfully...";
 		}
 		return channelID;
@@ -206,7 +206,7 @@ public class ControllerUtil {
 					}
 					service.saveBrand(bean.getBrandName(), startDateValue,
 							bean.getLocationsInvoiced(), submission, channelID,
-							partnerActive,clientId,brandId,bean.getEmail());
+							partnerActive,clientId,brandId,bean.getEmail(), bean.getbImagePath());
 					message = "New brand name is added successfully...";
 					
 				} else {
@@ -217,7 +217,7 @@ public class ControllerUtil {
 					message = updateBrand(brandInfoDTO.getBrandID(),brandInfoDTO.getInactive(),
 							bean.getBrandName(), brandInfoDTO.getStartDate(),
 							bean.getLocationsInvoiced(), channelID,
-							partnerActive, submission,service,clientId,brandInfoDTO.getId(),bean.getEmail());
+							partnerActive, submission,service,clientId,brandInfoDTO.getId(),bean.getEmail(), bean.getbImagePath());
 				}
 			}
 		}
@@ -231,7 +231,7 @@ public class ControllerUtil {
 						brandInfoDTO.getBrandName(),
 						brandInfoDTO.getStartDate(),
 						brandInfoDTO.getLocationsInvoiced(), channelID,
-						partnerActive, submission,service,clientId,brandInfoDTO.getId(),brandInfoDTO.getEmail());
+						partnerActive, submission,service,clientId,brandInfoDTO.getId(),brandInfoDTO.getEmail(), brandInfoDTO.getImagePath());
 			}
 		}
 		return message;
@@ -240,10 +240,10 @@ public class ControllerUtil {
 	private String updateBrand(Integer brandID, String inactive,
 			String brandName, Date startDate, String locationsInvoiced,
 			Integer channelID, String partnerActive, String submission,
-			BusinessService service, Integer clientId, Integer id, String email) {
+			BusinessService service, Integer clientId, Integer id, String email, String imagePath) {
 		String message;
 		service.updateBrand(brandID, brandName, startDate,inactive,
-				locationsInvoiced, submission, channelID, partnerActive,clientId,id,email);
+				locationsInvoiced, submission, channelID, partnerActive,clientId,id,email, imagePath);
 		message = "Old brand name updated successfully...";
 		return message;
 	}

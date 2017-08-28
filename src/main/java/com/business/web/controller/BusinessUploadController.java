@@ -46,6 +46,7 @@ import com.business.common.dto.LblErrorDTO;
 import com.business.common.dto.LocalBusinessDTO;
 import com.business.common.dto.UploadReportDTO;
 import com.business.common.dto.UsersDTO;
+import com.business.common.util.BingThread;
 import com.business.common.util.ControllerUtil;
 import com.business.common.util.LBLConstants;
 import com.business.common.util.SmartyStreetsThread;
@@ -54,7 +55,9 @@ import com.business.common.util.UploadDataAddExecutorService;
 import com.business.common.util.UploadDataErrorsAddExecutorService;
 import com.business.common.util.UploadDataUpdateExecutorService;
 import com.business.common.util.ValidationExecutorService;
+import com.business.service.BingService;
 import com.business.service.BusinessService;
+import com.business.service.UploadService;
 import com.business.web.bean.BussinessData;
 import com.business.web.bean.LblErrorBean;
 import com.business.web.bean.LocalBusinessBean;
@@ -94,6 +97,12 @@ public class BusinessUploadController {
 
 	@Autowired
 	private BusinessService service;
+
+	@Autowired
+	private BingService bingService;
+
+	@Autowired
+	private UploadService uploadService;
 
 	/***
 	 * 
@@ -212,6 +221,25 @@ public class BusinessUploadController {
 
 			List<UploadBusinessBean> validBusinessList = ValidationExecutorService.validBusinessList;
 			List<LblErrorBean> erroredBusinessList = ValidationExecutorService.erroredBusinessList;
+
+			logger.info("Total valid records updating/Adding to Bing are:"
+					+ validBusinessList.size());
+			/*BingThread bingThread = new BingThread(bingService,
+					validBusinessList);
+			bingThread.start();*/
+
+			List<UploadBusinessBean> deleteList = ValidationExecutorService.deleteBusinessList;
+
+			int deleteCount = 0;
+			for (UploadBusinessBean uploadBean : deleteList) {
+				if (uploadBean != null
+						&& uploadBean.getActionCode().equalsIgnoreCase("D")) {
+					deleteCount++;
+					uploadService.deleteBusiness(uploadBean);
+				}
+			}
+
+			logger.info("Total stores marked for delete are: " + deleteCount);
 
 			logger.info("Toatal valid records found are: "
 					+ validBusinessList.size());
@@ -333,8 +361,7 @@ public class BusinessUploadController {
 			logger.info("Total Corect Records: " + correctRecords.size());
 			logger.info("Total Updated Records: "
 					+ updateBusinessRecords.size());
-			logger.info("Total Deleted Records: "
-					+ listofDeletesbyActionCode.size());
+			logger.info("Total Deleted Records: " + deleteList.size());
 
 			logger.info("Total Error Records: " + inCorrectDataList.size());
 			logger.info("Total error updated Records: "
@@ -614,10 +641,6 @@ public class BusinessUploadController {
 
 				}
 			}
-			if (!listOfErorBusinessInfos.isEmpty()
-					&& listOfErorBusinessInfos.size() > 0) {
-				service.deleteErrorBusinessByActioncode(listOfErorBusinessInfos);
-			}
 
 			boolean isDuplicate = false;
 			for (int j = 0; j < listOfBusinessInfo.size(); j++) {
@@ -649,6 +672,12 @@ public class BusinessUploadController {
 			 * else { decreaseDuplicateRecordsLength(brandsCountsMap,
 			 * excelRecord); }
 			 */
+		}
+
+		if (!listOfErorBusinessInfos.isEmpty()
+				&& listOfErorBusinessInfos.size() > 0) {
+			service.deleteErrorBusinessByActioncode(listOfErorBusinessInfos);
+
 		}
 
 		return insertRecord;
@@ -782,6 +811,7 @@ public class BusinessUploadController {
 						int columnIndex = cell.getColumnIndex();
 						// System.out.println("columnIndex" + columnIndex);
 						String formatCellValue = df.formatCellValue(cell);
+
 						// System.out.println("formatCellValue" +
 						// formatCellValue);
 						org.apache.commons.beanutils.BeanUtils
@@ -797,6 +827,7 @@ public class BusinessUploadController {
 
 			}
 		} catch (Exception e) {
+			headerpopup = "Invalid Bulk Upload Template";
 			logger.error("Exception : " + e);
 			e.printStackTrace();
 		}

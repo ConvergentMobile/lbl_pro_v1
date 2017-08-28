@@ -1,5 +1,8 @@
 package com.business.web.controller;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -12,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -35,7 +39,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import com.business.common.dto.BrandInfoDTO;
@@ -346,11 +352,72 @@ public class AdminController {
 	@RequestMapping(value = "/addBrand.htm", method = RequestMethod.POST)
 	public String addBrands(Model model,
 			@ModelAttribute("BrandInfo") UsersBean bean,
-			HttpServletRequest request) throws ParseException {
+			HttpServletRequest request,
+			@RequestPart("brandImage") MultipartFile brandImage,
+			@RequestPart("channelImage") MultipartFile channelImage)
+			throws ParseException {
 		logger.info("start ::  addBrands method");
 		HttpSession session = request.getSession();
 		if (!loginSessionValidation(model, session)) {
 			return "logout";
+		}
+		ServletContext context = session.getServletContext();
+
+		String cImage = "";
+		String bImage = "";
+
+		String mode = request.getParameter("saveType");
+		if ("update".equalsIgnoreCase(mode)) {
+			String brandImagePath = request.getParameter("bImagePath");
+			String channelImagePath = request.getParameter("cImagePath");
+			bean.setcImagePath(channelImagePath);
+			bean.setbImagePath(brandImagePath);
+		}
+
+		if (!channelImage.isEmpty()) {
+			String cPath = "/images/channelimages/";
+			String channelImagesPath = context.getRealPath(cPath);
+			try {
+				String originalFilename = channelImage.getOriginalFilename();
+				//System.out.println("channelImage: " + originalFilename);
+				byte barr[] = channelImage.getBytes();
+
+				BufferedOutputStream bout = new BufferedOutputStream(
+						new FileOutputStream(channelImagesPath + "/"
+								+ originalFilename));
+				bout.write(barr);
+				bout.flush();
+				bout.close();
+
+				cImage = cPath + originalFilename;
+				cImage = cImage.substring(1);
+				bean.setcImagePath(cImage);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		if (!brandImage.isEmpty()) {
+			try {
+				String bPath = "/images/brandimages/";
+				String brandImagesPath = context.getRealPath(bPath);
+				String originalFilename = brandImage.getOriginalFilename();
+				//System.out.println("brandImage: " + originalFilename);
+				byte barr[] = brandImage.getBytes();
+
+				BufferedOutputStream bout = new BufferedOutputStream(
+						new FileOutputStream(brandImagesPath + "/"
+								+ originalFilename));
+				bout.write(barr);
+				bout.flush();
+				bout.close();
+				bImage = bPath + originalFilename;
+				bImage = bImage.substring(1);
+				bean.setbImagePath(bImage);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 		String message = "";
@@ -360,20 +427,20 @@ public class AdminController {
 				&& bean.getBrandName().trim().length() > 0) {
 			message = controllerUtil.saveOrUpdateBrandAndChannel(bean, message,
 					startDateValue, service);
-		} else if (bean.getChannelName().trim().length() > 0) {
+		} if (bean.getChannelName().trim().length() > 0) {
 			controllerUtil.saveOrUpdateChannel(bean, startDateValue, message,
 					service);
-		} else if (bean.getBrandName().trim().length() > 0) {
+		} if (bean.getBrandName().trim().length() > 0) {
 			Integer channelID = service.getChannelIdByName("Convergent Mobile");
 			if (channelID == 0) {
 				channelID = service.saveChannel("Convergent Mobile",
-						startDateValue);
+						startDateValue, bean.getcImagePath());
 			}
 			message = controllerUtil.saveOrUpdateBrand(bean, message,
 					startDateValue, channelID, service);
 		}
 
-		logger.info("mesassa" + message);
+		//logger.info("mesassa" + message);
 		model.addAttribute("message", message);
 		List<LocalBusinessDTO> listOfBusinessInfo = service
 				.getListOfBusinessInfo();
@@ -612,6 +679,7 @@ public class AdminController {
 		Integer chalID = businessInfo.getChannelID();
 		ChannelNameDTO getchannelInfo = service.getchannelInfo(chalID);
 		bean.setChannelName(getchannelInfo.getChannelName());
+		bean.setcImagePath(getchannelInfo.getImagePath());
 		SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 		String brandName = businessInfo.getBrandName();
 		bean.setBrandName(brandName);
@@ -624,9 +692,12 @@ public class AdminController {
 		logger.info("submisions::::::::::" + submisions);
 		bean.setSubmisions(submisions);
 		bean.setStartDate(sdf.format(businessInfo.getStartDate()));
+		bean.setbImagePath(businessInfo.getImagePath());
 		bean.setSaveType("update");
 		model.addAttribute("BrandInfo", new UsersBean());
 		model.addAttribute("BrandInfo", bean);
+		model.addAttribute("cImagePath", bean.getcImagePath());
+		model.addAttribute("bImagePath", bean.getbImagePath());
 		model.addAttribute("count", uploadedListings);
 		model.addAttribute("editbrandinadmin", "yes");
 		model.addAttribute("totalSubmissions", totalSubmissions);
@@ -639,6 +710,7 @@ public class AdminController {
 		return "admin";
 
 	}
+
 	@RequestMapping(value = "/cancelRenewal.htm", method = RequestMethod.POST)
 	public String cancelRenewal(@RequestBody String beanStr, Model model,
 			UsersBean bean, HttpSession session, HttpServletRequest request) {
@@ -664,19 +736,20 @@ public class AdminController {
 		}
 		String brand = businessInfo.getBrandName();
 		Integer clientId = businessInfo.getClientId();
-	List<String> storeForBrand = reportService.getStoreForBrand(brand);
-	for (String store : storeForBrand) {
-		RenewalReportEntity renewalReportEntity = service.isStoreExistInRenewal(store, clientId);
-		Date activeDate = renewalReportEntity.getActiveDate();
-		Calendar cal=Calendar.getInstance();
-		cal.setTime(activeDate);
-		cal.add(Calendar.YEAR, 1);
-		renewalReportEntity.setCancelledEffeciveDate(cal.getTime());
-		renewalReportEntity.setStatus("cancel");
-		service.updateRenewalInfo(renewalReportEntity);
-		
-	}
-		
+		List<String> storeForBrand = reportService.getStoreForBrand(brand);
+		for (String store : storeForBrand) {
+			RenewalReportEntity renewalReportEntity = service
+					.isStoreExistInRenewal(store, clientId);
+			Date activeDate = renewalReportEntity.getActiveDate();
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(activeDate);
+			cal.add(Calendar.YEAR, 1);
+			renewalReportEntity.setCancelledEffeciveDate(cal.getTime());
+			renewalReportEntity.setStatus("cancel");
+			service.updateRenewalInfo(renewalReportEntity);
+
+		}
+
 		logger.info("end ::  editBusinessInfo method");
 		List<LocalBusinessDTO> listOfBusinessInfo = service
 				.getListOfBusinessInfo();
@@ -738,7 +811,7 @@ public class AdminController {
 		}
 		List<BrandInfoDTO> brandListing = new ArrayList<BrandInfoDTO>();
 		for (String brandName2 : activeBrandNamesList) {
-			
+
 			Integer locationcount = service
 					.getlocationInvoicedByBrandname(brandName2);
 			BrandInfoDTO brandInfoByBrandName = service
@@ -748,9 +821,8 @@ public class AdminController {
 					.getlocationsByBrandName(brandName2);
 			brandInfoByBrandName.setLocationCotracted(locationContracted
 					.toString());
-			
-			brandListing.add(brandInfoByBrandName);
 
+			brandListing.add(brandInfoByBrandName);
 
 		}
 		model.addAttribute("brandListing", brandListing);
@@ -786,11 +858,11 @@ public class AdminController {
 		logger.info("submisions::::::::::" + submisions);
 		bean.setSubmisions(submisions);
 		bean.setStartDate(sdf.format(businessInfo.getStartDate()));
-		//bean.setSaveType("update");
+		// bean.setSaveType("update");
 		model.addAttribute("BrandInfo", new UsersBean());
 		model.addAttribute("BrandInfo", bean);
 		model.addAttribute("count", uploadedListings);
-		//model.addAttribute("editbrandinadmin", "yes");
+		// model.addAttribute("editbrandinadmin", "yes");
 		model.addAttribute("totalSubmissions", totalSubmissions);
 		model.addAttribute("possibleSubmissions", possibleSubmissions);
 		model.addAttribute("searchBusiness", new LocalBusinessDTO());
@@ -801,7 +873,6 @@ public class AdminController {
 		return "admin";
 
 	}
-
 
 	@RequestMapping(value = "/brandsandChannelSearch.htm", method = RequestMethod.POST)
 	public String brandDetailSearchInManageAccount(Model model,
@@ -1123,12 +1194,12 @@ public class AdminController {
 			}
 		}
 		int size = listDataFromXLS.size();
-		logger.info("size:::::::::::"+size);
-		if(listDataFromXLS.isEmpty() || size< 2){
+		logger.info("size:::::::::::" + size);
+		if (listDataFromXLS.isEmpty() || size < 2) {
 			headerpopup = "Invalid Category Conversion  Template";
 			model.addAttribute("headerPopup", headerpopup);
 		}
-		
+
 		if (listDataFromXLS != null && size > 0) {
 			categoryService.saveCategoryInfo(listDataFromXLS);
 		}
@@ -1232,7 +1303,7 @@ public class AdminController {
 		model.addAttribute("searchBusiness", new LocalBusinessDTO());
 		model.addAttribute("brandsInfo", listOfBrandsInfo);
 		logger.info("BusinessInformation size == " + activeListSize);
-		logger.info("size:::::::::::"+size);
+		logger.info("size:::::::::::" + size);
 		logger.info("end ::  getBusinessListing method");
 		/*
 		 * List<LocalBusinessDTO> storeNames = service.getStore();
@@ -1262,8 +1333,7 @@ public class AdminController {
 					}
 					continue;
 				}
-	
-				
+
 				CategoryBean categoryBean = new CategoryBean();
 
 				Iterator<Cell> cellIterator = row.cellIterator();
@@ -1278,8 +1348,6 @@ public class AdminController {
 									.getColumnIndex()], df
 									.formatCellValue(cell));
 
-					
-					
 				}
 				tListData.add(categoryBean);
 			}
@@ -1635,14 +1703,14 @@ public class AdminController {
 			factualTime = "Everyday";
 		}
 
-	/*	System.out.println("localeze frequency:" + localezefreq + " Time:"
-				+ localezeTime);
-		System.out.println("Fatual Frequency: " + factualfreq + " Time: "
-				+ factualTime);
-		System.out.println(" acxiom frequency:" + acxionfreq + "timeing:"
-				+ acxiomtime);
-		System.out.println("infogroup frequency:" + infogroupfreq + " Time:"
-				+ infogroupTime);*/
+		/*
+		 * System.out.println("localeze frequency:" + localezefreq + " Time:" +
+		 * localezeTime); System.out.println("Fatual Frequency: " + factualfreq
+		 * + " Time: " + factualTime); System.out.println(" acxiom frequency:" +
+		 * acxionfreq + "timeing:" + acxiomtime);
+		 * System.out.println("infogroup frequency:" + infogroupfreq + " Time:"
+		 * + infogroupTime);
+		 */
 
 		CustomSubmissionsDTO customSubmissionsDTO = service
 				.getCustomSubmissions(Integer.parseInt(submissionId));
@@ -1680,9 +1748,10 @@ public class AdminController {
 		dto.setLocalezeTiming(localezeTime);
 		service.saveCustomSubmissions(dto);
 
-	/*	System.out.println("frequency:" + localezefreq + "timeing:"
-				+ localezeTime);
-*/
+		/*
+		 * System.out.println("frequency:" + localezefreq + "timeing:" +
+		 * localezeTime);
+		 */
 		List<CustomSubmissionsBean> submissionsBean = service
 				.getCustomSubmissions();
 		model.addAttribute("BrandInfo", new UsersBean());

@@ -24,4 +24,6 @@ public class PropUtil {
 	
 	public static final ResourceBundle Google_Key=ResourceBundle.getBundle("google");
 	
+	public static final ResourceBundle BING_BUNDLE = ResourceBundle.getBundle("bing");
+	
 }

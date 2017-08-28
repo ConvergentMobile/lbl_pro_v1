@@ -47,7 +47,7 @@ public class SmartyStreetsUtil {
 			boolean isAddressValid = AddressValidationUtill
 					.validateAddressWithSS(uploadBean);
 			if (!isAddressValid) {
-				service.deleteBusinessInfoByStoreAndClient(uploadBean);
+				service.updateErrorInfoBySmartyStreets(uploadBean);
 			}
 		}
 

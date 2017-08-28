@@ -1,3 +1,4 @@
+
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
@@ -7,7 +8,7 @@
 	<bean id="runMeTask" class="com.lbl.scheduler.SubmissionTask" />
 
 	<!-- Spring Quartz -->
-	<bean name="runMeJob" class="org.springframework.scheduling.quartz.JobDetailBean">
+	<bean name="runMeJob" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
 
 		<property name="jobClass" value="com.lbl.scheduler.SubmissionJob" />
 
@@ -16,17 +17,18 @@
 				<entry key="runMeTask" value-ref="runMeTask" />
 			</map>
 		</property>
+		<property name="durability" value="true" />
 
 	</bean>
 
 
 	<!-- Cron Trigger, run every 5 seconds -->
-	<bean id="cronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+	<bean id="cronTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
 
 		<property name="jobDetail" ref="runMeJob" />
 		<!--<property name="cronExpression" value="0 0/2 * * * ?" /> every day 
 			at 1z AM -->
-		<property name="cronExpression" value="0 0 0 1 * ?" />
+		<property name="cronExpression" value="0 34 8 1/15 * ? *" />
 
 	</bean>
 
@@ -49,7 +51,7 @@
 	<bean id="gmbTask" class="com.lbl.scheduler.GMBSchedulerTask" />
 
 	<!-- Spring Quartz -->
-	<bean name="gmbJob" class="org.springframework.scheduling.quartz.JobDetailBean">
+	<bean name="gmbJob" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
 
 		<property name="jobClass" value="com.lbl.scheduler.GMBSchedulerJob" />
 
@@ -58,17 +60,16 @@
 				<entry key="runMeTask" value-ref="gmbTask" />
 			</map>
 		</property>
+		<property name="durability" value="true" />
 
 	</bean>
 
 
 	<!-- Cron Trigger, run every 5 seconds -->
-	<bean id="cronGMB" class="org.springframework.scheduling.quartz.CronTriggerBean">
+	<bean id="cronGMB" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
 
 		<property name="jobDetail" ref="gmbJob" />
-		<!--<property name="cronExpression" value="0 0/2 * * * ?" /> every day 
-			at 1z AM -->
-		<property name="cronExpression" value="0 21 17 ? * *" />
+		<property name="cronExpression" value="0 50 07 1/15 * ? *" />
 
 	</bean>
 
@@ -82,6 +83,45 @@
 		<property name="triggers">
 			<list>
 				<ref bean="cronGMB" />
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="bingTask" class="com.lbl.scheduler.BingSchedulerTask" />
+
+	<!-- Spring Quartz -->
+	<bean name="bingJob" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+
+		<property name="jobClass" value="com.lbl.scheduler.BingSchedulerJob" />
+
+		<property name="jobDataAsMap">
+			<map>
+				<entry key="runMeTask" value-ref="bingTask" />
+			</map>
+		</property>
+		<property name="durability" value="true" />
+
+	</bean>
+
+
+	<!-- Cron Trigger, run every 5 seconds -->
+	<bean id="cronBing" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+
+		<property name="jobDetail" ref="bingJob" />
+		<property name="cronExpression" value="0 21 10 1/15 * ? *" />
+
+	</bean>
+
+	<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="jobDetails">
+			<list>
+				<ref bean="bingJob" />
+			</list>
+		</property>
+
+		<property name="triggers">
+			<list>
+				<ref bean="cronBing" />
 			</list>
 		</property>
 	</bean>

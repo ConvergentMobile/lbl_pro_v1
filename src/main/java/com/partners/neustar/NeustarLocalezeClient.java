@@ -66,194 +66,227 @@ public class NeustarLocalezeClient {
 		query.setServiceId(serviceID);
 		query.setElements(arrayOfInt);
 		for (LocalBusinessDTO localBusinessDTO : localBusinessDTOs) {
-			
-			RenewalReportDTO renewalReportDTO = service.isRenewed(localBusinessDTO.getStore(), localBusinessDTO.getClientId());
-			if(renewalReportDTO!=null  ){
-				Date cancelledEffeciveDate = renewalReportDTO.getCancelledEffeciveDate();
-				boolean isDate=false;
-				if(cancelledEffeciveDate!=null){
-					Date currentDateDate=new Date();
-					 isDate=cancelledEffeciveDate.compareTo(currentDateDate)< 0;
-				}
-				
-				if((renewalReportDTO.getStatus().equals("Renewed")|| renewalReportDTO.getStatus().equals("Active") || isDate)){
-				NeustarLocalezeBean neustarLocalezeBean = new NeustarLocalezeBean();
-				neustarLocalezeBean.setPhone(localBusinessDTO.getLocationPhone());
-				neustarLocalezeBean.setBusinessName(localBusinessDTO
-						.getCompanyName().replaceAll("&", "&amp;"));
-				String address = localBusinessDTO.getLocationAddress();
-
-				if (localBusinessDTO.getSuite() != null && localBusinessDTO.getSuite().length() > 0 ) {
-					address = address + ", " + localBusinessDTO.getSuite();
-				}
-				neustarLocalezeBean.setAddress(address);
-				neustarLocalezeBean.setCity(localBusinessDTO.getLocationCity());
-				neustarLocalezeBean.setState(localBusinessDTO.getLocationState());
-				neustarLocalezeBean.setZip(localBusinessDTO.getLocationZipCode());
-				neustarLocalezeBean.setPlus4("");
-				neustarLocalezeBean.setFax(localBusinessDTO.getFax());
-				neustarLocalezeBean.setTollFreeNumber(localBusinessDTO
-						.getTollFree());
-				neustarLocalezeBean.setAltNumber(localBusinessDTO
-						.getAdditionalNumber());
-				neustarLocalezeBean.setMobileNumber(localBusinessDTO
-						.getMobileNumber());
-				neustarLocalezeBean
-						.setCategoryType(localBusinessDTO.getCategory1());
-				String categoryName = "";
-				if (localBusinessDTO.getCategory1() != null) {
-					categoryName = service.getCategoryNameById(Integer
-							.parseInt(localBusinessDTO.getCategory1()));
-				}else if(localBusinessDTO.getCategory2() != null) {
-					categoryName = service.getCategoryNameById(Integer
-							.parseInt(localBusinessDTO.getCategory2()));
+			RenewalReportDTO renewalReportDTO = service
+					.isRenewed(localBusinessDTO.getStore(),
+							localBusinessDTO.getClientId());
+			if (renewalReportDTO != null) {
+				Date cancelledEffeciveDate = renewalReportDTO
+						.getCancelledEffeciveDate();
+				boolean isDate = false;
+				if (cancelledEffeciveDate != null) {
+					Date currentDateDate = new Date();
+					isDate = cancelledEffeciveDate.compareTo(currentDateDate) < 0;
 				}
 
-				neustarLocalezeBean.setCategoryName(categoryName.replaceAll("&", "&amp;"));
-				neustarLocalezeBean.setAttributeID("");
-				neustarLocalezeBean.setAttributeName(localBusinessDTO
-						.getAlternativeName());
-				neustarLocalezeBean.setUnstructuredTerms("");
+				if ((renewalReportDTO.getStatus().equals("Renewed")
+						|| renewalReportDTO.getStatus().equals("Active") || isDate)) {
+					NeustarLocalezeBean neustarLocalezeBean = new NeustarLocalezeBean();
+					neustarLocalezeBean.setPhone(localBusinessDTO
+							.getLocationPhone());
+					neustarLocalezeBean.setBusinessName(localBusinessDTO
+							.getCompanyName().replaceAll("&", "&amp;"));
+					String address = localBusinessDTO.getLocationAddress();
 
-				StringBuffer creditCards = new StringBuffer();
-				if (localBusinessDTO.getaMEX() != null
-						&& "Y".equalsIgnoreCase(localBusinessDTO.getaMEX())) {
-					creditCards.append("Amex,");
-				}
-				if (localBusinessDTO.getMasterCard() != null
-						&& "Y".equalsIgnoreCase(localBusinessDTO.getMasterCard())) {
-					creditCards.append("MasterCard,");
-				}
-				if (localBusinessDTO.getDiscover() != null
-						&& "Y".equalsIgnoreCase(localBusinessDTO.getDiscover())) {
-					creditCards.append("Discover,");
-				}
-				if (localBusinessDTO.getVisa() != null
-						&& "Y".equalsIgnoreCase(localBusinessDTO.getVisa())) {
-					creditCards.append("Visa,");
-				}
-				if (localBusinessDTO.getDinersClub() != null
-						&& "Y".equalsIgnoreCase(localBusinessDTO.getDinersClub())) {
-					creditCards.append("DinersClub,");
-				}
-				if (localBusinessDTO.getCash() != null
-						&& "Y".equalsIgnoreCase(localBusinessDTO.getCash())) {
-					creditCards.append("Cash,");
-				}
-				if (localBusinessDTO.getCheck() != null
-						&& "Y".equalsIgnoreCase(localBusinessDTO.getCheck())) {
-					creditCards.append("Check,");
-				}
-				if (localBusinessDTO.getDebitCard() != null
-						&& "Y".equalsIgnoreCase(localBusinessDTO.getDebitCard())) {
-					creditCards.append("Debit");
-				}
+					if (localBusinessDTO.getSuite() != null
+							&& localBusinessDTO.getSuite().length() > 0) {
+						address = address + ", " + localBusinessDTO.getSuite();
+					}
+					neustarLocalezeBean.setAddress(address);
+					neustarLocalezeBean.setCity(localBusinessDTO
+							.getLocationCity());
+					neustarLocalezeBean.setState(localBusinessDTO
+							.getLocationState());
+					neustarLocalezeBean.setZip(localBusinessDTO
+							.getLocationZipCode());
+					neustarLocalezeBean.setPlus4("");
+					neustarLocalezeBean.setFax(localBusinessDTO.getFax());
+					neustarLocalezeBean.setTollFreeNumber(localBusinessDTO
+							.getTollFree());
+					neustarLocalezeBean.setAltNumber(localBusinessDTO
+							.getAdditionalNumber());
+					neustarLocalezeBean.setMobileNumber(localBusinessDTO
+							.getMobileNumber());
+					neustarLocalezeBean.setCategoryType(localBusinessDTO
+							.getCategory1());
+					String categoryName = "";
+					if (localBusinessDTO.getCategory1() != null) {
+						categoryName = service.getCategoryNameById(Integer
+								.parseInt(localBusinessDTO.getCategory1()));
+					} else if (localBusinessDTO.getCategory2() != null) {
+						categoryName = service.getCategoryNameById(Integer
+								.parseInt(localBusinessDTO.getCategory2()));
+					} else if (localBusinessDTO.getCategory3() != null) {
+						categoryName = service.getCategoryNameById(Integer
+								.parseInt(localBusinessDTO.getCategory3()));
+					} else if (localBusinessDTO.getCategory4() != null) {
+						categoryName = service.getCategoryNameById(Integer
+								.parseInt(localBusinessDTO.getCategory4()));
+					} else if (localBusinessDTO.getCategory5() != null) {
+						categoryName = service.getCategoryNameById(Integer
+								.parseInt(localBusinessDTO.getCategory5()));
+					}
 
-				String cards = creditCards.toString();
-				if (cards.endsWith(",")) {
-					cards = cards.replace(",", "");
-				}
+					neustarLocalezeBean.setCategoryName(categoryName
+							.replaceAll("&", "&amp;"));
+					neustarLocalezeBean.setAttributeID("");
+					neustarLocalezeBean.setAttributeName(localBusinessDTO
+							.getAlternativeName());
+					neustarLocalezeBean.setUnstructuredTerms("");
 
-				neustarLocalezeBean.setCreditCards(cards);
-				neustarLocalezeBean.setUrl(localBusinessDTO.getWebAddress());
-				neustarLocalezeBean.seteMail(localBusinessDTO.getLocationEmail());
-				neustarLocalezeBean.setYearOpenned(localBusinessDTO
-						.getYearEstablished());
+					StringBuffer creditCards = new StringBuffer();
+					if (localBusinessDTO.getaMEX() != null
+							&& "Y".equalsIgnoreCase(localBusinessDTO.getaMEX())) {
+						creditCards.append("Amex,");
+					}
+					if (localBusinessDTO.getMasterCard() != null
+							&& "Y".equalsIgnoreCase(localBusinessDTO
+									.getMasterCard())) {
+						creditCards.append("MasterCard,");
+					}
+					if (localBusinessDTO.getDiscover() != null
+							&& "Y".equalsIgnoreCase(localBusinessDTO
+									.getDiscover())) {
+						creditCards.append("Discover,");
+					}
+					if (localBusinessDTO.getVisa() != null
+							&& "Y".equalsIgnoreCase(localBusinessDTO.getVisa())) {
+						creditCards.append("Visa,");
+					}
+					if (localBusinessDTO.getDinersClub() != null
+							&& "Y".equalsIgnoreCase(localBusinessDTO
+									.getDinersClub())) {
+						creditCards.append("DinersClub,");
+					}
+					if (localBusinessDTO.getCash() != null
+							&& "Y".equalsIgnoreCase(localBusinessDTO.getCash())) {
+						creditCards.append("Cash,");
+					}
+					if (localBusinessDTO.getCheck() != null
+							&& "Y".equalsIgnoreCase(localBusinessDTO.getCheck())) {
+						creditCards.append("Check,");
+					}
+					if (localBusinessDTO.getDebitCard() != null
+							&& "Y".equalsIgnoreCase(localBusinessDTO
+									.getDebitCard())) {
+						creditCards.append("Debit");
+					}
 
-				StringBuffer hoursOfOperation = new StringBuffer();
-				String mondayOperations = "";
-				String tuesdayOperations = "";
-				String wedOperations = "";
-				String thursOperations = "";
-				String fridayOperations = "";
-				String satOperations = "";
-				String sunOperations = "";
-				if (localBusinessDTO.getMondayOpen() != null
-						&& localBusinessDTO.getMondayClose() != null) {
-					mondayOperations = localBusinessDTO.getMondayOpen() + "-"
-							+ localBusinessDTO.getMondayClose();
-				}
-				if (localBusinessDTO.getTuesdayOpen() != null
-						&& localBusinessDTO.getTuesdayClose() != null) {
-					tuesdayOperations = localBusinessDTO.getTuesdayOpen() + "-"
-							+ localBusinessDTO.getTuesdayClose();
-				}
+					String cards = creditCards.toString();
+					if (cards.endsWith(",")) {
+						cards = cards.replace(",", "");
+					}
 
-				if (localBusinessDTO.getWednesdayOpen() != null
-						&& localBusinessDTO.getWednesdayClose() != null) {
-					wedOperations = localBusinessDTO.getWednesdayOpen() + "-"
-							+ localBusinessDTO.getWednesdayClose();
-				}
-				if (localBusinessDTO.getThursdayOpen() != null
-						&& localBusinessDTO.getThursdayClose() != null) {
-					thursOperations = localBusinessDTO.getThursdayOpen() + "-"
-							+ localBusinessDTO.getThursdayClose();
-				}
-				if (localBusinessDTO.getFridayOpen() != null
-						&& localBusinessDTO.getFridayClose() != null) {
-					fridayOperations = localBusinessDTO.getFridayOpen() + "-"
-							+ localBusinessDTO.getFridayClose();
-				}
-				if (localBusinessDTO.getSaturdayOpen() != null
-						&& localBusinessDTO.getSaturdayClose() != null) {
-					satOperations = localBusinessDTO.getSaturdayOpen() + "-"
-							+ localBusinessDTO.getSaturdayClose();
-				}
-				if (localBusinessDTO.getSundayOpen() != null
-						&& localBusinessDTO.getSundayClose() != null) {
-					satOperations = localBusinessDTO.getSundayOpen() + "-"
-							+ localBusinessDTO.getSundayClose();
-				}
+					neustarLocalezeBean.setCreditCards(cards);
+					neustarLocalezeBean
+							.setUrl(localBusinessDTO.getWebAddress());
+					neustarLocalezeBean.seteMail(localBusinessDTO
+							.getLocationEmail());
+					neustarLocalezeBean.setYearOpenned(localBusinessDTO
+							.getYearEstablished());
 
-				 neustarLocalezeBean
-				 .setHoursOfOperation("Mon-Fri 8am-11am, Sat 8am-3pm, Sun Closed");
-				//neustarLocalezeBean.setHoursOfOperation(getHours(localBusinessDTO));
-				String languages = "";
-				if (localBusinessDTO.getLanguages() != null) {
-					languages = localBusinessDTO.getLanguages();
-				}
-				neustarLocalezeBean.setLanguagesSpoken(languages);
-				neustarLocalezeBean.setLogoImage(localBusinessDTO.getLogoLink());
-				neustarLocalezeBean.setTagLine(localBusinessDTO.getTagline());
-				neustarLocalezeBean.setSharedKey("");
-				ServiceKeyType serviceKeyType = new ServiceKeyType();
-				serviceKeyType.setId(1510);
-				// serviceKeyType.setValue("<BPMSPost Edition=\"1.1\"> <Record> <Phone>8583145300</Phone><BusinessName>Localeze</BusinessName> <Department/> <Address>3750 Carmel Mountain Rd, Suite400</Address> <City>San Diego</City> <State>CA</State> <Zip>92130</Zip> </Record></BPMSPost&gt");
-				String neustarData = NeustarLocalezeClient
-						.getFormattedValue(neustarLocalezeBean);
-				logger.info("*** Posting the Data to Neustar:" + neustarData);
-				serviceKeyType.setValue(neustarData);
-				ArrayOfServiceKeyType arrayOfServiceKeyType = new ArrayOfServiceKeyType();
-				ServiceKeyType[] localServiceKey = { serviceKeyType };
-				arrayOfServiceKeyType.setServiceKey(localServiceKey);
+					StringBuffer hoursOfOperation = new StringBuffer();
+					String mondayOperations = "";
+					String tuesdayOperations = "";
+					String wedOperations = "";
+					String thursOperations = "";
+					String fridayOperations = "";
+					String satOperations = "";
+					String sunOperations = "";
+					if (localBusinessDTO.getMondayOpen() != null
+							&& localBusinessDTO.getMondayClose() != null) {
+						mondayOperations = localBusinessDTO.getMondayOpen()
+								+ "-" + localBusinessDTO.getMondayClose();
+					}
+					if (localBusinessDTO.getTuesdayOpen() != null
+							&& localBusinessDTO.getTuesdayClose() != null) {
+						tuesdayOperations = localBusinessDTO.getTuesdayOpen()
+								+ "-" + localBusinessDTO.getTuesdayClose();
+					}
 
-				query.setServiceKeys(arrayOfServiceKeyType);
+					if (localBusinessDTO.getWednesdayOpen() != null
+							&& localBusinessDTO.getWednesdayClose() != null) {
+						wedOperations = localBusinessDTO.getWednesdayOpen()
+								+ "-" + localBusinessDTO.getWednesdayClose();
+					}
+					if (localBusinessDTO.getThursdayOpen() != null
+							&& localBusinessDTO.getThursdayClose() != null) {
+						thursOperations = localBusinessDTO.getThursdayOpen()
+								+ "-" + localBusinessDTO.getThursdayClose();
+					}
+					if (localBusinessDTO.getFridayOpen() != null
+							&& localBusinessDTO.getFridayClose() != null) {
+						fridayOperations = localBusinessDTO.getFridayOpen()
+								+ "-" + localBusinessDTO.getFridayClose();
+					}
+					if (localBusinessDTO.getSaturdayOpen() != null
+							&& localBusinessDTO.getSaturdayClose() != null) {
+						satOperations = localBusinessDTO.getSaturdayOpen()
+								+ "-" + localBusinessDTO.getSaturdayClose();
+					}
+					if (localBusinessDTO.getSundayOpen() != null
+							&& localBusinessDTO.getSundayClose() != null) {
+						satOperations = localBusinessDTO.getSundayOpen() + "-"
+								+ localBusinessDTO.getSundayClose();
+					}
 
-				QueryResponse queryResponse = null;
-				try {
-					queryResponse = stub.query(query);
-				} catch (RemoteException e) {
-					erroredStores.add(localBusinessDTO.getStore());
-					logger.error("Error while posting the data to neustar" + e);
-					//e.printStackTrace();
-				}
+					/*
+					 * neustarLocalezeBean .setHoursOfOperation(
+					 * "Mon-Fri 8am-11am, Sat 8am-3pm, Sun Closed");
+					 */
+					neustarLocalezeBean
+							.setHoursOfOperation(getHours(localBusinessDTO));
+					String languages = "";
+					if (localBusinessDTO.getLanguages() != null) {
+						languages = localBusinessDTO.getLanguages();
+					}
+					neustarLocalezeBean.setLanguagesSpoken(languages);
+					neustarLocalezeBean.setLogoImage(localBusinessDTO
+							.getLogoLink());
+					neustarLocalezeBean.setTagLine(localBusinessDTO
+							.getTagline());
+					neustarLocalezeBean.setSharedKey("");
+					ServiceKeyType serviceKeyType = new ServiceKeyType();
+					serviceKeyType.setId(1510);
+					// serviceKeyType.setValue("<BPMSPost Edition=\"1.1\"> <Record> <Phone>8583145300</Phone><BusinessName>Localeze</BusinessName> <Department/> <Address>3750 Carmel Mountain Rd, Suite400</Address> <City>San Diego</City> <State>CA</State> <Zip>92130</Zip> </Record></BPMSPost&gt");
+					String neustarData = NeustarLocalezeClient
+							.getFormattedValue(neustarLocalezeBean);
+					logger.info("*** Posting the Data to Neustar:"
+							+ neustarData);
+					serviceKeyType.setValue(neustarData);
+					ArrayOfServiceKeyType arrayOfServiceKeyType = new ArrayOfServiceKeyType();
+					ServiceKeyType[] localServiceKey = { serviceKeyType };
+					arrayOfServiceKeyType.setServiceKey(localServiceKey);
 
-				long transId = queryResponse.getResponse().getTransId();
-				logger.info("Transaction Id from Localeze Response is: " + transId);
-				int errorCode = queryResponse.getResponse().getErrorCode();
-				logger.info("ErrorCode from Localeze Response is: " + errorCode);
-				ArrayOfElementResultType result = queryResponse.getResponse()
-						.getResult();
-				ElementResultType[] element = result.getElement();
-				for (ElementResultType elementResultType : element) {
-					int id = elementResultType.getId();
-					logger.info("Element Reult ID is: " + id);
-					int errorCode2 = elementResultType.getErrorCode();
-					logger.info("ErrorCode from Localeze " + errorCode2);
-					String value = elementResultType.getValue();
-					logger.info("Value == " + value);
+					query.setServiceKeys(arrayOfServiceKeyType);
+
+					QueryResponse queryResponse = null;
+					try {
+						queryResponse = stub.query(query);
+					} catch (RemoteException e) {
+						erroredStores.add(localBusinessDTO.getStore());
+						logger.error("Error while posting the data to neustar"
+								+ e);
+						// e.printStackTrace();
+					}
+
+					long transId = queryResponse.getResponse().getTransId();
+					logger.info("Transaction Id from Localeze Response is: "
+							+ transId);
+					int errorCode = queryResponse.getResponse().getErrorCode();
+					logger.info("ErrorCode from Localeze Response is: "
+							+ errorCode);
+					ArrayOfElementResultType result = queryResponse
+							.getResponse().getResult();
+					ElementResultType[] element = result.getElement();
+					for (ElementResultType elementResultType : element) {
+						int id = elementResultType.getId();
+						logger.info("Element Reult ID is: " + id);
+						int errorCode2 = elementResultType.getErrorCode();
+						logger.info("ErrorCode from Localeze " + errorCode2);
+						String value = elementResultType.getValue();
+						logger.info("Value == " + value);
+					}
 				}
-			}
 			}
 		}
 		errorDetails.put("errorDetails", erroredStores);
@@ -383,37 +416,73 @@ public class NeustarLocalezeClient {
 		String hoursOfOperation = bean.getHoursOfOperation();
 		String sharedKey = bean.getSharedKey();
 
-		String value = "<BPMSPost Edition=\"1.1\"> " + "<Record>" + "<Phone>"
+		StringBuffer sb = new StringBuffer();
+
+		String start = "<BPMSPost Edition=\"1.1\"> " + "<Record>" + "<Phone>"
 				+ phone + "</Phone>" + "<BusinessName>" + businessName
-				+ "</BusinessName>" + "<Address>" + address
-				+ "</Address>" + "<City>" + city + "</City>" + "<State>"
-				+ state + "</State>" + "<Zip>" + zip + "</Zip>"
+				+ "</BusinessName>" + "<Address>" + address + "</Address>"
+				+ "<City>" + city + "</City>" + "<State>" + state + "</State>"
+				+ "<Zip>" + zip + "</Zip>"
 				+ "<Categories><Category><Type>Primary</Type><Name>"
-				+ categoryName + "</Name></Category></Categories>"
-/*				+ "<LogoImage>" + logoImage + "</LogoImage>" + "<eMail>"
-				+ eMail + "</eMail>" + "<TollFreeNumber>" + tollFreeNumber
-				+ "</TollFreeNuomber>" + "<Fax>" + fax + "</Fax>"
-				+ "<AltNumber>" + altNumber + "</AltNumber>" + "<MobileNumber>"
-				+ mobileNumber + "</MobileNumber>" + "<HoursOfOperation>"
-				+ hoursOfOperation + "</HoursOfOperation>" + "<CreditCards>"
-				+ creditCards + "</CreditCards>" + "<LanguagesSpoken>"
-				+ languagesSpoken + "</LanguagesSpoken>" + "<YearOpenned>"
-				+ yearOpenned + "</YearOpenned>" + "<TagLine>" + tagLine
-				+ "</TagLine>" + "<SharedKey>" + sharedKey + "</SharedKey>"*/
-				+ "<URL>" + url + "</URL>" 
-				+ "</Record>" + "</BPMSPost>";
-		
-		if(value!=null){
+				+ categoryName + "</Name></Category></Categories>";
+
+		sb.append(start);
+
+		if (logoImage != null && logoImage.length() > 0) {
+			sb.append("<LogoImage>" + logoImage + "</LogoImage>");
+		}
+		if (eMail != null && eMail.length() > 0) {
+			sb.append("<eMail>" + eMail + "</eMail>");
+		}
+		if (tollFreeNumber != null && tollFreeNumber.length() > 0) {
+			sb.append("<TollFreeNumber>" + tollFreeNumber
+					+ "</TollFreeNuomber>");
+		}
+		if (fax != null && fax.length() > 0) {
+			sb.append("<Fax>" + fax + "</Fax>");
+		}
+		if (altNumber != null && altNumber.length() > 0) {
+			sb.append("<AltNumber>" + altNumber + "</AltNumber>");
+		}
+		if (mobileNumber != null && mobileNumber.length() > 0) {
+			sb.append("<MobileNumber>" + mobileNumber + "</MobileNumber>");
+		}
+		if (hoursOfOperation != null && hoursOfOperation.length() > 0) {
+			sb.append("<HoursOfOperation>" + hoursOfOperation
+					+ "</HoursOfOperation>");
+		}
+		if (creditCards != null && creditCards.length() > 0) {
+			sb.append("<CreditCards>" + creditCards + "</CreditCards>");
+		}
+		if (languagesSpoken != null && languagesSpoken.length() > 0) {
+			sb.append("<LanguagesSpoken>" + languagesSpoken
+					+ "</LanguagesSpoken>");
+		}
+		if (yearOpenned != null && yearOpenned.length() > 0) {
+			sb.append("<YearOpenned>" + yearOpenned + "</YearOpenned>");
+		}
+		if (tagLine != null && tagLine.length() > 0) {
+			sb.append("<TagLine>" + tagLine + "</TagLine>");
+		}
+		if (sharedKey != null && sharedKey.length() > 0) {
+			sb.append("<SharedKey>" + sharedKey + "</SharedKey>");
+		}
+		if (url != null && url.length() > 0) {
+			sb.append("<URL>" + url + "</URL>");
+		}
+
+		sb.append("</Record>" + "</BPMSPost>");
+		String value = sb.toString();
+
+		if (value != null) {
 			value.replaceAll("null", "");
 		}
 		return value;
 	}
 
 	public static void main(String[] args) {
-		
-		
+
 		getDetails();
-		
 
 		String userName = LBLConstants.NEUSTAR_USERNAME;
 		String passWord = LBLConstants.NEUSTAR_PASSWORD;
@@ -515,8 +584,8 @@ public class NeustarLocalezeClient {
 				+ "<YearOpenned>1898</YearOpenned>"
 				+ "<TagLine>Lorem ipsum dolor sit amet, consetetur sadipscing elitr.</TagLine>"
 				+ "<URL>client1.com/location14479</URL></Record></BPMSPost>";
-		
-		value2 ="<BPMSPost Edition=\"1.1\"> <Record><Phone>8883948530</Phone>"
+
+		value2 = "<BPMSPost Edition=\"1.1\"> <Record><Phone>8883948530</Phone>"
 				+ "<BusinessName>PODS Moving &amp; Storage of Northeast Atlanta</BusinessName>"
 				+ "<Address>16 Overmeyer Way</Address>"
 				+ "<City>Forest Park</City"
@@ -554,12 +623,11 @@ public class NeustarLocalezeClient {
 			String value = elementResultType.getValue();
 			logger.info("Value == " + value);
 		}
-		
-		
+
 	}
-	
-	public static void  getDetails(){
-		
+
+	public static void getDetails() {
+
 		String userName = LBLConstants.NEUSTAR_USERNAME;
 		String passWord = LBLConstants.NEUSTAR_PASSWORD;
 		String serviceID = LBLConstants.NEUSTAR_SERVICEID;
@@ -630,8 +698,9 @@ public class NeustarLocalezeClient {
 		 * "</SharedKey>" + "<URL>" + url + "</URL>" + "</Record>" +
 		 * "</BPMSPost>"; //**********************
 		 */
-		//String value2 = "<BPMSPost Edition=\"1.1\"><Record><BusinessName/>Maid Brigade of Annapolis</BusinessName/><Zip>21401</Zip></Record></BPMSPost>";
-		String value2 ="<BPMSPost Edition=\"1.1\">"
+		// String value2 =
+		// "<BPMSPost Edition=\"1.1\"><Record><BusinessName/>Maid Brigade of Annapolis</BusinessName/><Zip>21401</Zip></Record></BPMSPost>";
+		String value2 = "<BPMSPost Edition=\"1.1\">"
 				+ " <Record><Phone>8883948530</Phone><BusinessName>PODS Moving &amp; Storage of Bakersfield</BusinessName>"
 				+ "<Address>4615 Grissom Street</Address><City>Bakersfield</City><State>CA</State><Zip>93313</Zip><Categories><Category><Type>Primary</Type><Name>STORAGE CONTAINERS, FACILITIES & WAREHOUSES</Name></Category></Categories></Record></BPMSPost>";
 
@@ -665,9 +734,7 @@ public class NeustarLocalezeClient {
 			String value = elementResultType.getValue();
 			logger.info("Value == " + value);
 		}
-		
-		
-		
+
 	}
 
 }

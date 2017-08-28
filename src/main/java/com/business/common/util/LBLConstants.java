@@ -177,5 +177,23 @@ public class LBLConstants {
 			.getString("smart.url");
 	public static final String google_Key = PropUtil.Google_Key
 			.getString("google.Key");
+
+	public static final String BING_ANALYTICS_URL = PropUtil.BING_BUNDLE
+			.getString("analytiscUrl");
+	public static final String BING_CREATE_URL = PropUtil.BING_BUNDLE
+			.getString("createStoreURL");
+	public static final String BING_UPDATE_URL = PropUtil.BING_BUNDLE
+			.getString("updateStoreURL");
 	
+	public static final String ALERT_MAIL_ID = PropUtil.BING_BUNDLE
+			.getString("mailToSendReport");
+	
+	public static final String REPORT_PATH = PropUtil.BING_BUNDLE
+			.getString("reportPath");
+	
+	
+	
+	
+	
+
 }

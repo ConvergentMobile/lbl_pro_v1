@@ -56,7 +56,9 @@
 .canvasjs-chart-credit {
    display: none;
 }
-
+.clear-background {
+	background-image: none;
+}
 .dsp_None{
 display: none;
 }
@@ -102,7 +104,7 @@ display: none;
 			
 			<!-- subtitle -->
 			<div class="box_subtitle_lightgray">
-			  <p><strong>${brand}</strong>, ${store} <span class="divider"></span> ${start} - ${end}</p>  
+			  <p><strong>${brand}</strong>, ${store} <span class="divider"></span>Last 12 Months – YOY</p>  
 			  <input type="hidden" id="brandVal" value="${brand}">     
 			   <input type="hidden" id="directVal" value="${direct}">     
 			    <input type="hidden" id="discoveryVal" value="${discovery}">
