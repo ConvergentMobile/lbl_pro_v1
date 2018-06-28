@@ -6,7 +6,7 @@ import java.util.Date;
  * 
  * It Holds the data Which is used to Transfer the data from UI to BusinessLayer
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  */
 
@@ -28,8 +28,17 @@ public class BrandInfoDTO {
 	private String locationCotracted;
 	private String email; 
 	private String inactive;
+	private String imagePath;
 	
 	
+	public String getImagePath() {
+		return imagePath;
+	}
+
+	public void setImagePath(String imagePath) {
+		this.imagePath = imagePath;
+	}
+
 	public String getInactive() {
 		return inactive;
 	}

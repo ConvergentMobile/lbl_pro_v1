@@ -62,7 +62,7 @@ import com.business.web.bean.UploadBusinessBean;
 import com.business.web.bean.UsersBean;
 
 /***
- * @author Vasanth
+ * @author lbl_dev
  * 
  *         BusinessClientController class which gets the data from the View
  *         Layer and sends to the Business Logic Layer and returns respective
@@ -261,12 +261,12 @@ public class BusinessClientController {
 		logger.info("Bean value == " + beanStr);
 		String[] split = beanStr.split("&");
 		String services = null;
-		List<Integer> listIds = new ArrayList<Integer>();
+		List<Long> listIds = new ArrayList<Long>();
 
 		for (String value : split) {
 			if (value.contains("id=")) {
 				String id = value.substring("id=".length());
-				listIds.add(Integer.parseInt(id));
+				listIds.add(Long.parseLong(id));
 			}
 
 			if (value.contains("serviceName=")) {
@@ -539,11 +539,11 @@ public class BusinessClientController {
 			return "logout";
 		}
 		String[] split = beanStr.split("&");
-		List<Integer> listIds = new ArrayList<Integer>();
+		List<Long> listIds = new ArrayList<Long>();
 		for (String value : split) {
 			if (value.contains("id=")) {
 				String id = value.substring("id=".length());
-				listIds.add(Integer.parseInt(id));
+				listIds.add(Long.parseLong(id));
 			}
 		}
 		session.setAttribute("listIds", listIds);
@@ -606,11 +606,11 @@ public class BusinessClientController {
 			return "logout";
 		}
 		String[] split = beanStr.split("&");
-		List<Integer> listIds = new ArrayList<Integer>();
+		List<Long> listIds = new ArrayList<Long>();
 		for (String value : split) {
 			if (value.contains("id=")) {
 				String id = value.substring("id=".length());
-				listIds.add(Integer.parseInt(id));
+				listIds.add(Long.parseLong(id));
 			}
 		}
 		httpSession.setAttribute("listIds", listIds);
@@ -713,10 +713,10 @@ public class BusinessClientController {
 		}
 		BeanUtils.copyProperties(bean, businessInfoDto);
 		businessInfoDto.setId(bean.getId());
-		List<Integer> listIds = (List<Integer>) session.getAttribute("listIds");
+		List<Long> listIds = (List<Long>) session.getAttribute("listIds");
 		String message = "";
 		int index = 1;
-		for (Integer id : listIds) {
+		for (Long id : listIds) {
 			if (index++ > 1) {
 				businessInfoDto = new LocalBusinessDTO();
 				businessInfoDto = service.getBusinessInfo(id);
@@ -892,11 +892,11 @@ public class BusinessClientController {
 		}
 		BeanUtils.copyProperties(bean, businessInfoDto);
 		businessInfoDto.setId(bean.getId());
-		List<Integer> listIds = (List<Integer>) httpSession
+		List<Long> listIds = (List<Long>) httpSession
 				.getAttribute("listIds");
 		String message = "";
 		int index = 1;
-		for (Integer id : listIds) {
+		for (Long id : listIds) {
 			if (index++ > 1) {
 				businessInfoDto = new LblErrorDTO();
 				businessInfoDto = service.getErrorBusinessInfo(id);
@@ -980,12 +980,12 @@ public class BusinessClientController {
 
 		logger.info("Delete Ids info == " + beanStr);
 		String[] split = beanStr.split("&");
-		List<Integer> listIds = new ArrayList<Integer>();
+		List<Long> listIds = new ArrayList<Long>();
 		String services = null;
 		for (String value : split) {
 			if (value.contains("id=")) {
 				String id = value.substring("id=".length());
-				listIds.add(Integer.parseInt(id));
+				listIds.add(Long.parseLong(id));
 			}
 			if (value.contains("serviceName=")) {
 				String serviceName = value.substring("serviceName=".length());
@@ -1108,12 +1108,12 @@ public class BusinessClientController {
 		}
 		logger.info("Delete Ids info == " + beanStr);
 		String[] split = beanStr.split("&");
-		List<Integer> listIds = new ArrayList<Integer>();
+		List<Long> listIds = new ArrayList<Long>();
 
 		for (String value : split) {
 			if (value.contains("id=")) {
 				String id = value.substring("id=".length());
-				listIds.add(Integer.parseInt(id));
+				listIds.add(Long.parseLong(id));
 			}
 		}
 		logger.info("Selected IDs == " + listIds);
@@ -1150,12 +1150,12 @@ public class BusinessClientController {
 		}
 		logger.info("Delete Ids info == " + beanStr);
 		String[] split = beanStr.split("&");
-		List<Integer> listIds = new ArrayList<Integer>();
+		List<Long> listIds = new ArrayList<Long>();
 
 		for (String value : split) {
 			if (value.contains("id=")) {
 				String id = value.substring("id=".length());
-				listIds.add(Integer.parseInt(id));
+				listIds.add(Long.parseLong(id));
 			}
 		}
 		logger.info("Selected IDs == " + listIds);

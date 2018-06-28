@@ -53,7 +53,7 @@ public class UploadDataUpdateExecutorService implements Callable<String> {
 		int size = businessDTO.size();
 		int listSizeForThread = size / 10;
 
-		System.out.println("listSizeForThread: " + listSizeForThread);
+		//System.out.println("listSizeForThread: " + listSizeForThread);
 
 		listSizeForThread = listSizeForThread + 1;
 

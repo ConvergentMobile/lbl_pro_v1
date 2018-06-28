@@ -1,6 +1,7 @@
 package com.business.model.pojo;
 
 
+import java.sql.Blob;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -11,7 +12,7 @@ import javax.persistence.Table;
 
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  *         POJO bean which creates table with the available fields in the
  *         database table on server load-up.
@@ -31,8 +32,16 @@ public class ChannelEntity {
 	private String channelName;
 	@Column(name="startdate")
 	private Date  startDate;
-	
-	
+	@Column(name="imagePath")
+	private String  imagePath;
+
+	public String getImagePath() {
+		return imagePath;
+	}
+
+	public void setImagePath(String imagePath) {
+		this.imagePath = imagePath;
+	}
 
 	public Integer getChannelID() {
 		return channelID;

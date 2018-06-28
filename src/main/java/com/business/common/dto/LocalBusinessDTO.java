@@ -7,7 +7,7 @@ import java.util.Date;
  * 
  * It Holds the data Which is used to Transfer the data from UI to BusinessLayer
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  */
 public class LocalBusinessDTO implements Serializable {
@@ -21,6 +21,8 @@ public class LocalBusinessDTO implements Serializable {
 	private Long brandsCount;
 	private Integer id;
 	private String store;
+	private Long lblStoreId;
+	private String newStore;
 	private String actionCode;
 	private String companyName;
 	private String alternativeName;
@@ -142,6 +144,37 @@ public class LocalBusinessDTO implements Serializable {
 	
 	private String searchType;
 	private String searchValue;
+	
+	private String trackingId;
+	
+	
+	
+	
+	public String getNewStore() {
+		return newStore;
+	}
+
+	public void setNewStore(String newStore) {
+		this.newStore = newStore;
+	}
+	
+	
+
+	public Long getLblStoreId() {
+		return lblStoreId;
+	}
+
+	public void setLblStoreId(Long lblStoreId) {
+		this.lblStoreId = lblStoreId;
+	}
+
+	public String getTrackingId() {
+		return trackingId;
+	}
+
+	public void setTrackingId(String trackingId) {
+		this.trackingId = trackingId;
+	}
 	
 	
 	

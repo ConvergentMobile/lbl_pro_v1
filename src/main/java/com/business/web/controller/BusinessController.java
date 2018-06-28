@@ -63,6 +63,7 @@ import com.business.model.pojo.LocalBusinessEntity;
 import com.business.model.pojo.StatesListEntity;
 import com.business.service.BusinessService;
 import com.business.service.InventoryManagementService;
+import com.business.service.ListingService;
 import com.business.web.bean.LblErrorBean;
 import com.business.web.bean.LocalBusinessBean;
 import com.business.web.bean.UploadBusinessBean;
@@ -74,7 +75,7 @@ import com.whitespark.ws.WhitesparkUtil;
 import com.whitespark.ws.wsProcessJSON;
 
 /***
- * @author Vasanth
+ * @author lbl_dev
  * 
  *         BusinessController class which gets the data from the View Layer and
  *         sends to the Business Logic Layer and returns respective results to
@@ -82,16 +83,16 @@ import com.whitespark.ws.wsProcessJSON;
  */
 
 @Controller
-@SessionAttributes(value = { "userName", "user", "userID", "roleId",
-		"channelName", "locationAddress", "locationCity", "locationPhone",
-		"locationState", "locationZipCode", "webAddress", "companyName",
-		"store" })
 public class BusinessController {
 
 	Logger logger = Logger.getLogger(BusinessController.class);
 
 	@Autowired
 	private BusinessService service;
+	
+	@Autowired
+	private ListingService listingService;
+	
 	@Autowired
 	private InventoryManagementService inManagementService;
 
@@ -274,7 +275,7 @@ public class BusinessController {
 			Model model, HttpServletRequest request,
 			@ModelAttribute("searchBusiness") LocalBusinessDTO businessDTO,
 			HttpSession session) {
-
+		System.out.println("Start: " + new Date());
 		logger.info("start ::  login post method");
 
 		UsersDTO userDTO = service.getUserByUserNameAndPWD(bean.getUserName(),
@@ -378,6 +379,7 @@ public class BusinessController {
 		model.addAttribute("listingActivityInfo", exportReportDTOs);
 		model.addAttribute("brandsInfo", businessDTOs);
 		session.setAttribute("loginRole", "other");
+		System.out.println("end: " + new Date());
 		logger.info("end ::  login post method");
 		return "dashboard";
 	}
@@ -394,6 +396,7 @@ public class BusinessController {
 	public String getBusinessListing(Model model, HttpSession session,
 			HttpServletRequest request) {
 		logger.info("start ::  getBusinessListing method");
+		
 		if (!loginSessionValidation(model, session)) {
 			return "logout";
 		}
@@ -410,6 +413,7 @@ public class BusinessController {
 				listOfBusinessInfo);
 		logger.info("BusinessInformation size == " + activeListSize);
 		logger.info("end ::  getBusinessListing method");
+		
 		return "business-listings";
 	}
 
@@ -827,6 +831,10 @@ public class BusinessController {
 
 		String sessionAddress = (String) httpSession
 				.getAttribute("locationAddress");
+
+		String sessionStore = (String) httpSession
+				.getAttribute("store");
+		
 		String sessionCity = (String) httpSession.getAttribute("locationCity");
 		String sessionPhone = (String) httpSession
 				.getAttribute("locationPhone");
@@ -839,9 +847,35 @@ public class BusinessController {
 				.getAttribute("webAddress");
 		String sessioncompanyName = (String) httpSession
 				.getAttribute("companyName");
+		
+		boolean storeNameChanged=false;
+		String newStore = bean.getStore();
+		if(!sessionStore.equalsIgnoreCase(newStore)) {
+			storeNameChanged = true;
+		}
+		
+		String lblStoreId = req.getParameter("lblStoreId");
+		String listId = req.getParameter("listId");
+		List<Long> selectedIds = new ArrayList<Long>();
+		if (listId != null && listId.length() > 0) {
+			String[] split = listId.split(",");
+			for (String string : split) {
+				string = string.replaceAll("\\s+", "");
+				if (string.contains("[")) {
+					string = string.replace("[", "");
+				}
+				if (string.contains("]")) {
+					string = string.replace("]", "");
+				}
+				selectedIds.add(Long.parseLong(string));
+			}
 
-		LocalBusinessDTO businesslistingBystore = service
-				.getBusinesslistingBystore(bean.getStore());
+		}
+
+		/*LocalBusinessDTO businesslistingBystore = service
+				.getBusinesslistingBystore(bean.getStore());*/
+		bean.setLblStoreId(selectedIds.get(0));
+		LocalBusinessDTO businesslistingBystore = service.getBusinessInfo(bean.getLblStoreId());
 
 		if (businesslistingBystore != null) {
 			if (sessionAddress == null || sessionAddress.equals("")) {
@@ -901,7 +935,7 @@ public class BusinessController {
 						+ ", errorMessage: " + errorsMap.get(field));
 				model.addAttribute(errorKey, errorsMap.get(field));
 			}
-			List<Integer> listIds = (List<Integer>) httpSession
+			List<Long> listIds = (List<Long>) httpSession
 					.getAttribute("listIds");
 			logger.info("id in update:::::::::::" + listIds);
 			model.addAttribute("listId", listIds);
@@ -915,11 +949,11 @@ public class BusinessController {
 		BeanUtils.copyProperties(bean, businessInfoDto);
 
 		businessInfoDto.setId(bean.getId());
-		List<Integer> listIds = (List<Integer>) httpSession
+		List<Long> listIds = (List<Long>) httpSession
 				.getAttribute("listIds");
 		String message = "";
 		int index = 1;
-		for (Integer id : listIds) {
+		for (Long id : listIds) {
 			if (index++ > 1) {
 				businessInfoDto = new LocalBusinessDTO();
 				businessInfoDto = service.getBusinessInfo(id);
@@ -1008,10 +1042,12 @@ public class BusinessController {
 
 				entity.setClientId(clientId);
 				entity.setStore(store);
+				Long lblStoreId2 = businessInfoDto.getLblStoreId();
+				entity.setLblStoreId(lblStoreId2);
 				entity.setDate(date);
 				entity.setUser(userName);
 				ChangeTrackingEntity changeTrackingEntity = service
-						.isClientIdAndStoreExists(clientId, store);
+						.isClientIdAndStoreExists(clientId, lblStoreId2);
 				if (changeTrackingEntity != null) {
 
 					changeTrackingEntity
@@ -1101,6 +1137,11 @@ public class BusinessController {
 		model.addAttribute("activeListSize", activeListSize);
 		httpSession.setAttribute("listOfBusinessInfo", listOfBusinessInfo);
 		controllerUtil.listingsAddAttributes(1, model, req, listOfBusinessInfo);
+		
+		if(storeNameChanged) {
+			bean.setStore(sessionStore);
+			listingService.updateLBLBusinessWithNewStoreName(bean, newStore);			
+		}
 
 		model.addAttribute("message", message == "" ? "Update Success Fully"
 				: "Update Fail for Ids " + message);
@@ -1195,14 +1236,16 @@ public class BusinessController {
 		}
 		BeanUtils.copyProperties(bean, businessInfoDto);
 		businessInfoDto.setId(bean.getId());
-		List<Integer> listIds = (List<Integer>) httpSession
+
+		List<Long> listIds = (List<Long>) httpSession
 				.getAttribute("listIds");
 		String message = "";
 		int index = 1;
-		for (Integer id : listIds) {
+		for (Long id : listIds) {
 			if (index++ > 1) {
 				businessInfoDto = new LblErrorDTO();
 				businessInfoDto = service.getErrorBusinessInfo(id);
+				businessInfoDto.setLblStoreId(id);
 				String[] multiUpdateArr = multiUpdatedStr.split("\\|");
 				for (String str : multiUpdateArr) {
 					String[] mulitUpdatedArr = str.split("=");
@@ -1221,6 +1264,7 @@ public class BusinessController {
 			 * brand=service.getBrandByClientId(clientId);
 			 * businessInfoDto.setClient(brand);
 			 */
+			businessInfoDto.setLblStoreId(id);
 			UploadBusinessBean lblBean = new UploadBusinessBean();
 			BeanUtils.copyProperties(businessInfoDto, lblBean);
 
@@ -1298,11 +1342,11 @@ public class BusinessController {
 		}
 		logger.info("Delete Ids info == " + beanStr);
 		String[] split = beanStr.split("&");
-		List<Integer> listIds = new ArrayList<Integer>();
+		List<Long> listIds = new ArrayList<Long>();
 		for (String value : split) {
 			if (value.contains("id=")) {
 				String id = value.substring("id=".length());
-				listIds.add(Integer.parseInt(id));
+				listIds.add(Long.parseLong(id));
 			}
 		}
 		logger.info("Selected IDs == " + listIds);
@@ -1317,6 +1361,9 @@ public class BusinessController {
 		session.setAttribute("listOfBusinessInfo", listOfBusinessInfo);
 		controllerUtil.listingsAddAttributes(1, model, request,
 				listOfBusinessInfo);
+		
+		listingService.deleteStoreFromLBLMap(listIds);
+		
 		logger.info("end ::  deleteBusinessInfo method");
 		return "business-listings";
 	}
@@ -1340,11 +1387,11 @@ public class BusinessController {
 		}
 		logger.info("Delete Ids info == " + beanStr);
 		String[] split = beanStr.split("&");
-		List<Integer> listIds = new ArrayList<Integer>();
+		List<Long> listIds = new ArrayList<Long>();
 		for (String value : split) {
 			if (value.contains("id=")) {
 				String id = value.substring("id=".length());
-				listIds.add(Integer.parseInt(id));
+				listIds.add(Long.parseLong(id));
 			}
 		}
 		logger.info("Selected IDs == " + listIds);
@@ -1367,6 +1414,8 @@ public class BusinessController {
 		session.setAttribute("listOfBusinessInfo", listOfErrorBusinessInfo);
 		controllerUtil.listingAddAttributes(1, model, request,
 				listOfErrorBusinessInfo);
+		
+		listingService.deleteStoreFromLBLMap(listIds);
 		logger.info("errorBusinessInformation size == "
 				+ listOfErrorBusinessInfo.size());
 		logger.info("end ::  deleteErrorBusinessInfo method");
@@ -1589,11 +1638,11 @@ public class BusinessController {
 			return "logout";
 		}
 		String[] split = beanStr.split("&");
-		List<Integer> listIds = new ArrayList<Integer>();
+		List<Long> listIds = new ArrayList<Long>();
 		for (String value : split) {
 			if (value.contains("id=")) {
 				String id = value.substring("id=".length());
-				listIds.add(Integer.parseInt(id));
+				listIds.add(Long.parseLong(id));
 			}
 		}
 		httpSession.setAttribute("listIds", listIds);
@@ -1662,7 +1711,7 @@ public class BusinessController {
 		}
 		String listId = req.getParameter("listid");
 
-		List<Integer> listIds = new ArrayList<Integer>();
+		List<Long> listIds = new ArrayList<Long>();
 		LblErrorDTO businessInfo = null;
 		if (listId != null && listId.length() > 0) {
 			String[] split = listId.split(",");
@@ -1674,7 +1723,7 @@ public class BusinessController {
 				if (string.contains("]")) {
 					string = string.replace("]", "");
 				}
-				listIds.add(Integer.parseInt(string));
+				listIds.add(Long.parseLong(string));
 			}
 			businessInfo = service.getErrorBusinessInfo(listIds.get(0));
 			httpSession.setAttribute("listIds", listIds);
@@ -1712,11 +1761,11 @@ public class BusinessController {
 			return "logout";
 		}
 		String[] split = beanStr.split("&");
-		List<Integer> listIds = new ArrayList<Integer>();
+		List<Long> listIds = new ArrayList<Long>();
 		for (String value : split) {
 			if (value.contains("id=")) {
 				String id = value.substring("id=".length());
-				listIds.add(Integer.parseInt(id));
+				listIds.add(Long.parseLong(id));
 			}
 		}
 		httpSession.setAttribute("listIds", listIds);
@@ -1853,11 +1902,11 @@ public class BusinessController {
 			return "logout";
 		}
 		String[] split = beanStr.split("&");
-		List<Integer> listIds = new ArrayList<Integer>();
+		List<Long> listIds = new ArrayList<Long>();
 		for (String value : split) {
 			if (value.contains("id=")) {
 				String id = value.substring("id=".length());
-				listIds.add(Integer.parseInt(id));
+				listIds.add(Long.parseLong(id));
 			}
 		}
 		String brandName = request.getParameter("brandval");
@@ -1895,6 +1944,7 @@ public class BusinessController {
 		String webAddress = businessInfo.getWebAddress();
 		String companyName = businessInfo.getCompanyName();
 		String store = businessInfo.getStore();
+		businessInfo.setLblStoreId(businessInfo.getLblStoreId());
 		httpSession.setAttribute("locationAddress", locationAddress);
 		httpSession.setAttribute("locationCity", locationCity);
 		httpSession.setAttribute("locationPhone", locationPhone);
@@ -1928,7 +1978,7 @@ public class BusinessController {
 		Integer id = bean.getId();
 		logger.info("id in edit businessmethod::::::::::::::" + id);
 		/* String[] split = beanStr.split("&"); */
-		List<Integer> listIds = new ArrayList<Integer>();
+		List<Long> listIds = new ArrayList<Long>();
 		String listId = request.getParameter("listid");
 		logger.info("listId:::::::::::" + listId);
 		LocalBusinessDTO businessInfo = null;
@@ -1942,7 +1992,7 @@ public class BusinessController {
 				if (string.contains("]")) {
 					string = string.replace("]", "");
 				}
-				listIds.add(Integer.parseInt(string));
+				listIds.add(Long.parseLong(string));
 			}
 
 			httpSession.setAttribute("listIds", listIds);
@@ -1975,6 +2025,7 @@ public class BusinessController {
 		String webAddress = businessInfo.getWebAddress();
 		String companyName = businessInfo.getCompanyName();
 		String store = businessInfo.getStore();
+		businessInfo.setLblStoreId(businessInfo.getLblStoreId());
 		httpSession.setAttribute("locationAddress", locationAddress);
 		httpSession.setAttribute("locationCity", locationCity);
 		httpSession.setAttribute("locationPhone", locationPhone);
@@ -2013,14 +2064,14 @@ public class BusinessController {
 		List<LocalBusinessDTO> businessDTOs = (List<LocalBusinessDTO>) session2
 				.getAttribute("listSearchOfBusinessInfo");
 		logger.info("businessDTOs:::::::::::::::::::::" + businessDTOs);
-		logger.info("Delete Ids info == " + beanStr);
+		logger.info("Selected Ids info == " + beanStr);
 		String[] split = beanStr.split("&");
-		List<Integer> listIds = new ArrayList<Integer>();
+		List<Long> listIds = new ArrayList<Long>();
 		String services = null;
 		for (String value : split) {
 			if (value.contains("id=")) {
 				String id = value.substring("id=".length());
-				listIds.add(Integer.parseInt(id));
+				listIds.add(Long.parseLong(id));
 			}
 			if (value.contains("serviceName=")) {
 				String serviceName = value.substring("serviceName=".length());
@@ -2049,7 +2100,7 @@ public class BusinessController {
 			String brandName = brandInfoDTO.getBrandName();
 			allbrands.add(brandName);
 		}
-		List<Integer> listId = new ArrayList<Integer>();
+		List<Long> listId = new ArrayList<Long>();
 
 		if (checkedValue == true && businessDTOs == null) {
 
@@ -2061,7 +2112,7 @@ public class BusinessController {
 		} else if (checkedValue == true && businessDTOs != null) {
 
 			for (LocalBusinessDTO localBusinessDTO : businessDTOs) {
-				listId.add(localBusinessDTO.getId());
+				listId.add(localBusinessDTO.getLblStoreId());
 			}
 			logger.info("listIds::::::::::::::" + listId.size());
 			specificBusinessInfo = service.getSpecificBusinessInfo(listId,
@@ -2079,7 +2130,7 @@ public class BusinessController {
 
 				List<LocalBusinessDTO> listingsForBrand = brandListingsMap
 						.get(brand);
-				specificBusinessInfo.addAll(listingsForBrand);
+				//specificBusinessInfo.addAll(listingsForBrand);
 				exportActivity.put(brand, listingsForBrand.size());
 
 			}
@@ -2133,7 +2184,7 @@ public class BusinessController {
 		int errorListSize = listOfErrorBusinessInfo.size();
 		model.addAttribute("errorListSize", errorListSize);
 		model.addAttribute("activeListSize", activeListSize);
-		// session.setAttribute("listOfBusinessInfo", specificBusinessInfo);
+		//session.setAttribute("listOfBusinessInfo", specificBusinessInfo);
 		controllerUtil.listingsAddAttributes(1, model, request,
 				specificBusinessInfo);
 		model.addAttribute("exportMessage", "exportMessage");
@@ -2854,7 +2905,7 @@ public class BusinessController {
 		controllerUtil.getUploadDropDown(model, request, service);
 		List<LocalBusinessDTO> listOfBrandsInfo = service.getListOfBrands();
 		List<ExportReportDTO> listingActivityInfo = service
-				.getListingActivityInf();
+				.getListingActivityInf(businessDTO);
 		Collections.sort(listingActivityInfo);
 		List<UsersDTO> usersList = service.getAllUsersList((Integer) session
 				.getAttribute("roleId"));
@@ -2889,7 +2940,7 @@ public class BusinessController {
 		List<UsersDTO> searchUser = service.getUserByUserName(userName);
 		List<LocalBusinessDTO> listOfBrandsInfo = service.getListOfBrands();
 		List<ExportReportDTO> listingActivityInfo = service
-				.getListingActivityInf();
+				.getListingActivityInf(businessDTO);
 		Collections.sort(listingActivityInfo);
 		model.addAttribute("brandSize", listOfBrandsInfo.size());
 		model.addAttribute("listingActivityInfo", listingActivityInfo);
@@ -3147,7 +3198,7 @@ public class BusinessController {
 			Integer channelID = service.getChannelIdByName("Convergent Mobile");
 			if (channelID == 0) {
 				channelID = service.saveChannel("Convergent Mobile",
-						startDateValue);
+						startDateValue, bean.getcImagePath());
 			}
 			message = controllerUtil.saveOrUpdateBrand(bean, message,
 					startDateValue, channelID, service);
@@ -3523,11 +3574,11 @@ public class BusinessController {
 		logger.info("Bean value == " + beanStr);
 		String[] split = beanStr.split("&");
 		String services = null;
-		List<Integer> listIds = new ArrayList<Integer>();
+		List<Long> listIds = new ArrayList<Long>();
 		for (String value : split) {
 			if (value.contains("id=")) {
 				String id = value.substring("id=".length());
-				listIds.add(Integer.parseInt(id));
+				listIds.add(Long.parseLong(id));
 			}
 			if (value.contains("serviceName=")) {
 				String serviceName = value.substring("serviceName=".length());
@@ -3561,9 +3612,9 @@ public class BusinessController {
 					+ listOfErrorBusinessInfo.size());
 			return "listing-errors";
 		} else if (checkedval == true && businessDTOs != null) {
-			List<Integer> listId = new ArrayList<Integer>();
+			List<Long> listId = new ArrayList<Long>();
 			for (LblErrorDTO lblErrorDTO : businessDTOs) {
-				listId.add(lblErrorDTO.getId());
+				listId.add(lblErrorDTO.getLblStoreId());
 			}
 			specificErrorBusinessInfo = service
 					.getSpecificErrorBusinessInfo(listId);

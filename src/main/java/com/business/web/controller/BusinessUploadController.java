@@ -46,15 +46,18 @@ import com.business.common.dto.LblErrorDTO;
 import com.business.common.dto.LocalBusinessDTO;
 import com.business.common.dto.UploadReportDTO;
 import com.business.common.dto.UsersDTO;
+import com.business.common.util.BingThread;
 import com.business.common.util.ControllerUtil;
+import com.business.common.util.GMBClient;
+import com.business.common.util.GMBThread;
 import com.business.common.util.LBLConstants;
 import com.business.common.util.SmartyStreetsThread;
 import com.business.common.util.UploadBeanValidateUtil;
-import com.business.common.util.UploadDataAddExecutorService;
-import com.business.common.util.UploadDataErrorsAddExecutorService;
-import com.business.common.util.UploadDataUpdateExecutorService;
 import com.business.common.util.ValidationExecutorService;
+import com.business.service.BingService;
 import com.business.service.BusinessService;
+import com.business.service.ListingService;
+import com.business.service.UploadService;
 import com.business.web.bean.BussinessData;
 import com.business.web.bean.LblErrorBean;
 import com.business.web.bean.LocalBusinessBean;
@@ -63,7 +66,7 @@ import com.business.web.bean.UsersBean;
 
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  *         BusinessUploadController class which gets the data from the View
  *         Layer and sends to the Business Logic Layer and returns respective
@@ -94,6 +97,15 @@ public class BusinessUploadController {
 
 	@Autowired
 	private BusinessService service;
+
+	@Autowired
+	private BingService bingService;
+
+	@Autowired
+	private UploadService uploadService;
+
+	@Autowired
+	private ListingService listingService;
 
 	/***
 	 * 
@@ -196,6 +208,11 @@ public class BusinessUploadController {
 			listDataFromXLS = null;
 		}
 
+
+		List<LocalBusinessDTO> storesToadd = new ArrayList<LocalBusinessDTO>();
+		List<LblErrorDTO> errorStoresToadd = new ArrayList<LblErrorDTO>();
+		List<LocalBusinessDTO> storesToUpdate = new ArrayList<LocalBusinessDTO>();
+		
 		if (listDataFromXLS != null && listDataFromXLS.size() > 0) {
 			message = "Upload complete, results can be seen in Business Listings.";
 
@@ -212,48 +229,35 @@ public class BusinessUploadController {
 
 			List<UploadBusinessBean> validBusinessList = ValidationExecutorService.validBusinessList;
 			List<LblErrorBean> erroredBusinessList = ValidationExecutorService.erroredBusinessList;
+			
+			BingThread bingThread = new BingThread(bingService,	validBusinessList);
+			bingThread.start();
 
-			logger.info("Toatal valid records found are: "
-					+ validBusinessList.size());
-			logger.info("Toatal Errored records found are: "
-					+ erroredBusinessList);
+			List<UploadBusinessBean> deleteList = ValidationExecutorService.deleteBusinessList;
 
-			List<LocalBusinessDTO> correctDatas = new ArrayList<LocalBusinessDTO>();
-			List<LblErrorDTO> inCorrectData = new ArrayList<LblErrorDTO>();
+			for (UploadBusinessBean uploadBean : validBusinessList) {
+				Long recordsCount = Long.valueOf(1);
+				String brandName = uploadBean.getClient();
 
-			LocalBusinessDTO businessDTO = null;
-			for (UploadBusinessBean uploadBusinessBean : validBusinessList) {
-				businessDTO = new LocalBusinessDTO();
-				BeanUtils.copyProperties(uploadBusinessBean, businessDTO);
-				correctDatas.add(businessDTO);
+				if (brandsCountsMap.containsKey(brandName)) {
+					recordsCount = brandsCountsMap.get(brandName) + 1;
+				}
+				brandsCountsMap.put(brandName, recordsCount);
 			}
-			LblErrorDTO errorDTO = null;
+
+			for (UploadBusinessBean uploadBean : deleteList) {
+				Long recordsCount = Long.valueOf(1);
+				String brandName = uploadBean.getClient();
+
+				if (brandsCountsMap.containsKey(brandName)) {
+					recordsCount = brandsCountsMap.get(brandName) + 1;
+				}
+				brandsCountsMap.put(brandName, recordsCount);
+			}
+
 			for (LblErrorBean errorBean : erroredBusinessList) {
-				errorDTO = new LblErrorDTO();
-				BeanUtils.copyProperties(errorBean, errorDTO);
-				inCorrectData.add(errorDTO);
-			}
-
-			List<LocalBusinessDTO> correctRecords = new ArrayList<LocalBusinessDTO>();
-
-			correctRecords = checkRecordsInListings(correctDatas,
-					brandsCountsMap);
-
-			for (LocalBusinessDTO localBusinessDTO : correctRecords) {
 				Long recordsCount = Long.valueOf(1);
-				String brandName = localBusinessDTO.getClient();
-				if (brandsCountsMap.containsKey(brandName)) {
-					recordsCount = brandsCountsMap.get(brandName) + 1;
-				}
-				brandsCountsMap.put(brandName, recordsCount);
-			}
-
-			List<LblErrorDTO> inCorrectDataList = checkRecordsInListingErrors(
-					inCorrectData, brandsCountsMap);
-
-			for (LblErrorDTO lblErrorDTO : inCorrectDataList) {
-				Long recordsCount = Long.valueOf(1);
-				String brandName = lblErrorDTO.getClient();
+				String brandName = errorBean.getClient();
 
 				if (brandsCountsMap.containsKey(brandName)) {
 					recordsCount = brandsCountsMap.get(brandName) + 1;
@@ -261,7 +265,7 @@ public class BusinessUploadController {
 				brandsCountsMap.put(brandName, recordsCount);
 			}
 
-			List<LblErrorDTO> correctDBErrorRecords = correctDBErrorRecords(correctDatas);
+			// for tracking
 
 			Date date = new Date();
 			String uploadUserName = (String) session.getAttribute("userName");
@@ -269,111 +273,46 @@ public class BusinessUploadController {
 					+ System.currentTimeMillis();
 			session.setAttribute("uploadJobId", uploadJobId);
 
-			logger.info("Start: Add listings");
-			UploadDataAddExecutorService uploadAddService = new UploadDataAddExecutorService();
-			try {
-				uploadAddService.addBusinessList(correctRecords, date,
-						uploadJobId, service);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			logger.info("End: Add listings");
+			// for tracking
 
-			logger.info("Start: update listings");
-			// String userName = (String) session.getAttribute("userName");
-			UploadDataUpdateExecutorService uploadUpdateService = new UploadDataUpdateExecutorService();
-			try {
-				uploadUpdateService.updateBusinessList(updateBusinessRecords,
-						date, uploadJobId, service, uploadUserName);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 
-			logger.info("End: update listings");
-
-			logger.info("reomve Correct ErrorData from business error ::"
-					+ correctDBErrorRecords);
-			// deleteBusinessByActionCode in business table
-			service.deleteBusinessByActionCode(listofDeletesbyActionCode);
-
-			// remove the CorrectErrorData from business table
-			service.reomveCorrectErrorData(correctDBErrorRecords);
-
-			logger.info("Start: Add  Error listings");
-			UploadDataErrorsAddExecutorService errorService = new UploadDataErrorsAddExecutorService();
-
-			try {
-				errorService.insertErrorBusiness(inCorrectDataList, date,
-						uploadJobId, service);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			logger.info("End: Add  Error listings");
-
-			// insert error records to error table
-			// service.insertErrorBusiness(inCorrectDataList, date,
-			// uploadJobId);
-
-			// updateErrorBusinessByActionCode in business error table
-			service.updateErrorBusinessByActionCode(
-					listOfErrorUpdatesByActionCode, date, uploadJobId);
-
-			// deleteErrorBusinessByActioncode in business error table
-			service.deleteErrorBusinessByActioncode(listofErrorDeletesbyActionCode);
-
-			SmartyStreetsThread st = new SmartyStreetsThread(service,
-					correctRecords, updateBusinessRecords, inCorrectDataList,
-					listOfErrorUpdatesByActionCode);
-			st.start();
-
-			logger.info("Total Records: " + totalDataCount);
-			logger.info("Total Corect Records: " + correctRecords.size());
-			logger.info("Total Updated Records: "
-					+ updateBusinessRecords.size());
-			logger.info("Total Deleted Records: "
-					+ listofDeletesbyActionCode.size());
-
-			logger.info("Total Error Records: " + inCorrectDataList.size());
-			logger.info("Total error updated Records: "
-					+ listOfErrorUpdatesByActionCode.size());
-			logger.info("Total error deleted Records: "
-					+ listofErrorDeletesbyActionCode.size());
-
-			if (correctRecords != null) {
-				correctDataCount = correctRecords.size();
-				int updateSize = 0;
-				if (updateBusinessRecords != null) {
-					updateSize = updateBusinessRecords.size();
-				}
-				int deleteSize = 0;
-				if (listofDeletesbyActionCode != null) {
-					deleteSize = listofDeletesbyActionCode.size();
-				}
-				correctDataCount = correctDataCount + updateSize - deleteSize;
-				if (correctDataCount < 0) {
-					correctDataCount = 0;
+			LocalBusinessDTO businessDTO = null;
+			for (UploadBusinessBean uploadBusinessBean : validBusinessList) {
+				businessDTO = new LocalBusinessDTO();
+				BeanUtils.copyProperties(uploadBusinessBean, businessDTO);
+				if (businessDTO.getActionCode().equalsIgnoreCase("A")) {
+					storesToadd.add(businessDTO);
+				} else if (businessDTO.getActionCode().equalsIgnoreCase("U")) {
+					storesToUpdate.add(businessDTO);
 				}
 			}
-			if (inCorrectDataList != null) {
-				inCorrectDataCount = inCorrectDataList.size();
-				int updateSize = 0;
-				if (listOfErrorUpdatesByActionCode != null) {
-					updateSize = listOfErrorUpdatesByActionCode.size();
-				}
-				int deleteSize = 0;
-				if (listofErrorDeletesbyActionCode != null) {
-					deleteSize = listofErrorDeletesbyActionCode.size();
-				}
-				inCorrectDataCount = inCorrectDataCount + updateSize
-						- deleteSize;
-				if (inCorrectDataCount < 0) {
-					inCorrectDataCount = 0;
-				}
+			
+			for (LblErrorBean uploadBusinessBean : erroredBusinessList) {
+				LblErrorDTO LblErrorDTO = new LblErrorDTO();
+				BeanUtils.copyProperties(uploadBusinessBean, LblErrorDTO);
+				errorStoresToadd.add(LblErrorDTO);
 			}
-			if (correctRecords.size() > 0 || inCorrectDataList.size() > 0) {
+			
+			
+
+			// delete the stores
+
+			int storesDeleted = deleteList.size();
+			uploadService.deleteBusinessbyUpload(deleteList);
+
+			uploadService.addBusinessByUpload(storesToadd, uploadJobId, uploadUserName, date);
+			
+			uploadService.updateBusinessByUpload(storesToUpdate, uploadJobId, uploadUserName, date);
+			
+			// update Stores on GMB
+			GMBThread gmbThread = new GMBThread(service, listingService, storesToUpdate);
+			gmbThread.start();
+			
+			
+			uploadService.addErrorsbyUpload(errorStoresToadd,uploadJobId, date);
+			
+
+			if (storesToadd.size() > 0 || storesToUpdate.size() > 0) {
 				Set<String> brandNames = brandsCountsMap.keySet();
 				for (String brand : brandNames) {
 					UploadReportDTO uploadReportDTO = new UploadReportDTO();
@@ -397,6 +336,12 @@ public class BusinessUploadController {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		
+	    SmartyStreetsThread st = new SmartyStreetsThread(service,
+				storesToadd, updateBusinessRecords, errorStoresToadd,
+				listOfErrorUpdatesByActionCode);
+		st.start();
 
 		List<LocalBusinessDTO> listOfBusinessInfo = service
 				.getListOfBusinessInfo();
@@ -406,8 +351,8 @@ public class BusinessUploadController {
 		logger.info("Correct Data Count == " + correctDataCount);
 		logger.info("Incorrect Data Count == " + inCorrectDataCount);
 		model.addAttribute("listingsUploaded", totalDataCount);
-		model.addAttribute("listingsCompleted", correctDataCount);
-		model.addAttribute("listingsWithErrors", inCorrectDataCount);
+		model.addAttribute("listingsCompleted", storesToUpdate.size() + storesToadd.size());
+		model.addAttribute("listingsWithErrors", errorStoresToadd.size());
 		model.addAttribute("message", message);
 
 		duplicateRecord.clear();
@@ -614,10 +559,6 @@ public class BusinessUploadController {
 
 				}
 			}
-			if (!listOfErorBusinessInfos.isEmpty()
-					&& listOfErorBusinessInfos.size() > 0) {
-				service.deleteErrorBusinessByActioncode(listOfErorBusinessInfos);
-			}
 
 			boolean isDuplicate = false;
 			for (int j = 0; j < listOfBusinessInfo.size(); j++) {
@@ -649,6 +590,12 @@ public class BusinessUploadController {
 			 * else { decreaseDuplicateRecordsLength(brandsCountsMap,
 			 * excelRecord); }
 			 */
+		}
+
+		if (!listOfErorBusinessInfos.isEmpty()
+				&& listOfErorBusinessInfos.size() > 0) {
+			service.deleteErrorBusinessByActioncode(listOfErorBusinessInfos);
+
 		}
 
 		return insertRecord;
@@ -782,6 +729,7 @@ public class BusinessUploadController {
 						int columnIndex = cell.getColumnIndex();
 						// System.out.println("columnIndex" + columnIndex);
 						String formatCellValue = df.formatCellValue(cell);
+
 						// System.out.println("formatCellValue" +
 						// formatCellValue);
 						org.apache.commons.beanutils.BeanUtils
@@ -797,6 +745,7 @@ public class BusinessUploadController {
 
 			}
 		} catch (Exception e) {
+			headerpopup = "Invalid Bulk Upload Template";
 			logger.error("Exception : " + e);
 			e.printStackTrace();
 		}

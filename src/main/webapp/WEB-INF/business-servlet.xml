@@ -12,7 +12,8 @@
 		http://www.springframework.org/schema/mvc/spring-mvc.xsd">
 
 	<context:component-scan base-package="com.business" />
-
+	
+	 <mvc:annotation-driven/>
 
 	<bean id="viewResolver"
 		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
@@ -64,7 +65,8 @@
 	</bean>
 
 	<bean id="sessionFactory"
-		class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		
 		<property name="dataSource" ref="dataSource" />
 
 		<property name="packagesToScan">
@@ -80,7 +82,7 @@
 				</prop>
 				<prop key="hibernate.show_sql">false</prop>
 				<prop key="hibernate.hbm2ddl.auto">update</prop>
-				<prop key="hibernate.c3p0.min_size">5</prop>
+				<prop key="hibernate.c3p0.min_size">10</prop>
   				<prop key="hibernate.c3p0.max_size">100</prop>
   				<prop key="hibernate.c3p0.timeout">300</prop>
   				<prop key="hibernate.c3p0.max_statements">50</prop>
@@ -91,7 +93,7 @@
 	</bean>
 
 	<bean id="transactionManager"
-		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		class="org.springframework.orm.hibernate4.HibernateTransactionManager">
 		<property name="sessionFactory" ref="sessionFactory" />
 	</bean>
 

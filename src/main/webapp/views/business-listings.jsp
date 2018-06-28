@@ -476,6 +476,20 @@ function getPhone(flag){
 		
 	}
 	function sendDeleteResult(){
+		
+		
+		var checkBoxCount = 0;
+		$('input[type=checkbox].checkbox1').each(function () {
+			if($(this).is(":checked")){
+				++checkBoxCount;
+			}
+		});
+		var editType = "single";
+		if (checkBoxCount > 1) {
+			editType = "multiple";
+		}
+		$.session.set("editType",editType);
+		$.session.set("isSave",false);
 	 
 	  var form = document.getElementById('businessListform');
 	     form.action = "deleteBusinessInfo";
@@ -514,29 +528,31 @@ function getPhone(flag){
 		  var form = document.getElementById('businessListform');
 		     form.action = "editBusinessInfo";
 		     form.submit();
-		}
+	}
 	
-	function showExportPopup(){
-		var form ="";
-		var count = 0;
-		$('input[type=checkbox].checkbox1').each(function () {
-			if($(this).is(":checked")){
-				++count;
-				form = $(".checkbox1").val();
-				}
-		});		
-		if(form!="" && count>=1){
-			 $('#displayExportFilepopup').bPopup();			 
-			 $("ul li").removeClass("selected");
-		 	return true;
-			}else{
-				$('#exportrecordselectionpopup').bPopup();
+
+	 function showExportPopup(){
+			var form ="";
+			var count = 0;
+			$('input[type=checkbox].checkbox1').each(function () {
+				if($(this).is(":checked")){
+					++count;
+					form = $(".checkbox1").val();
+					}
+			});		
+			//if(form!="" && count>=1){
+				 $('#displayExportFilepopup').bPopup();			 
 				 $("ul li").removeClass("selected");
-				//alert("please select at least one record");		
-				return false;
-			}	;	
-		};
-	function sendExportSubmit(){
+			 	return true;
+				/* }else{
+					$('#exportrecordselectionpopup').bPopup();
+					 $("ul li").removeClass("selected");
+					//alert("please select at least one record");		
+					return false;
+				}		 */
+	}
+	 
+	function sendExportSubmitOld(){
 		var checkedvalue='';
 
         $('.checkbox2').each(function() { 
@@ -558,6 +574,22 @@ function getPhone(flag){
 			     form.submit(); 
 		 }
 				
+		}
+	
+	function sendExportSubmit(){
+		 var serviceName = document.getElementById('serviceName').value;
+		 var checkedvalue='';
+
+	        $('.checkbox2').each(function() { 
+
+	        	checkedvalue=this.checked;
+	        });
+	       // alert(checkedvalue);
+		 document.getElementById('templateName').value=serviceName;
+		// $("#businessListform").attr("action", "downloadErrorBusiness");
+		  var form = document.getElementById('businessListform');
+		  form.action = "exportBusinessInfo.htm?checkedvalue="+checkedvalue;
+		     form.submit(); 
 		}
 	
 	function addLocation() {
@@ -582,15 +614,15 @@ function getPhone(flag){
 		    		}else{
 		    			flag = 'ASC';
 		    		}
-		    		  var businessname=$("#companyName").val();
-				       	 var brands=$("#brands").val();
-				       	 var locationAddress=$("#Addresslocation").val();
-				       	 //locationstore
-				       	 var locationstore=$("#locationstore").val();
-				       	 var ZipCodelocation=$("#ZipCodelocation").val();
-				       	 var Citylocation=$("#Citylocation").val();
-				       	 var Phonelocation=$("#Phonelocation").val();
-				       	 var Statelocation=$("#Statelocation").val();
+		    		var businessname=$("#companyName").val();
+			       	var brands=$("#brands").val();
+			       	var locationAddress=$("#Addresslocation").val();
+			       	 //locationstore
+			       	var locationstore=$("#locationstore").val();
+			       	var ZipCodelocation=$("#ZipCodelocation").val();
+			       	var Citylocation=$("#Citylocation").val();
+			        var Phonelocation=$("#Phonelocation").val();
+			        var Statelocation=$("#Statelocation").val();
 		            var selecttype=$("#selectType").val();
 		            //alert(selecttype);
 		            if(selecttype ==''){
@@ -1166,14 +1198,14 @@ function getPhone(flag){
 													test="${cheked eq 'true' and checkedvalue eq 'true'}">
 													<td class="td_01"><div>
 															<input type="checkbox" class="checkbox1"
-																checked="checked" value="${bean.id}" name="id">
+																checked="checked" value="${bean.lblStoreId}" name="id">
 														</div></td>
 
 												</core:when>
 												<core:otherwise>
 													<td class="td_01"><div>
 															<input type="checkbox" class="checkbox1"
-																value="${bean.id}" name="id">
+																value="${bean.lblStoreId}" name="id">
 														</div></td>
 
 												</core:otherwise>
@@ -1239,7 +1271,7 @@ function getPhone(flag){
 									.getAttribute("isViewOnly");
 							if (!isViewOnly) {
 					%>
-					<a href="#" onclick="showDeletePopup();" class="btn_dark_blue_2">Delete</a>
+					<a href="#" onclick="sendDeleteResult();" class="btn_dark_blue_2">Delete</a>
 					<%
 										
 							if(Role==LBLConstants.CONVERGENT_MOBILE_ADMIN){						

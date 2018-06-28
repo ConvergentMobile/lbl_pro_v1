@@ -532,7 +532,7 @@
 										<option value="AppleTemplate">Apple Template</option>
 									
 							</select> <a onclick="bulkExportBusiness();"  class="btn_dark_blue_2"
-								id="bulkExport">Export</a>
+								id="bulkExport">Export</a>s
 								
 							<p>
 								<a href="MAILTO:LBLPro@convergentmobile.com">Contact Us</a> if
@@ -554,6 +554,7 @@
 									class="btn_dark_blue_2">Download Sprint</a>
 									 <a href="#"  onclick="renewBrand()"
 									class="btn_dark_blue_2">Renew Brand</a> -->
+								
 							<div id="container" style=" display: none"></div>
 										<!--  <a href="runAccuracyReportdata.htm" 
 									class="btn_dark_blue_2">Accuracy</a>

@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  */
 public class LBLConstants {
@@ -177,5 +177,41 @@ public class LBLConstants {
 			.getString("smart.url");
 	public static final String google_Key = PropUtil.Google_Key
 			.getString("google.Key");
+
+	public static final String BING_ANALYTICS_URL = PropUtil.BING_BUNDLE
+			.getString("analytiscUrl");
+	public static final String BING_CREATE_URL = PropUtil.BING_BUNDLE
+			.getString("createStoreURL");
+	public static final String BING_UPDATE_URL = PropUtil.BING_BUNDLE
+			.getString("updateStoreURL");
 	
+	public static final String ALERT_MAIL_ID = PropUtil.BING_BUNDLE
+			.getString("mailToSendReport");
+	
+	public static final String REPORT_PATH = PropUtil.BING_BUNDLE
+			.getString("reportPath");
+	
+	
+	public static final String GMB_INSIGHTS_STARTDATE = PropUtil.GMB_BUNDLE
+			.getString("startDate");
+	public static final String GMB_INSIGHTS_ENDDATE = PropUtil.GMB_BUNDLE
+			.getString("endDate");
+	
+	public static final String GMB_INSIGHTS_CoLLECTIONS_TYPE = PropUtil.GMB_BUNDLE
+			.getString("dataCollectionType");
+	
+	public static final String LIBERTY_ACCESS_KEY = PropUtil.GMB_BUNDLE
+			.getString("libertyAccessKey");
+	
+	
+	public static final String PDF_APIKEY = PropUtil.PDF_BUNDLE
+			.getString("apiKey");
+	
+	public static final String PDF_BASE_URL = PropUtil.PDF_BUNDLE
+			.getString("baseURL");
+	
+	public static final String PDF_PATH = PropUtil.PDF_BUNDLE
+			.getString("pathToPDF");
+	
+
 }

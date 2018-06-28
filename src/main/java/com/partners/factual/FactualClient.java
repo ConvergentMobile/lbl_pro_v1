@@ -23,7 +23,7 @@ import com.google.api.client.util.Maps;
 
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  */
 
@@ -45,85 +45,107 @@ public class FactualClient {
 		String oauthKey = bundle.getString("factual.oauthKey");
 		String oauthSecret = bundle.getString("factual.oauthSecret");
 		for (LocalBusinessDTO localBusinessDTO : listOfBusinessInfo) {
+
 			String store = localBusinessDTO.getStore();
 			Integer clientId = localBusinessDTO.getClientId();
-			RenewalReportDTO renewalReportDTO = service.isRenewed(localBusinessDTO.getStore(), localBusinessDTO.getClientId());
-			if(renewalReportDTO!=null  ){
-				Date cancelledEffeciveDate = renewalReportDTO.getCancelledEffeciveDate();
-				boolean isDate=false;
-				if(cancelledEffeciveDate!=null){
-					Date currentDateDate=new Date();
-					 isDate=cancelledEffeciveDate.compareTo(currentDateDate)< 0;
+			RenewalReportDTO renewalReportDTO = service
+					.isRenewed(localBusinessDTO.getStore(),
+							localBusinessDTO.getClientId());
+			if (renewalReportDTO != null) {
+				Date cancelledEffeciveDate = renewalReportDTO
+						.getCancelledEffeciveDate();
+				boolean isDate = false;
+				if (cancelledEffeciveDate != null) {
+					Date currentDateDate = new Date();
+					isDate = cancelledEffeciveDate.compareTo(currentDateDate) < 0;
 				}
-				
-				if((renewalReportDTO.getStatus().equals("Renewed")|| renewalReportDTO.getStatus().equals("Active") || isDate)){
-				try {
-					String hours = SubmissionUtil.getHours(localBusinessDTO);
 
-					Factual factual = new Factual(oauthKey, oauthSecret);
-					Map<String, Object> values = Maps.newHashMap();
-					values.put(bundle.getString("factual.schema.name"),
-							localBusinessDTO.getCompanyName());
-					values.put(bundle.getString("factual.schema.address"),
-							localBusinessDTO.getLocationAddress());
-					values.put(bundle.getString("factual.schema.neighborhood"), "");
-					values.put(bundle.getString("factual.schema.locality"),
-							localBusinessDTO.getLocationCity());
-					values.put(bundle.getString("factual.schema.region"),
-							localBusinessDTO.getLocationState());
-					values.put(bundle.getString("factual.schema.postcode"),
-							localBusinessDTO.getLocationZipCode());
-					values.put(bundle.getString("factual.schema.country"),
-							localBusinessDTO.getCountryCode());
+				if ((renewalReportDTO.getStatus().equals("Renewed")
+						|| renewalReportDTO.getStatus().equals("Active") || isDate)) {
+					try {
+						String hours = SubmissionUtil
+								.getHours(localBusinessDTO);
 
-					String categoryId = service
-							.getFactualCategoryId(clientId);
+						Factual factual = new Factual(oauthKey, oauthSecret);
+						Map<String, Object> values = Maps.newHashMap();
+						values.put(bundle.getString("factual.schema.name"),
+								localBusinessDTO.getCompanyName());
+						values.put(bundle.getString("factual.schema.address"),
+								localBusinessDTO.getLocationAddress());
+						values.put(
+								bundle.getString("factual.schema.neighborhood"),
+								"");
+						values.put(bundle.getString("factual.schema.locality"),
+								localBusinessDTO.getLocationCity());
+						values.put(bundle.getString("factual.schema.region"),
+								localBusinessDTO.getLocationState());
+						values.put(bundle.getString("factual.schema.postcode"),
+								localBusinessDTO.getLocationZipCode());
+						values.put(bundle.getString("factual.schema.country"),
+								localBusinessDTO.getCountryCode());
 
-					values.put(bundle.getString("factual.schema.category_ids"),
-							categoryId);
-					values.put(bundle.getString("factual.schema.category_labels"),
-							"");
-					values.put(bundle.getString("factual.schema.latitude"), "");
-					values.put(bundle.getString("factual.schema.longitude"), "");
-					values.put(bundle.getString("factual.schema.tel"),
-							localBusinessDTO.getLocationPhone());
-					values.put(bundle.getString("factual.schema.fax"),
-							localBusinessDTO.getFax());
-					values.put(bundle.getString("factual.schema.website"),
-							localBusinessDTO.getWebAddress());
-					values.put(bundle.getString("factual.schema.chain_name"),
-							localBusinessDTO.getCompanyName());
-					values.put(bundle.getString("factual.schema.chain_id"), "");
-					values.put(bundle.getString("factual.schema.hours_display"), "");
-					values.put(bundle.getString("factual.schema.hours"), hours);
-					values.put(bundle.getString("factual.schema.admin_region"), "");
-					values.put(bundle.getString("factual.schema.post_town"),
-							localBusinessDTO.getLocationCity());
+						String categoryId = service
+								.getFactualCategoryId(clientId);
 
-					// An end user id is required
-					Metadata metadata = new Metadata().user(bundle
-							.getString("factual.userName"));
+						values.put(
+								bundle.getString("factual.schema.category_ids"),
+								categoryId);
+						values.put(bundle
+								.getString("factual.schema.category_labels"),
+								"");
+						values.put(bundle.getString("factual.schema.latitude"),
+								"");
+						values.put(
+								bundle.getString("factual.schema.longitude"),
+								"");
+						values.put(bundle.getString("factual.schema.tel"),
+								localBusinessDTO.getLocationPhone());
+						values.put(bundle.getString("factual.schema.fax"),
+								localBusinessDTO.getFax());
+						values.put(bundle.getString("factual.schema.website"),
+								localBusinessDTO.getWebAddress());
+						values.put(
+								bundle.getString("factual.schema.chain_name"),
+								localBusinessDTO.getCompanyName());
+						values.put(bundle.getString("factual.schema.chain_id"),
+								"");
+						values.put(bundle
+								.getString("factual.schema.hours_display"), "");
+						values.put(bundle.getString("factual.schema.hours"),
+								hours);
+						values.put(
+								bundle.getString("factual.schema.admin_region"),
+								"");
+						values.put(
+								bundle.getString("factual.schema.post_town"),
+								localBusinessDTO.getLocationCity());
 
-					// Run the Submit
-					Submit submit = new Submit(values);
-					SubmitResponse resps = factual
-							.submit(bundle.getString("factual.tableName"), submit,
-									metadata);
-					logger.debug("response from Factual is : " + resps);
-					logger.debug("returned Factual id is:  " + resps.getFactualId());
-				} catch (FactualApiException e) {
-					erroredStores.add(store);
-					logger.error("There was a error in posting the data to Fatual: "
-							+ e.getRequestUrl());
-					e.printStackTrace();
-				} catch (Exception e) {
-					logger.error("There was a error in posting the data to Fatual"
-							+ e);
-					e.printStackTrace();
-				}	
+						// An end user id is required
+						Metadata metadata = new Metadata().user(bundle
+								.getString("factual.userName"));
+
+						logger.debug("requesr to Factual is : " + values);
+
+						// Run the Submit
+						Submit submit = new Submit(values);
+						SubmitResponse resps = factual.submit(
+								bundle.getString("factual.tableName"), submit,
+								metadata);
+						logger.debug("response from Factual is : " + resps);
+						logger.debug("returned Factual id is:  "
+								+ resps.getFactualId());
+					} catch (FactualApiException e) {
+						erroredStores.add(store);
+						logger.error("There was a error in posting the data to Fatual: "
+								+ e.getRequestUrl());
+						e.printStackTrace();
+					} catch (Exception e) {
+						logger.error("There was a error in posting the data to Fatual"
+								+ e);
+						e.printStackTrace();
+					}
+				}
 			}
-			}
-			
 		}
 
 		errorDetails.put("errorDetails", erroredStores);

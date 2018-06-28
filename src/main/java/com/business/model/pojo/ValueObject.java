@@ -3,7 +3,7 @@ package com.business.model.pojo;
 import java.io.Serializable;
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  * 
  * 

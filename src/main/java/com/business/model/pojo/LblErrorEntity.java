@@ -15,7 +15,7 @@ import org.hibernate.type.StringClobType;
 
 /**
  * 
- * @author Vasanth POJO bean which creates table with the available fields in
+ * @author lbl_dev POJO bean which creates table with the available fields in
  *         the database table on server load-up.
  */
 
@@ -29,6 +29,7 @@ public class LblErrorEntity {
 	@GeneratedValue
 	private Integer id;
 	private String store;
+	private Long lblStoreId;
 	private String actionCode;
 	private String companyName;
 	private String alternativeName;
@@ -137,6 +138,26 @@ public class LblErrorEntity {
 
 	private String googleAccountId;
 	private String googleLocationId;
+	
+	private String trackingId;
+	
+	
+	
+	public Long getLblStoreId() {
+		return lblStoreId;
+	}
+
+	public void setLblStoreId(Long lblStoreId) {
+		this.lblStoreId = lblStoreId;
+	}
+
+	public String getTrackingId() {
+		return trackingId;
+	}
+
+	public void setTrackingId(String trackingId) {
+		this.trackingId = trackingId;
+	}
 
 	public String getGoogleAccountId() {
 		return googleAccountId;

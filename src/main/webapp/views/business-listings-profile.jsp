@@ -312,6 +312,7 @@ function diableReadOnlyForAddLocation(id){
 					<input type="hidden" value="${listId}" name="listId" id="listId">
 					<input type="hidden" value="${brandName }" name="brandval">
 					<input type="hidden" value="${storeVal }" name="storeVal">
+					<input type="hidden" value="${lblStoreId}" name="lblStoreId" id="lblStoreId">
 						<div class="box_title"><h2 style="text-align: left;">Location profile</h2></div>
 						<!-- <a href="business-listings.htm" class="lp-back"><span>Back to Business Listings</span></a> -->
 						<div class="lp-subtitle-text">
@@ -414,12 +415,14 @@ function diableReadOnlyForAddLocation(id){
 								<tbody>
 							<%-- 	<spring:hidden  path="id" value="${listId}" id="listId"/> --%>
 									<input type="hidden" value="${listId}" name="listId" id="listId">
+									<input type="hidden" value="${lblStoreId}" name="lblStoreId" id="lblStoreId">
 									<tr>
 										<td class="td_01"><div><tag:message code="businessApp.lable.Client">
 																</tag:message><span style="color: red">*</span>
 																<%-- <span  style="color: red;    margin: 12px -10px 0px; font-size: 12px;display: block;">${clientId_Error}</span> --%>
 																</div></td>
-										<td class="td_02"><div><spring:input class="bussinessInfo" path="clientId" id="location_information_field" readonly="" /></div></td>
+										<td class="td_02"><div><spring:input class="bussinessInfo" path="clientId" id="location_information_field" /></div></td>
+										
 										
 										  <td class="errors">${clientId_Error}</td>
 									</tr>
@@ -589,8 +592,9 @@ function diableReadOnlyForAddLocation(id){
 												</tag:message></div></td>
 										<td class="td_02"><div><spring:textarea class="bussinessInfo" id="location_information_field"   path="serviceArea" style="height: 105px;"/></div></td>
 										 <td class="errors">${serviceArea_Error}</td>
-									</tr>									
-										<tr>
+									</tr>	
+									
+									<tr>
 										<td class="td_01"><div>&nbsp;</div></td>
 										<td class="td_02"><div>&nbsp;</div></td>
 										<td class="td_02"><div>&nbsp;</div></td>

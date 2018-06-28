@@ -1,6 +1,7 @@
 package com.business.model.dataaccess.impl;
 
 import java.io.Serializable;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,7 +11,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +23,8 @@ import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.classic.Session;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
@@ -34,6 +34,8 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.StringType;
+import org.joda.time.DateTime;
+import org.joda.time.Days;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -41,6 +43,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.business.common.dto.AccuracyDTO;
 import com.business.common.dto.AccuracyGraphDTO;
+import com.business.common.dto.BingAnalyticsDTO;
+import com.business.common.dto.BingReportDTO;
 import com.business.common.dto.BrandInfoDTO;
 import com.business.common.dto.CategoryDTO;
 import com.business.common.dto.ChangeTrackingDTO;
@@ -51,6 +55,8 @@ import com.business.common.dto.CustomSubmissionsDTO;
 import com.business.common.dto.ExportReportDTO;
 import com.business.common.dto.ForgotPasswordDto;
 import com.business.common.dto.InsightsGraphDTO;
+import com.business.common.dto.InsightsMonthlyCountDTO;
+import com.business.common.dto.LBLStoreDTO;
 import com.business.common.dto.LblErrorDTO;
 import com.business.common.dto.LocalBusinessDTO;
 import com.business.common.dto.PartnerDTO;
@@ -83,6 +89,8 @@ import com.business.model.pojo.ExportReportEntity;
 import com.business.model.pojo.FailedScrapingsEntity;
 import com.business.model.pojo.ForgotPasswordEntity;
 import com.business.model.pojo.InsightsGraphEntity;
+import com.business.model.pojo.InsightsMonthlyCountEntity;
+import com.business.model.pojo.LBLStoreEntity;
 import com.business.model.pojo.LblErrorEntity;
 import com.business.model.pojo.LocalBusinessEntity;
 import com.business.model.pojo.PartnersEntity;
@@ -100,11 +108,11 @@ import com.business.model.pojo.ValueObject;
 import com.business.web.bean.CustomSubmissionsBean;
 import com.business.web.bean.UploadBusinessBean;
 import com.business.web.bean.UsersBean;
-import com.google.api.services.mybusiness.v3.model.Location;
+import com.google.api.services.mybusiness.v4.model.Location;
 
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  *         DataAccess layer of Business Which interacts with database
  * 
@@ -469,13 +477,13 @@ public class BusinessDaoImpl implements BusinessDao {
 	/**
 	 * deleteBusinessInfo
 	 */
-	public void deleteBusinessInfo(List<Integer> listIds) {
+	public void deleteBusinessInfo(List<Long> listIds) {
 
 		Session session = sessionFactory.getCurrentSession();
-		for (Integer id : listIds) {
+		for (Long id : listIds) {
 			LocalBusinessEntity bean = (LocalBusinessEntity) session
 					.createCriteria(LocalBusinessEntity.class)
-					.add(Restrictions.eq("id", id)).uniqueResult();
+					.add(Restrictions.eq("lblStoreId", id)).uniqueResult();
 			;
 			session.delete(bean);
 		}
@@ -511,7 +519,8 @@ public class BusinessDaoImpl implements BusinessDao {
 		LocalBusinessEntity bean = (LocalBusinessEntity) session.get(
 				LocalBusinessEntity.class, businessDTO.getId());
 		// delete entry
-		session.delete(bean);
+		if(bean!=null)
+			session.delete(bean);
 		BeanUtils.copyProperties(businessDTO, bean);
 
 		// save enrey with latest details
@@ -544,16 +553,19 @@ public class BusinessDaoImpl implements BusinessDao {
 	/**
 	 * getSpecificBusinessInfo
 	 */
-	public List<LocalBusinessDTO> getSpecificBusinessInfo(
-			List<Integer> listIds, String services) {
+	public List<LocalBusinessDTO> getSpecificBusinessInfo(List<Long> listIds,
+			String services) {
 		Session session = sessionFactory.getCurrentSession();
 		List<LocalBusinessDTO> list = new ArrayList<LocalBusinessDTO>();
-		for (Integer id : listIds) {
-			LocalBusinessDTO dto = new LocalBusinessDTO();
-			LocalBusinessEntity entityBean = (LocalBusinessEntity) session
-					.load(LocalBusinessEntity.class, id);
-			BeanUtils.copyProperties(entityBean, dto);
-			String client = entityBean.getClient();
+		for (Long id : listIds) {
+			// LocalBusinessDTO dto = new LocalBusinessDTO();
+			/*
+			 * LocalBusinessEntity entityBean = (LocalBusinessEntity) session
+			 * .load(LocalBusinessEntity.class, id);
+			 */
+			LocalBusinessDTO dto = getBusinessInfo(id);
+			// BeanUtils.copyProperties(entityBean, dto);
+			String client = dto.getClient();
 			List<String> category = getCategory(client, services);
 			StringBuffer sb = new StringBuffer();
 
@@ -900,6 +912,65 @@ public class BusinessDaoImpl implements BusinessDao {
 		return channelID;
 	}
 
+	public Map<String, String> getChannelImageBytes(String brand) {
+
+		Map<String, String> brandAndChannelImages = new HashMap<String, String>();
+
+		Session cmAdmin = sessionFactory.getCurrentSession();
+		Criteria cmAdminCriteria = cmAdmin.createCriteria(ChannelEntity.class);
+		cmAdminCriteria.add(Restrictions.eq("channelName", "ConvergentMobile"));
+		ChannelEntity cmAdminEntity = (ChannelEntity) cmAdminCriteria.list()
+				.get(0);
+		String cmImagePath = cmAdminEntity.getImagePath();
+		/*
+		 * int cmblobLength = 0; byte[] cmAdminBlobAsBytes = null; try {
+		 * cmblobLength = (int) cmImage.length(); cmAdminBlobAsBytes =
+		 * cmImage.getBytes(1, cmblobLength); } catch (SQLException e) { // TODO
+		 * Auto-generated catch block e.printStackTrace(); }
+		 */
+
+		String brandChannel = getBrandChannel(brand);
+
+		Session session = sessionFactory.getCurrentSession();
+		Criteria criteria = session.createCriteria(BrandEntity.class);
+		criteria.add(Restrictions.eq("brandName", brand));
+		BrandEntity brandEntity = (BrandEntity) criteria.list().get(0);
+
+		String imagePath = brandEntity.getImagePath();
+		if (imagePath == null || imagePath.length() == 0) {
+			brandAndChannelImages.put("bImage", cmImagePath);
+		} else {
+			/*
+			 * int blobLength = 0; byte[] brandBlobAsBytes = null; try {
+			 * blobLength = (int) image.length(); brandBlobAsBytes =
+			 * image.getBytes(1, blobLength); } catch (SQLException e) { // TODO
+			 * Auto-generated catch block e.printStackTrace(); }
+			 */
+			brandAndChannelImages.put("bImage", imagePath);
+		}
+
+		Session sessionChannel = sessionFactory.getCurrentSession();
+		Criteria channelCriteria = sessionChannel
+				.createCriteria(ChannelEntity.class);
+		channelCriteria.add(Restrictions.eq("channelName", brandChannel));
+		ChannelEntity channel = (ChannelEntity) channelCriteria.list().get(0);
+		String cimagePath = channel.getImagePath();
+		if (cimagePath == null || cimagePath.length() == 0) {
+			brandAndChannelImages.put("cImage", cmImagePath);
+		} else {
+			/*
+			 * int cblobLength = 0; byte[] channleBlobAsBytes = null; try {
+			 * cblobLength = (int) cimage.length(); channleBlobAsBytes =
+			 * cimage.getBytes(1, cblobLength); } catch (SQLException e) { //
+			 * TODO Auto-generated catch block e.printStackTrace(); }
+			 */
+			brandAndChannelImages.put("cImage", cimagePath);
+		}
+
+		return brandAndChannelImages;
+
+	}
+
 	/**
 	 * getBrandByBrandNameAndPartner
 	 * 
@@ -976,7 +1047,7 @@ public class BusinessDaoImpl implements BusinessDao {
 			if (allBrandNames.contains((String) objects[0])) {
 				brands.add(dto);
 			}
-			logger.info(Arrays.toString(objects));
+			//logger.info(Arrays.toString(objects));
 		}
 		brands.addAll(zeroLocationBrandNames);
 
@@ -1288,11 +1359,16 @@ public class BusinessDaoImpl implements BusinessDao {
 	 * getBusinessInfo
 	 * 
 	 */
-	public LocalBusinessDTO getBusinessInfo(Integer id) {
+	public LocalBusinessDTO getBusinessInfo(Long id) {
 		Session session = sessionFactory.getCurrentSession();
-		LocalBusinessEntity bean = (LocalBusinessEntity) session.load(
-				LocalBusinessEntity.class, id);
+
 		LocalBusinessDTO localBusinessDTO = new LocalBusinessDTO();
+
+		Criteria criteria = session.createCriteria(LocalBusinessEntity.class);
+		criteria.add(Restrictions.eq("lblStoreId", id));
+
+		LocalBusinessEntity bean = (LocalBusinessEntity) criteria
+				.uniqueResult();
 
 		BeanUtils.copyProperties(bean, localBusinessDTO);
 
@@ -1539,13 +1615,15 @@ public class BusinessDaoImpl implements BusinessDao {
 	 * 
 	 */
 
-	public Integer saveChannel(String channelName, Date startDate) {
+	public Integer saveChannel(String channelName, Date startDate,
+			String imagePath) {
 
 		Session session = sessionFactory.getCurrentSession();
 
 		ChannelEntity channelEntity = new ChannelEntity();
 		channelEntity.setChannelName(channelName);
 		channelEntity.setStartDate(startDate);
+		channelEntity.setImagePath(imagePath);
 		Serializable save = session.save(channelEntity);
 
 		return Integer.valueOf(save.toString());
@@ -1557,12 +1635,13 @@ public class BusinessDaoImpl implements BusinessDao {
 	 */
 
 	public boolean updateChannel(String channelName, Date startDate,
-			Integer channelID) {
+			Integer channelID, String imagePath) {
 		Session session = sessionFactory.getCurrentSession();
 		ChannelEntity channelEntity = new ChannelEntity();
 		channelEntity.setChannelID(channelID);
 		channelEntity.setChannelName(channelName);
 		channelEntity.setStartDate(startDate);
+		channelEntity.setImagePath(imagePath);
 		session.saveOrUpdate(channelEntity);
 		return true;
 	}
@@ -2592,7 +2671,7 @@ public class BusinessDaoImpl implements BusinessDao {
 			 * ; Query query = session.createQuery(sql); query.setString(0,
 			 * userName); List<String> list = query.list();
 			 */
-			if (allBrandNames != null && allBrandNames.size() > 1)
+			if (allBrandNames != null && allBrandNames.size() > 0)
 				criteria.add(Restrictions.in("brand", allBrandNames));
 
 		}
@@ -2913,13 +2992,31 @@ public class BusinessDaoImpl implements BusinessDao {
 	 * getErrorBusinessInfo by id
 	 */
 
-	public LblErrorDTO getErrorBusinessInfo(Integer id) {
+	public LblErrorDTO getErrorBusinessInfo(Long lblStoreID) {
+
 		Session session = sessionFactory.getCurrentSession();
-		LblErrorEntity bean = (LblErrorEntity) session.load(
-				LblErrorEntity.class, id);
+
+		Criteria criteria = session.createCriteria(LblErrorEntity.class);
+		criteria.add(Restrictions.eq("lblStoreId", lblStoreID));
+
+		LblErrorEntity bean = (LblErrorEntity) criteria.uniqueResult();
 		LblErrorDTO lblErrorDTO = new LblErrorDTO();
 		BeanUtils.copyProperties(bean, lblErrorDTO);
+
 		return lblErrorDTO;
+
+	}
+
+	public LblErrorEntity getErrorBusinessEntity(Long lblStoreID) {
+
+		Session session = sessionFactory.getCurrentSession();
+
+		Criteria criteria = session.createCriteria(LblErrorEntity.class);
+		criteria.add(Restrictions.eq("lblStoreId", lblStoreID));
+
+		LblErrorEntity bean = (LblErrorEntity) criteria.uniqueResult();
+
+		return bean;
 
 	}
 
@@ -2939,7 +3036,8 @@ public class BusinessDaoImpl implements BusinessDao {
 
 		Criteria criteria = session.createCriteria(LocalBusinessEntity.class);
 		criteria.add(Restrictions.eq("clientId", businessInfoDto.getClientId()));
-		criteria.add(Restrictions.eq("store", businessInfoDto.getStore()));
+		criteria.add(Restrictions.eq("lblStoreId",
+				businessInfoDto.getLblStoreId()));
 		List<LocalBusinessEntity> list = criteria.list();
 
 		if ((list != null && !list.isEmpty())) {
@@ -2951,8 +3049,8 @@ public class BusinessDaoImpl implements BusinessDao {
 		Criteria errorCriteria = session.createCriteria(LblErrorEntity.class);
 		errorCriteria.add(Restrictions.eq("clientId",
 				businessInfoDto.getClientId()));
-		errorCriteria.add(Restrictions.like("store",
-				businessInfoDto.getStore(), MatchMode.START));
+		errorCriteria.add(Restrictions.eq("lblStoreId",
+				businessInfoDto.getLblStoreId()));
 		List<LblErrorEntity> errorsList = errorCriteria.list();
 
 		if ((errorsList != null && !errorsList.isEmpty())) {
@@ -3134,14 +3232,15 @@ public class BusinessDaoImpl implements BusinessDao {
 	 * getSpecificErrorBusinessInfo
 	 * 
 	 */
-	public List<LblErrorDTO> getSpecificErrorBusinessInfo(List<Integer> listIds) {
+	public List<LblErrorDTO> getSpecificErrorBusinessInfo(List<Long> listIds) {
 		Session session = sessionFactory.getCurrentSession();
 		List<LblErrorDTO> list = new ArrayList<LblErrorDTO>();
-		for (Integer id : listIds) {
-			LblErrorDTO dto = new LblErrorDTO();
-			LblErrorEntity entityBean = (LblErrorEntity) session.load(
-					LblErrorEntity.class, id);
-			BeanUtils.copyProperties(entityBean, dto);
+		for (Long id : listIds) {
+			/*
+			 * LblErrorDTO dto = new LblErrorDTO(); LblErrorEntity entityBean =
+			 * (LblErrorEntity) session.load( LblErrorEntity.class, id);
+			 */
+			LblErrorDTO dto = getErrorBusinessInfo(id);
 			list.add(dto);
 		}
 		logger.info("Specific Error BusinessInfo List size == " + list.size());
@@ -3467,12 +3566,12 @@ public class BusinessDaoImpl implements BusinessDao {
 	 * deleteErrorBusinessInfo
 	 */
 
-	public void deleteErrorBusinessInfo(List<Integer> listIds) {
+	public void deleteErrorBusinessInfo(List<Long> listIds) {
 		Session session = sessionFactory.getCurrentSession();
-		for (Integer id : listIds) {
+		for (Long id : listIds) {
 			LblErrorEntity bean = (LblErrorEntity) session
 					.createCriteria(LblErrorEntity.class)
-					.add(Restrictions.eq("id", id)).uniqueResult();
+					.add(Restrictions.eq("lblStoreId", id)).uniqueResult();
 			;
 			session.delete(bean);
 		}
@@ -3691,8 +3790,8 @@ public class BusinessDaoImpl implements BusinessDao {
 	public String getSyphCodeByStore(String store) {
 		Session session = sessionFactory.getCurrentSession();
 
-		String sql = "SELECT syphCode FROM CategorySyphcode where store="
-				+ store;
+		String sql = "SELECT syphCode FROM CategorySyphcode where store='"
+				+ store + "'";
 
 		Query createQuery = session.createQuery(sql);
 		List<String> Syphcode = createQuery.list();
@@ -4116,12 +4215,13 @@ public class BusinessDaoImpl implements BusinessDao {
 
 	public boolean saveBrand(String brandName, Date startDateValue,
 			String locationsInvoiced, String submission, Integer channelID,
-			String partnerActive, Integer clientId, int brandId, String email) {
+			String partnerActive, Integer clientId, int brandId, String email,
+			String imagePath) {
 		Session session = sessionFactory.getCurrentSession();
-		logger.info("added successfulyu");
 		BrandEntity brandEntity = getBrandEntity(brandName, startDateValue,
 				locationsInvoiced, submission, channelID, partnerActive,
 				clientId, brandId, email);
+		brandEntity.setImagePath(imagePath);
 		brandEntity.setInactive("N");
 		Serializable save = session.save(brandEntity);
 		boolean isexist = isBrandnameExist(brandName);
@@ -5349,12 +5449,13 @@ public class BusinessDaoImpl implements BusinessDao {
 	public boolean updateBrand(Integer brandID, String brandName,
 			Date startDate, String inactive, String locationsInvoiced,
 			String submission, Integer channelID, String partnerActive,
-			Integer clientId, Integer id, String email) {
+			Integer clientId, Integer id, String email, String imagePath) {
 		Session session = sessionFactory.getCurrentSession();
 
 		BrandEntity brandEntity = getBrandEntity(brandName, startDate,
 				inactive, locationsInvoiced, submission, channelID,
 				partnerActive, clientId, brandID, email);
+		brandEntity.setImagePath(imagePath);
 		brandEntity.setId(id);
 		session.saveOrUpdate(brandEntity);
 
@@ -6847,6 +6948,185 @@ public class BusinessDaoImpl implements BusinessDao {
 		return submissionsBeans;
 
 	}
+	
+	public List<ExportReportDTO> getListingActivityInf(
+			LocalBusinessDTO businessDTO) {
+		// TODO Auto-generated method stub
+		Session session = sessionFactory.getCurrentSession();
+		Criteria criteria = session.createCriteria(UploadReportEntity.class);
+		Integer role = (Integer) httpSession.getAttribute("roleId");
+		String userName = (String) httpSession.getAttribute("userName");
+		
+		Criteria exportCriteria = session
+				.createCriteria(ExportReportEntity.class);
+		
+		String dateRange = businessDTO.getDateRange();
+		if (dateRange!=null && !dateRange.equalsIgnoreCase(LBLConstants.DATE_RANGE_ALL)) {
+			Date date = new Date();
+			Calendar cal = Calendar.getInstance();
+			int currentYear = cal.get(Calendar.YEAR);
+			int curentMonth = cal.get(Calendar.MONTH) + 1;
+			int previousMonth = curentMonth;
+			int previousYear = currentYear;
+			if (dateRange.equalsIgnoreCase(LBLConstants.DATE_RANGE_LAST_MONTH)) {
+				--previousMonth;
+			} else if (dateRange
+					.equalsIgnoreCase(LBLConstants.DATE_RANGE_LAST_3_MONTHS)) {
+				previousMonth -= 3;
+			}
+			if (previousMonth <= 0) {
+				previousMonth = 12 - previousMonth;
+				--previousYear;
+			}
+
+			String startDateStr = previousYear + "/" + previousMonth + "/01";
+			String currentDateStr = currentYear + "/" + curentMonth + "/01";
+			Date startDate = DateUtil.getDate("MM/dd/yyyy HH:mm:ss", new Date(
+					startDateStr));
+			Date currentDate = DateUtil.getDate("MM/dd/yyyy HH:mm:ss",
+					new Date(currentDateStr));
+			if (curentMonth == previousMonth) {
+				criteria.add(Restrictions.ge("date", currentDate));
+				exportCriteria.add(Restrictions.ge("date", currentDate));
+			} else {
+				criteria.add(Restrictions.between("date", startDate,
+						currentDate));
+				exportCriteria.add(Restrictions.between("date", startDate,
+						currentDate));
+			}
+		}
+		
+		List<ExportReportDTO> exportReportList = new ArrayList<ExportReportDTO>();
+
+		if (role == LBLConstants.CLIENT_ADMIN && userName != null) {
+
+			Criteria userCriteria = session.createCriteria(UsersEntity.class);
+			userCriteria.add(Restrictions.eq("userName", userName));
+			List<UsersEntity> usersEntities = userCriteria.list();
+			UsersEntity usersEntity = new UsersEntity();
+			if (usersEntities != null && !usersEntities.isEmpty()) {
+				usersEntity = usersEntities.get(0);
+			}
+			List<String> brand = new ArrayList<String>();
+			List<Integer> listbrandID = new ArrayList<Integer>();
+			Integer userID = usersEntity.getUserID();
+			Criteria brandcriteria = session.createCriteria(User_brands.class);
+			brandcriteria.add(Restrictions.eq("userID", userID));
+			List<User_brands> list2 = brandcriteria.list();
+			for (User_brands user_brands : list2) {
+				Integer brandID = user_brands.getBrandID();
+				listbrandID.add(brandID);
+
+			}
+			brand = getBrandById(listbrandID);
+
+			if (brand.size() > 0)
+				criteria.add(Restrictions.in("brand", brand));
+		} else if ((role == LBLConstants.CHANNEL_ADMIN || role == LBLConstants.PURIST)
+				&& userName != null) {
+
+			/*
+			 * String sql =
+			 * "SELECT b.brandName from BrandEntity b where b.channelID= (SELECT u.channelID from UsersEntity u where u.userName=?)"
+			 * ; Query query = session.createQuery(sql); query.setString(0,
+			 * userName); List<String> list = query.list();
+			 */
+			List<String> allBrandNames = getAllBrandNames(false, userName);
+			if (allBrandNames != null && allBrandNames.size() > 0)
+				criteria.add(Restrictions.in("brand", allBrandNames));
+
+		}
+
+		List<UploadReportEntity> uploadReportList = criteria.list();
+		for (UploadReportEntity uploadReportEntity : uploadReportList) {
+			ExportReportDTO dto = new ExportReportDTO();
+			dto.setExportID(uploadReportEntity.getId());
+			dto.setCount(Integer.valueOf(uploadReportEntity
+					.getNumberOfRecords()));
+			Date myUploadedDate = uploadReportEntity.getDate();
+			java.sql.Date sqlDate = new java.sql.Date(myUploadedDate.getTime());
+			dto.setDate(sqlDate);
+			dto.setBrandName(uploadReportEntity.getBrand());
+			String activityDesc = "Uploaded to System";
+			dto.setActivityDescription(activityDesc);
+			exportReportList.add(dto);
+
+		}
+
+
+		if (role == LBLConstants.CLIENT_ADMIN && userName != null) {
+
+			Criteria userCriteria = session.createCriteria(UsersEntity.class);
+			userCriteria.add(Restrictions.eq("userName", userName));
+			List<UsersEntity> usersEntities = userCriteria.list();
+			UsersEntity usersEntity = new UsersEntity();
+			if (usersEntities != null && !usersEntities.isEmpty()) {
+				usersEntity = usersEntities.get(0);
+			}
+			List<String> brand = new ArrayList<String>();
+			List<Integer> listbrandID = new ArrayList<Integer>();
+			Integer userID = usersEntity.getUserID();
+			Criteria brandcriteria = session.createCriteria(User_brands.class);
+			brandcriteria.add(Restrictions.eq("userID", userID));
+			List<User_brands> list2 = brandcriteria.list();
+			for (User_brands user_brands : list2) {
+				Integer brandID = user_brands.getBrandID();
+				listbrandID.add(brandID);
+			}
+			brand = getBrandById(listbrandID);
+
+			if (brand.size() > 0)
+				exportCriteria.add(Restrictions.in("brandName", brand));
+
+		} else if ((role == LBLConstants.CHANNEL_ADMIN || role == LBLConstants.PURIST)
+				&& userName != null) {
+			/*
+			 * String sql =
+			 * "SELECT b.brandName from BrandEntity b where b.channelID= (SELECT u.channelID from UsersEntity u where u.userName=?)"
+			 * ; Query query = session.createQuery(sql); query.setString(0,
+			 * userName); List<String> list = query.list();
+			 */
+			List<String> allBrandNames = getAllBrandNames(false, userName);
+			if (allBrandNames != null && allBrandNames.size() > 0)
+				exportCriteria.add(Restrictions.in("brandName", allBrandNames));
+
+		}
+
+		List<ExportReportEntity> exportReportEntities = exportCriteria.list();
+		for (ExportReportEntity exportReportEntity : exportReportEntities) {
+			ExportReportDTO exportReportDTO = new ExportReportDTO();
+			exportReportDTO.setDate(new java.sql.Date(exportReportEntity
+					.getDate().getTime()));
+			exportReportDTO.setExportID(exportReportEntity.getExportID());
+			String brandName = exportReportEntity.getBrandName();
+			exportReportDTO.setBrandName(brandName);
+			String partner = exportReportEntity.getPartner();
+			String activityDesc = null;
+			if (partner.contains("Template")) {
+				String[] tempalteName = partner.split("Template");
+				String temp = tempalteName[0];
+				if (temp.contains("AcxiomCan")) {
+					temp = "Acxiom Canada";
+				} else if (temp.contains("AcxiomUS")) {
+					temp = "Acxiom US";
+				}
+				partner = temp + " Template";
+
+				activityDesc = "Export to " + partner;
+			} else {
+				activityDesc = "Distributed to " + partner;
+			}
+
+			exportReportDTO.setActivityDescription(activityDesc);
+			exportReportDTO
+					.setCount(exportReportEntity.getNumberOfRecords() != null ? Long
+							.valueOf(exportReportEntity.getNumberOfRecords())
+							.intValue() : 0);
+			exportReportList.add(exportReportDTO);
+		}
+		return exportReportList;
+	}
+
 
 	public List<SearchDomainDTO> getDomainsByStore(String store,
 			String directory) {
@@ -7058,7 +7338,15 @@ public class BusinessDaoImpl implements BusinessDao {
 		Query createQuery = session.createQuery(query);
 		createQuery.executeUpdate();
 
-		session.save(errorEntity);
+		LblErrorEntity entity = getErrorBusinessInfo(
+				uploadBusinessBean.getStore(), uploadBusinessBean.getClientId());
+
+		if (entity != null && entity.getStore() == null) {
+
+			session.save(errorEntity);
+		} else {
+			updateErrorInfoBySmartyStreets(uploadBusinessBean);
+		}
 
 	}
 
@@ -7068,20 +7356,101 @@ public class BusinessDaoImpl implements BusinessDao {
 		LblErrorEntity errorEntity = getErrorBusinessInfo(errorDTO.getStore(),
 				errorDTO.getClientId());
 
-		BeanUtils.copyProperties(errorDTO, errorEntity);
-		StringBuffer stringBuffer = new StringBuffer();
-		stringBuffer.append(errorEntity.getErrorMessage());
-		stringBuffer
-				.append(", LocationAddress Verification is failed.</br> Kindly verify the address info, ");
+		if (errorEntity != null && errorEntity.getStore() != null) {
 
-		String query = "update LblErrorEntity set errorMessage=?  where store='"
-				+ errorDTO.getStore()
-				+ "' and clientId='"
-				+ errorDTO.getClientId() + "'";
+			errorDTO.setId(errorEntity.getId());
+			errorDTO.setErrorMessage(errorEntity.getErrorMessage());
+			BeanUtils.copyProperties(errorDTO, errorEntity);
+			StringBuffer stringBuffer = new StringBuffer();
+			String errorMessage = errorEntity.getErrorMessage();
+			if (errorMessage == null) {
+				errorMessage = "";
+			}
+			stringBuffer.append(errorMessage);
+			if (!errorMessage.contains("LocationAddress")) {
+
+				stringBuffer
+						.append(", LocationAddress Verification is failed.</br> Kindly verify the address info, ");
+			} else {
+				stringBuffer.append("");
+			}
+			String query = "update LblErrorEntity set errorMessage=?  where store='"
+					+ errorDTO.getStore()
+					+ "' and clientId='"
+					+ errorDTO.getClientId() + "'";
+			Query createQuery = session.createQuery(query);
+			createQuery.setString(0, stringBuffer.toString());
+
+			createQuery.executeUpdate();
+		}
+
+	}
+
+	public void updateErrorInfoBySmartyStreets(UploadBusinessBean uploadBean) {
+		// TODO Auto-generated method stub
+		LblErrorEntity errorEntity = getErrorBusinessInfo(
+				uploadBean.getStore(), uploadBean.getClientId());
+
+		Session session = sessionFactory.getCurrentSession();
+
+		if (errorEntity != null && errorEntity.getStore() != null) {
+			StringBuffer stringBuffer = new StringBuffer();
+			String errorMessage = errorEntity.getErrorMessage();
+			if (errorMessage == null) {
+				errorMessage = "";
+			}
+			stringBuffer.append(errorMessage);
+
+			BeanUtils.copyProperties(uploadBean, errorEntity);
+			errorEntity.setErrorMessage(errorMessage);
+			if (!errorMessage.contains("LocationAddress")) {
+
+				stringBuffer
+						.append(", LocationAddress Verification is failed.</br> Kindly verify the address info, ");
+			} else {
+				stringBuffer.append("");
+			}
+
+			String query = "update LblErrorEntity set errorMessage=?  where store='"
+					+ errorEntity.getStore()
+					+ "' and clientId='"
+					+ errorEntity.getClientId() + "'";
+
+			Query createQuery = session.createQuery(query);
+			createQuery.setString(0, stringBuffer.toString());
+
+			createQuery.executeUpdate();
+		} else {
+
+			// delete from business
+
+			deleteBusinessInfo(uploadBean);
+			// add to errors
+
+			LblErrorEntity entity = new LblErrorEntity();
+			BeanUtils.copyProperties(uploadBean, entity);
+			entity.setErrorMessage("LocationAddress Verification is failed.</br> Kindly verify the address info,");
+			session.save(entity);
+		}
+	}
+
+	public void deleteBusinessInfo(UploadBusinessBean uploadBusinessBean) {
+		Session session = sessionFactory.getCurrentSession();
+		/*
+		 * LblErrorEntity errorEntity = new LblErrorEntity();
+		 * BeanUtils.copyProperties(uploadBusinessBean, errorEntity);
+		 * errorEntity .setErrorMessage(
+		 * "LocationAddress Verification is failed. Kindly verify the address info, "
+		 * );
+		 */
+
+		String query = "delete from LocalBusinessEntity where store='"
+				+ uploadBusinessBean.getStore() + "' and clientId='"
+				+ uploadBusinessBean.getClientId() + "'";
 		Query createQuery = session.createQuery(query);
-		createQuery.setString(0, stringBuffer.toString().replace("null", ""));
-
 		createQuery.executeUpdate();
+
+		// session.save(errorEntity);
 
 	}
 
@@ -7187,10 +7556,10 @@ public class BusinessDaoImpl implements BusinessDao {
 	}
 
 	public ChangeTrackingEntity isClientIdAndStoreExists(Integer clientId,
-			String store) {
+			Long store) {
 		Session session = sessionFactory.getCurrentSession();
 		Criteria criteria = session.createCriteria(ChangeTrackingEntity.class);
-		criteria.add(Restrictions.eq("store", store));
+		criteria.add(Restrictions.eq("lblStoreId", store));
 		criteria.add(Restrictions.eq("clientId", clientId));
 		List<ChangeTrackingEntity> list = criteria.list();
 		Integer listingId = 0;
@@ -8532,10 +8901,10 @@ public class BusinessDaoImpl implements BusinessDao {
 	}
 
 	public void addErrorToBusinessList(LocalBusinessDTO localBusinessDTO,
-			Date date, String uploadJobId, List<Integer> listIds) {
+			Date date, String uploadJobId, List<Long> listIds) {
 
-		for (Integer id : listIds) {
-			LblErrorDTO errorBusinessInfo = getErrorBusinessInfo(id);
+		for (Long lblStoreID : listIds) {
+			LblErrorDTO errorBusinessInfo = getErrorBusinessInfo(lblStoreID);
 			LocalBusinessDTO localBusinessDTOs = new LocalBusinessDTO();
 			localBusinessDTOs.setUploadedTime(date);
 			localBusinessDTOs.setUploadJobId(uploadJobId);
@@ -8614,9 +8983,13 @@ public class BusinessDaoImpl implements BusinessDao {
 			session.save(auditEntity);
 			// }
 
-			LblErrorEntity bean = (LblErrorEntity) session
-					.createCriteria(LblErrorEntity.class)
-					.add(Restrictions.eq("id", id)).uniqueResult();
+			/*
+			 * LblErrorEntity bean = (LblErrorEntity) session
+			 * .createCriteria(LblErrorEntity.class) .add(Restrictions.eq("id",
+			 * id)).uniqueResult();
+			 */
+
+			LblErrorEntity bean = getErrorBusinessEntity(lblStoreID);
 
 			session.delete(bean);
 
@@ -10957,6 +11330,8 @@ public class BusinessDaoImpl implements BusinessDao {
 	public boolean updateBusinessWithGoogleMB(String clientId,
 			List<Location> locations) {
 		Session session = sessionFactory.getCurrentSession();
+		
+		int missingStores = 0;
 
 		for (Location location : locations) {
 
@@ -10968,6 +11343,7 @@ public class BusinessDaoImpl implements BusinessDao {
 			LocalBusinessDTO listingByStore = getListingByStore(storeCode,
 					clientId);
 			if (listingByStore == null) {
+				missingStores++;
 				logger.info("Listing with store: " + storeCode
 						+ ", doesnot found in LBL");
 				continue;
@@ -10978,15 +11354,21 @@ public class BusinessDaoImpl implements BusinessDao {
 				listingByStore.setGoogleLocationId(googleLocationId);
 				listingByStore.setStore(listingByStore.getStore());
 				// update location id's in LBL with GMB location id's
-				/*logger.info("Listing with store: " + storeCode
-						+ ", found in LBL");*/
+				/*
+				 * logger.info("Listing with store: " + storeCode +
+				 * ", found in LBL");
+				 */
 				updateBusinessInfo(listingByStore);
 			} else {
-				/*logger.info("Listing is already updated with GMB location Details:"
-						+ storeCode);*/
+				/*
+				 * logger.info(
+				 * "Listing is already updated with GMB location Details:" +
+				 * storeCode);
+				 */
 				continue;
 			}
 		}
+		logger.info("The number of listings found in GMB and doe snot found in LBL are: "+ missingStores + " . for brand: "+ clientId);
 		return true;
 	}
 
@@ -11056,13 +11438,14 @@ public class BusinessDaoImpl implements BusinessDao {
 			insightsEntity.setBrandId(clientId);
 			insightsEntity.setBrandName(dto.getClient());
 			String store = dto.getStore();
-			//delete existing records
-			//deleteExistingRecords(clientId, store, formattedEndDate);
+			// delete existing records
+			// deleteExistingRecords(clientId, store, formattedEndDate);
 			// add details now
 			insightsEntity.setDate(formattedEndDate);
 			insightsEntity.setState(dto.getLocationState());
 
 			insightsEntity.setStore(store);
+			insightsEntity.setLblStoreId(dto.getLblStoreId());
 			insightsEntity.setCity(dto.getLocationCity());
 
 			insightsEntity.setDirectCount(directCount);
@@ -11085,16 +11468,207 @@ public class BusinessDaoImpl implements BusinessDao {
 
 	}
 
-	public void deleteExistingRecords(Integer clientId,Date formattedEndDate) {
+	public void deleteExistingRecords(Integer clientId, Date formattedEndDate) {
 		Session session = sessionFactory.getCurrentSession();
-		java.sql.Timestamp sqlDate = new java.sql.Timestamp(formattedEndDate.getTime());
-		Query createQuery = session.createQuery("delete from InsightsGraphEntity where brandId =? and date=?");
+		java.sql.Timestamp sqlDate = new java.sql.Timestamp(
+				formattedEndDate.getTime());
+		Query createQuery = session
+				.createQuery("delete from InsightsGraphEntity where brandId =? and date=?");
 		createQuery.setInteger(0, clientId);
 		createQuery.setTimestamp(1, sqlDate);
 
 		int result = createQuery.executeUpdate();
-		logger.info("Total records deleted are: "+ result + ", for Brand: "+ clientId + ", date is: "+ sqlDate);
+		logger.info("Total records deleted are: " + result + ", for Brand: "
+				+ clientId + ", date is: " + sqlDate);
 	}
+	
+
+	public void deleteExistingRecords(Integer clientId, Date formattedDate,
+			Date formattedDate2) {
+		Session session = sessionFactory.getCurrentSession();
+		java.sql.Timestamp startDate = new java.sql.Timestamp(
+				formattedDate.getTime());
+		
+		java.sql.Timestamp endDate = new java.sql.Timestamp(
+				formattedDate2.getTime());
+		
+		Query createQuery = session
+				.createQuery("delete from InsightsGraphEntity where brandId =? and date>=? and date<=?");
+		createQuery.setInteger(0, clientId);
+		createQuery.setTimestamp(1, startDate);
+		createQuery.setTimestamp(2, endDate);
+
+		int result = createQuery.executeUpdate();
+		logger.info("Total records deleted are: " + result + ", for Brand: "
+				+ clientId + ", from date : " + startDate + "to " + endDate  +", is " + result);
+		
+	}
+	
+	public static Date[] getStartandEndDatesOfCurrentMonth() {
+		
+		Date[] dates = new Date[2];
+		
+		Calendar calendar = Calendar.getInstance();         
+		calendar.set(Calendar.DATE, calendar.getActualMinimum(Calendar.DAY_OF_MONTH));
+		Date startDate = calendar.getTime();
+		calendar.set(Calendar.DATE, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+		Date endDate = calendar.getTime();
+		
+		dates[0]=startDate;
+		dates[1]=endDate;
+		
+		System.out.println("startDate: "+ startDate + ", endDate: "+ endDate);
+		return dates;
+	}
+	
+	
+	public void deleteCurrentMonthCountsForStore(String store, Integer brandId, Date startDate, Date endDate){
+		Session session = sessionFactory.getCurrentSession();
+		Query createQuery = session.createQuery("delete from InsightsMonthlyCountEntity where store=? and brandId=? and date>=? and date<=? ");
+		createQuery.setString(0, store);
+		createQuery.setInteger(1, brandId);
+		createQuery.setDate(2, startDate);
+		createQuery.setDate(3, endDate);
+		int executeUpdate = createQuery.executeUpdate();
+		logger.info("Total records deleted are: "+ executeUpdate );
+	}
+	
+
+	public void updateInsightMonthlyCountsForStore(LocalBusinessDTO dto,
+			String accountId, String googleLocationId) {
+		// TODO Auto-generated method stub
+		Date[] startandEndDatesOfCurrentMonth = getStartandEndDatesOfCurrentMonth();
+		
+		// delete current month accounts
+		
+		deleteCurrentMonthCountsForStore(dto.getStore(), dto.getClientId() ,startandEndDatesOfCurrentMonth[0], startandEndDatesOfCurrentMonth[1] );
+		
+		// add new row for current month
+		List<InsightsMonthlyCountDTO> currentMonthCountForStore = getMonthlyCountsForStore(dto.getClientId(), dto.getStore(), startandEndDatesOfCurrentMonth[0], startandEndDatesOfCurrentMonth[1]);
+		
+		
+		Session session = sessionFactory.getCurrentSession();
+		InsightsMonthlyCountDTO totalDto = new InsightsMonthlyCountDTO();
+		
+		Long viewCount= 0L;
+		Long searchCount= 0L;
+		Long actionCount= 0L;
+
+		InsightsMonthlyCountEntity monthlyEntity = new InsightsMonthlyCountEntity();
+		for (InsightsMonthlyCountDTO insightsMonthlyCountDTO : currentMonthCountForStore) {
+			BeanUtils.copyProperties(insightsMonthlyCountDTO, totalDto);
+			viewCount = viewCount + insightsMonthlyCountDTO.getViewCount();
+			searchCount =  searchCount + insightsMonthlyCountDTO.getSearchCount();
+			actionCount =  actionCount + insightsMonthlyCountDTO.getActionCount();
+		}
+		
+		totalDto.setDate(new Date());
+		totalDto.setActionCount(actionCount);
+		totalDto.setViewCount(viewCount);
+		totalDto.setSearchCount(searchCount);
+
+		BeanUtils.copyProperties(totalDto, monthlyEntity);
+		session.save(monthlyEntity);
+		
+		
+	}
+	
+	public List<InsightsMonthlyCountDTO> getMonthlyCountsForStore(
+			Integer clientId, String store, Date startDate, Date endDate)  {
+
+		Session session = sessionFactory.getCurrentSession();
+		List<InsightsMonthlyCountDTO> trendData = new ArrayList<InsightsMonthlyCountDTO>();
+
+		String query = "";
+		Query createQuery = null;
+
+		query = "SELECT date, sum(totalSearchCount) as searches, sum(totalViewCount) as views, sum(totalActionCount) as actions, store, state, lblStoreId, brandId "
+				+ "from InsightsGraphEntity where brandId=? and store=? and  date >= ? and date <= ?";
+		
+				createQuery = session.createQuery(query);
+		createQuery.setInteger(0, clientId);
+		createQuery.setString(1, store);
+		
+		createQuery.setDate(2, startDate);
+		createQuery.setDate(3, endDate);
+
+		List<Object[]> dataCount = createQuery.list();
+
+		for (Object[] objects : dataCount) {
+			InsightsMonthlyCountDTO history = new InsightsMonthlyCountDTO();
+			if (objects[0] != null) {
+				SimpleDateFormat format = new SimpleDateFormat(
+						"yyyy-MM-dd HH:mm:ss.S");
+				Date date = null;
+				try {
+					date = format.parse(objects[0].toString());
+				} catch (ParseException e) {
+					e.printStackTrace();
+				}
+				history.setDate(date);
+				history.setSearchCount(Long.valueOf(objects[1].toString()));
+				history.setViewCount(Long.valueOf(objects[2].toString()));
+				history.setActionCount(Long.valueOf(objects[3].toString()));
+				history.setStore(objects[4].toString());
+				history.setState(objects[5].toString());
+				if(objects[6]!=null) {
+					history.setLblStoreId(Long.valueOf(objects[6].toString()));
+				}
+				history.setBrandId(Integer.parseInt(objects[7].toString()));
+				trendData.add(history);
+			}
+		}
+		return trendData;
+	}
+	
+	
+	public InsightsMonthlyCountDTO getCurrentMonthCountForStore(
+			Integer clientId, String store, Date startDate, Date endDate) {
+
+		Session session = sessionFactory.getCurrentSession();
+		InsightsMonthlyCountDTO history = new InsightsMonthlyCountDTO();
+
+		String query = "";
+		Query createQuery = null;
+
+		query = "SELECT date, sum(totalSearchCount) as searches, sum(totalViewCount) as views, sum(totalActionCount) as actions, store, state, lblStoreId, brandId "
+				+ "from InsightsGraphEntity where brandId=? and store=? and  date >= ? and date <= ?";
+		
+				createQuery = session.createQuery(query);
+		createQuery.setInteger(0, clientId);
+		createQuery.setString(1, store);
+		
+		createQuery.setDate(2, startDate);
+		createQuery.setDate(3, endDate);
+
+		List<Object[]> dataCount = createQuery.list();
+
+		for (Object[] objects : dataCount) {
+
+			if (objects[0] != null) {
+				SimpleDateFormat format = new SimpleDateFormat(
+						"yyyy-MM-dd HH:mm:ss.S");
+				Date date = null;
+				try {
+					date = format.parse(objects[0].toString());
+				} catch (ParseException e) {
+					e.printStackTrace();
+				}
+				history.setDate(date);
+				history.setSearchCount(Long.valueOf(objects[1].toString()));
+				history.setViewCount(Long.valueOf(objects[2].toString()));
+				history.setActionCount(Long.valueOf(objects[3].toString()));
+				history.setStore(objects[4].toString());
+				history.setState(objects[5].toString());
+				if(objects[6]!=null) {
+					history.setLblStoreId(Long.valueOf(objects[6].toString()));
+				}
+				history.setBrandId(Integer.parseInt(objects[7].toString()));
+			}
+		}
+		return history;
+	}
+	
 
 	private List<InsightsGraphEntity> getInsightDetails(Integer clientId,
 			String store, Date formattedEndDate) {
@@ -11140,7 +11714,7 @@ public class BusinessDaoImpl implements BusinessDao {
 		Session session = sessionFactory.getCurrentSession();
 
 		String query = "SELECT sum(directCount) as direct, sum(inDirectCount) as indirects, sum(searchCount) as searches,sum(mapCount) as maps, sum(websiteCount) as websites, sum(directionsCount) as directions, sum(callsCount) as calls "
-				+ "FROM InsightsGraphEntity where date between ? and ? and brandName=? and store=?";
+				+ "FROM InsightsGraphEntity where date>=? and date<=? and brandName=? and store=?";
 
 		Query createQuery = session.createQuery(query.toString());
 		createQuery.setDate(0, startDate);
@@ -11168,11 +11742,12 @@ public class BusinessDaoImpl implements BusinessDao {
 			insightsDataMap.put("ACTIONS_PHONE",
 					Long.valueOf(objects[6].toString()));
 		}
+
 		return insightsDataMap;
 
 	}
 
-	public Map<String, Long> getInsightsDataForBrandAndStore(String brand,
+	public Map<String, Long> getInsightsDataForBrandAndStore(Integer brand,
 			String store, Date startDate, Date endDate) {
 
 		Calendar cal = Calendar.getInstance();
@@ -11183,12 +11758,12 @@ public class BusinessDaoImpl implements BusinessDao {
 		Session session = sessionFactory.getCurrentSession();
 
 		String query = "SELECT sum(directCount) as direct, sum(inDirectCount) as indirects, sum(searchCount) as searches,sum(mapCount) as maps, sum(websiteCount) as websites, sum(directionsCount) as directions, sum(callsCount) as calls "
-				+ "FROM InsightsGraphEntity where date between ? and ? and brandName=? and store=?";
+				+ "FROM InsightsGraphEntity where date>=? and date<=? and brandId=? and store=?";
 
 		Query createQuery = session.createQuery(query.toString());
 		createQuery.setDate(0, startDate);
 		createQuery.setDate(1, endDate);
-		createQuery.setString(2, brand);
+		createQuery.setInteger(2, brand);
 		createQuery.setString(3, store);
 
 		List<Object[]> dataCount = createQuery.list();
@@ -11213,26 +11788,24 @@ public class BusinessDaoImpl implements BusinessDao {
 						Long.valueOf(objects[6].toString()));
 			}
 		}
+		System.out.println("from qurty: "+ insightsDataMap.get("QUERIES_DIRECT"));
 		return insightsDataMap;
 	}
 
 	/**
 	 * to collect insight details for Brand
 	 */
-	public Map<String, Long> getInsightsBrandData(String brand, String state,
+	public Map<String, Long> getInsightsBrandData(Integer brandId, String state,
 			Date startDate, Date endDate) {
+		
 
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(endDate);
-		cal.add(Calendar.DATE, 1);
-		endDate = cal.getTime();
 
 		Session session = sessionFactory.getCurrentSession();
 
 		StringBuffer sb = new StringBuffer();
 
 		String query = "SELECT sum(directCount) as direct, sum(inDirectCount) as indirects, sum(searchCount) as searches,sum(mapCount) as maps, sum(websiteCount) as websites, sum(directionsCount) as directions, sum(callsCount) as calls "
-				+ "FROM InsightsGraphEntity where date between ? and ? and brandName=?";
+				+ "FROM InsightsGraphEntity where date>=? and  date<=? and brandId=?";
 
 		String stateQuery = "";
 		if (state != null && state.length() > 0) {
@@ -11247,13 +11820,14 @@ public class BusinessDaoImpl implements BusinessDao {
 		Query createQuery = session.createQuery(sb.toString());
 		createQuery.setDate(0, startDate);
 		createQuery.setDate(1, endDate);
-		createQuery.setString(2, brand);
+		createQuery.setInteger(2, brandId);
 		if (state != null && state.length() > 0) {
 			createQuery.setString(3, state);
 		}
 
 		List<Object[]> dataCount = createQuery.list();
 		Map<String, Long> insightsDataMap = new HashMap<String, Long>();
+		Long directCount = 0L;
 		for (Object[] objects : dataCount) {
 			if (objects[0] != null) {
 				insightsDataMap.put("QUERIES_DIRECT",
@@ -11265,7 +11839,6 @@ public class BusinessDaoImpl implements BusinessDao {
 						Long.valueOf(objects[2].toString()));
 				insightsDataMap.put("VIEWS_MAPS",
 						Long.valueOf(objects[3].toString()));
-
 				insightsDataMap.put("ACTIONS_WEBSITE",
 						Long.valueOf(objects[4].toString()));
 				insightsDataMap.put("ACTIONS_DRIVING_DIRECTIONS",
@@ -11274,6 +11847,8 @@ public class BusinessDaoImpl implements BusinessDao {
 						Long.valueOf(objects[6].toString()));
 			}
 		}
+		
+		System.out.println("from hostory: "+insightsDataMap.get("ACTIONS_PHONE"));
 
 		return insightsDataMap;
 	}
@@ -11282,18 +11857,14 @@ public class BusinessDaoImpl implements BusinessDao {
 			String state, Date startDate, Date endDate) {
 
 		List<InsightsGraphDTO> excelData = new ArrayList<InsightsGraphDTO>();
-		// TODO Auto-generated method stub
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(endDate);
-		cal.add(Calendar.DATE, 1);
-		endDate = cal.getTime();
+
 
 		Session session = sessionFactory.getCurrentSession();
 
 		StringBuffer sb = new StringBuffer();
 
 		String query = "SELECT brandId,store,city,state,sum(directCount) as direct, sum(inDirectCount) as indirects, sum(searchCount) as searches,sum(mapCount) as maps, sum(websiteCount) as websites, sum(directionsCount) as directions, sum(callsCount) as calls"
-				+ " from InsightsGraphEntity where date between ? and ? and brandName=? ";
+				+ " from InsightsGraphEntity where date>=? and date<=? and brandName=? ";
 
 		String stateQuery = "";
 		if (state != null && state.length() > 0) {
@@ -11317,6 +11888,7 @@ public class BusinessDaoImpl implements BusinessDao {
 		}
 
 		List<Object[]> dataCount = createQuery.list();
+		Long directCount = 0L;
 		Map<String, InsightsGraphDTO> dailyMap = new TreeMap<String, InsightsGraphDTO>();
 		for (Object[] objects : dataCount) {
 			InsightsGraphDTO history = new InsightsGraphDTO();
@@ -11335,8 +11907,102 @@ public class BusinessDaoImpl implements BusinessDao {
 				excelData.add(history);
 			}
 		}
+	
 
 		return excelData;
+	}
+
+	public List<InsightsGraphDTO> getMonthlyReportData(String brand, String type) {
+		// TODO Auto-generated method stub
+		List<InsightsGraphDTO> excelData = new ArrayList<InsightsGraphDTO>();
+
+		Session session = sessionFactory.getCurrentSession();
+
+		StringBuffer sb = new StringBuffer();
+		String query = "";
+		boolean isStore = false;
+		if (type.equalsIgnoreCase("location")) {
+
+			query = "SELECT store,date, sum(totalSearchCount) as searches, sum(totalViewCount) as views, sum(totalActionCount) as actions"
+					+ " from InsightsGraphEntity where brandName=? GROUP BY CONCAT(MONTH(date) ,'', store) order by store,date ";
+			isStore = true;
+		} else {
+			query = "SELECT state,date, sum(totalSearchCount) as searches, sum(totalViewCount) as views, sum(totalActionCount) as actions"
+					+ " from InsightsGraphEntity where brandName=? GROUP BY CONCAT(MONTH(date) ,'', state) order by state,date";
+		}
+
+		Query createQuery = session.createQuery(query);
+		createQuery.setString(0, brand);
+
+		List<Object[]> dataCount = createQuery.list();
+		Map<String, InsightsGraphDTO> dailyMap = new TreeMap<String, InsightsGraphDTO>();
+		for (Object[] objects : dataCount) {
+			InsightsGraphDTO history = new InsightsGraphDTO();
+			if (objects[0] != null) {
+
+				if (isStore)
+					history.setStore(objects[0].toString());
+				else
+					history.setState(objects[0].toString());
+
+				SimpleDateFormat format = new SimpleDateFormat(
+						"yyyy-MM-dd HH:mm:ss.S");
+				Date date = null;
+				try {
+					date = format.parse(objects[1].toString());
+				} catch (ParseException e) {
+					e.printStackTrace();
+				}
+				history.setDate(date);
+				history.setTotalSearchCount(Long.valueOf(objects[2].toString()));
+				history.setTotalViewCount(Long.valueOf(objects[3].toString()));
+				history.setTotalActionCount(Long.valueOf(objects[4].toString()));
+				excelData.add(history);
+			}
+		}
+
+		return excelData;
+	}
+
+	public List<InsightsGraphDTO> getMonthlyTrends(Integer brandId, String state) {
+		List<InsightsGraphDTO> trendData = new ArrayList<InsightsGraphDTO>();
+		Session session = sessionFactory.getCurrentSession();
+		
+		String query = "";
+		Query createQuery = null;
+		if (state != null && state.length() > 0) {
+			query = "SELECT date, sum(searchCount) as searches, sum(viewCount) as views, sum(actionCount) as actions "
+					+ "from InsightsMonthlyCountEntity where brandId=? and state=? GROUP BY YEAR(date), MONTH(date)";
+			createQuery = session.createQuery(query);
+			createQuery.setInteger(0, brandId);
+			createQuery.setString(1, state);
+		} else {
+			query = "SELECT date, sum(searchCount) as searches, sum(viewCount) as views, sum(actionCount) as actions "
+					+ "from InsightsMonthlyCountEntity where brandId=? GROUP BY YEAR(date), MONTH(date)";
+			createQuery = session.createQuery(query);
+			createQuery.setInteger(0, brandId);
+		}
+		List<Object[]> dataCount = createQuery.list();
+		Map<String, InsightsGraphDTO> dailyMap = new TreeMap<String, InsightsGraphDTO>();
+		for (Object[] objects : dataCount) {
+			InsightsGraphDTO history = new InsightsGraphDTO();
+			if (objects[0] != null) {
+				SimpleDateFormat format = new SimpleDateFormat(
+						"yyyy-MM-dd HH:mm:ss.S");
+				Date date = null;
+				try {
+					date = format.parse(objects[0].toString());
+				} catch (ParseException e) {
+					e.printStackTrace();
+				}
+				history.setDate(date);
+				history.setTotalSearchCount(Long.valueOf(objects[1].toString()));
+				history.setTotalViewCount(Long.valueOf(objects[2].toString()));
+				history.setTotalActionCount(Long.valueOf(objects[3].toString()));
+				trendData.add(history);
+			}
+		}
+		return trendData;
 	}
 
 	public List<InsightsGraphDTO> getViewsHistoryByWeek(String state,
@@ -11344,7 +12010,7 @@ public class BusinessDaoImpl implements BusinessDao {
 
 		Session session = sessionFactory.getCurrentSession();
 		Criteria criteria = session.createCriteria(InsightsGraphEntity.class);
-
+		
 		if (store != null && store.length() > 0) {
 			criteria.add(Restrictions.eq("store", store));
 		}
@@ -11412,23 +12078,22 @@ public class BusinessDaoImpl implements BusinessDao {
 		return insightsGraphsList;
 	}
 
-	public Map<String, InsightsGraphDTO> getHistoryForStore(String brand,
+	public Map<String, InsightsGraphDTO> getHistoryForStore(Integer brandId,
 			String store, Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(endDate);
-		cal.add(Calendar.DATE, 1);
-		endDate = cal.getTime();
+
 
 		Session session = sessionFactory.getCurrentSession();
 
+
+		//Long lblStorByCleintIdandStore = getLBLStorByCleintIdandStore(brandId, store);
+
 		String query = "SELECT date, sum(searchCount) as searches,sum(mapCount) as maps, sum(websiteCount) as websites, sum(directionsCount) as directions, sum(callsCount) as calls "
-				+ "FROM InsightsGraphEntity where date between ? and ? and brandName=? and store=? group by date";
+				+ "FROM InsightsGraphEntity where date>=? and date<=? and brandId=? and store=? group by date";
 
 		Query createQuery = session.createQuery(query);
 		createQuery.setDate(0, startDate);
 		createQuery.setDate(1, endDate);
-		createQuery.setString(2, brand);
+		createQuery.setInteger(2, brandId);
 		createQuery.setString(3, store);
 
 		List<Object[]> dataCount = createQuery.list();
@@ -11449,27 +12114,141 @@ public class BusinessDaoImpl implements BusinessDao {
 		return dailyMap;
 	}
 
-	public Integer getInsightCountsForBrand(String brand, String store) {
+	public Long getInsightCountsForBrand(Integer brand, String store, Date startDate, Date endDate) {
 		// TODO Auto-generated method stub
 		Session session = sessionFactory.getCurrentSession();
-		Criteria criteria = session.createCriteria(InsightsGraphEntity.class);
-		criteria.add(Restrictions.eq("brandName", brand));
+		
+
+		StringBuffer sb = new StringBuffer();
+		String brandQ= "select count(store) from InsightsGraphEntity where date>=? and date<=? and brandId=?";
+		
+		sb.append(brandQ);
+
+		String stateQuery = "";
 		if (store != null && store.length() > 0) {
-			criteria.add(Restrictions.eq("store", store));
+			stateQuery = " and store=?";
+			sb.append(stateQuery);
 		}
-
-		Integer count = 0;
-
-		List<InsightsGraphEntity> insights = criteria.list();
-		if (insights != null) {
-			count = insights.size();
+		
+		Query query = session.createQuery(sb.toString());
+		query.setDate(0, startDate);
+		query.setDate(1, endDate);
+		query.setInteger(2, brand);
+		if (store != null && store.length() > 0) {
+			query.setString(3, store);
 		}
+		
+		Long count = (Long)query.uniqueResult();
+
 		return count;
 	}
 
-	public Map<String, InsightsGraphDTO> getHistory(String brand, String state,
+	public Map<String, InsightsGraphDTO> getHistory(Integer brandId, String state,
 			Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
+		
+		
+		DateTime dt1 = new DateTime(startDate);
+		DateTime dt2 = new DateTime(endDate);
+		
+		int days = Days.daysBetween(dt1, dt2).getDays();
+		
+		Session session = sessionFactory.getCurrentSession();
+		
+
+		StringBuffer sb = new StringBuffer();
+		
+		
+
+		String query = "SELECT date, sum(searchCount) as searches,sum(mapCount) as maps, sum(websiteCount) as websites, sum(directionsCount) as directions, sum(callsCount) as calls ,sum(directCount) as direct, sum(inDirectCount) as indirects "
+				+ "FROM InsightsGraphEntity where  date>=? and date<=? and brandId=? ";
+
+		String stateQuery = "";
+		if (state != null && state.length() > 0) {
+			stateQuery = " and state=?";
+		}
+		String groupQuery = "";
+		if(days<=14) {
+			groupQuery = " group by date";
+		} else if(days > 14 && days < 90) {
+			groupQuery = "group by DATE_FORMAT( date, '%u' )";
+		} else {
+			groupQuery = "group by DATE_FORMAT( date, '%Y%m' )";
+		}
+
+		sb.append(query);
+		if (state != null && state.length() > 0) {
+			sb.append(stateQuery);
+		}
+		sb.append(groupQuery);
+
+		Query createQuery = session.createQuery(sb.toString());
+		createQuery.setDate(0, startDate);
+		createQuery.setDate(1, endDate);
+		createQuery.setInteger(2, brandId);
+		if (state != null && state.length() > 0) {
+			createQuery.setString(3, state);
+		}
+
+		List<Object[]> dataCount = createQuery.list();
+		Map<String, InsightsGraphDTO> dailyMap = new TreeMap<String, InsightsGraphDTO>();
+		Long directCount = 0L;
+		Long discoveryCount = 0L;
+
+		Long searchCount = 0L;
+		Long mapsCount = 0L;
+		Long viewsCount = 0L;
+
+		Long websiteCount = 0L;
+		Long phoneCount = 0L;
+		Long directionsCount = 0L;
+		Long actionsCount = 0L;
+
+		for (Object[] objects : dataCount) {
+			InsightsGraphDTO history = new InsightsGraphDTO();
+			if (objects[0] != null) {
+				String dateKey = objects[0].toString().substring(0, 10);
+				history.setSearchCount(Long.valueOf(objects[1].toString()));
+				history.setMapCount(Long.valueOf(objects[2].toString()));
+				history.setWebsiteCount(Long.valueOf(objects[3].toString()));
+				history.setDirectionsCount(Long.valueOf(objects[4].toString()));
+				history.setCallsCount(Long.valueOf(objects[5].toString()));
+				
+				history.setDirectCount(Long.valueOf(objects[6].toString()));
+				history.setInDirectCount(Long.valueOf(objects[7].toString()));
+				dailyMap.put(dateKey, history);
+				
+				directCount = directCount + Long.valueOf(objects[6].toString());
+				discoveryCount =  discoveryCount + Long.valueOf(objects[7].toString());
+				searchCount = searchCount + Long.valueOf(objects[1].toString());
+				mapsCount = mapsCount + Long.valueOf(objects[2].toString());
+				websiteCount =  websiteCount + Long.valueOf(objects[3].toString());
+				directionsCount = directionsCount + Long.valueOf(objects[4].toString());
+				phoneCount =  phoneCount + Long.valueOf(objects[5].toString());
+			}
+		}
+		InsightsGraphDTO totals = new InsightsGraphDTO();
+		
+		totals.setDirectCount(directCount);
+		totals.setInDirectCount(discoveryCount);
+		totals.setSearchCount(searchCount);
+		totals.setMapCount(mapsCount);
+		totals.setWebsiteCount(websiteCount);
+		totals.setDirectionsCount(directionsCount);
+		totals.setCallsCount(phoneCount);
+		
+		
+		dailyMap.put("TotalCounts", totals);
+
+		return dailyMap;
+	}
+
+	public Map<String, List<BingAnalyticsDTO>> getTopandBottomAnalytics(
+			Integer brandId, String state, Date startDate, Date endDate) {
+
+		Map<String, List<BingAnalyticsDTO>> topBottoms = new HashMap<String, List<BingAnalyticsDTO>>();
+
+		List<BingAnalyticsDTO> analyticsData = new ArrayList<BingAnalyticsDTO>();
+		List<BingAnalyticsDTO> analyticsDataBottoms = new ArrayList<BingAnalyticsDTO>();
 
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(endDate);
@@ -11480,8 +12259,126 @@ public class BusinessDaoImpl implements BusinessDao {
 
 		StringBuffer sb = new StringBuffer();
 
-		String query = "SELECT date, sum(searchCount) as searches,sum(mapCount) as maps, sum(websiteCount) as websites, sum(directionsCount) as directions, sum(callsCount) as calls "
-				+ "FROM InsightsGraphEntity where date between ? and ? and brandName=?";
+
+		Map<Long, String> lblStoreMapByCleintId = getLBLStoreMapByCleintId(brandId);
+
+		String query = "SELECT lblStoreId, state, city, sum(impressionCount) as totalImpressions FROM BingAnalyticsEntity where date>=? and date<=? and brandId=? ";
+
+		String stateQuery = "";
+		if (state != null && state.length() > 0) {
+			stateQuery = " and state=?";
+		}
+		String groupQuery = " group by store ORDER BY sum(impressionCount) desc";
+
+		sb.append(query);
+		if (state != null && state.length() > 0) {
+			sb.append(stateQuery);
+		}
+		sb.append(groupQuery);
+
+		Query createQuery = session.createQuery(sb.toString());
+
+		createQuery.setDate(0, startDate);
+		createQuery.setDate(1, endDate);
+		createQuery.setInteger(2, brandId);
+		if (state != null && state.length() > 0) {
+			createQuery.setString(3, state);
+		}
+
+		List<Object[]> dataCount = createQuery.list();
+		if (dataCount.size() > 10) {
+			dataCount = dataCount.subList(0, 9);
+		}
+		for (Object[] objects : dataCount) {
+
+			BingAnalyticsDTO history = new BingAnalyticsDTO();
+			if (objects[0] != null) {
+				Long lblStoreId = Long.valueOf(objects[0].toString());
+				String stateVal = objects[1].toString();
+				String city = objects[2].toString();
+				history.setImpressionCount(Integer.valueOf(objects[3]
+						.toString()));
+				history.setStore(lblStoreMapByCleintId.get(lblStoreId));
+				history.setState(stateVal);
+				history.setCity(city);
+				analyticsData.add(history);
+			}
+		}
+
+		topBottoms.put("topAnalytics", analyticsData);
+
+		StringBuffer sbBottoms = new StringBuffer();
+		String queryBottoms = "SELECT store, state, city, sum(impressionCount) as totalImpressions FROM BingAnalyticsEntity where date>=? and date<=? and brandId=?";
+
+		String sQuery = "";
+		if (state != null && state.length() > 0) {
+			sQuery = " and state=?";
+		}
+		String bgQuery = " group by store ORDER BY sum(impressionCount)";
+
+		sbBottoms.append(queryBottoms);
+		if (state != null && state.length() > 0) {
+			sbBottoms.append(sQuery);
+		}
+		sbBottoms.append(bgQuery);
+
+		Query createQueryBottoms = session.createQuery(sbBottoms.toString());
+
+		createQueryBottoms.setDate(0, startDate);
+		createQueryBottoms.setDate(1, endDate);
+		createQueryBottoms.setInteger(2, brandId);
+		if (state != null && state.length() > 0) {
+			createQueryBottoms.setString(3, state);
+		}
+
+		List<Object[]> data = createQueryBottoms.list();
+		if (data.size() > 10) {
+			data = data.subList(0, 9);
+		}
+		for (Object[] objects : data) {
+
+			BingAnalyticsDTO history = new BingAnalyticsDTO();
+			if (objects[0] != null) {
+				Long lblStoreId = Long.valueOf(objects[0].toString());
+				String stateVal = objects[1].toString();
+				String city = objects[2].toString();
+				history.setImpressionCount(Integer.valueOf(objects[3]
+						.toString()));
+				history.setStore(lblStoreMapByCleintId.get(lblStoreId));
+				history.setState(stateVal);
+				history.setCity(city);
+				analyticsDataBottoms.add(history);
+			}
+		}
+
+		topBottoms.put("bottomAnalytics", analyticsDataBottoms);
+
+		return topBottoms;
+	}
+
+	public Map<Integer, InsightsGraphDTO> getDailyTrends(String brand,
+			String state, Date startDate, Date endDate) {
+
+		Map<String, Map<String, Long>> dailyTrends = new HashMap<String, Map<String, Long>>();
+
+		// TODO Auto-generated method stub
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(endDate);
+		cal.add(Calendar.DATE, 1);
+		endDate = cal.getTime();
+
+		Session session = sessionFactory.getCurrentSession();
+		
+		BrandInfoDTO brandInfo = getBrandInfoByBrandName(brand);
+		Integer brandId=0;
+		if(brandInfo!=null){
+			brandId = brandInfo.getClientId();
+		}
+
+		StringBuffer sb = new StringBuffer();
+
+		String query = "SELECT date, sum(totalViewCount) as views,sum(totalActionCount) as actions, sum(websiteCount) as websites, sum(directionsCount) as directions, sum(callsCount) as calls  "
+				+ "FROM InsightsGraphEntity where brandId=? and date>=? and date<=?";
 
 		String stateQuery = "";
 		if (state != null && state.length() > 0) {
@@ -11499,45 +12396,114 @@ public class BusinessDaoImpl implements BusinessDao {
 		Query createQuery = session.createQuery(sb.toString());
 		createQuery.setDate(0, startDate);
 		createQuery.setDate(1, endDate);
-		createQuery.setString(2, brand);
+		createQuery.setInteger(2, brandId);
 		if (state != null && state.length() > 0) {
 			createQuery.setString(3, state);
 		}
 
 		List<Object[]> dataCount = createQuery.list();
-		Map<String, InsightsGraphDTO> dailyMap = new TreeMap<String, InsightsGraphDTO>();
+
+		List<InsightsGraphDTO> dailyTrendData = new ArrayList<InsightsGraphDTO>();
 		for (Object[] objects : dataCount) {
 			InsightsGraphDTO history = new InsightsGraphDTO();
 			if (objects[0] != null) {
-				String dateKey = objects[0].toString().substring(0, 10);
-				history.setSearchCount(Long.valueOf(objects[1].toString()));
-				history.setMapCount(Long.valueOf(objects[2].toString()));
+				SimpleDateFormat format = new SimpleDateFormat(
+						"yyyy-MM-dd HH:mm:ss.S");
+				Date date = null;
+				try {
+					date = format.parse(objects[0].toString());
+				} catch (ParseException e) {
+					e.printStackTrace();
+				}
+				history.setDate(date);
+				history.setTotalViewCount(Long.valueOf(objects[1].toString()));
+				history.setTotalActionCount(Long.valueOf(objects[2].toString()));
 				history.setWebsiteCount(Long.valueOf(objects[3].toString()));
 				history.setDirectionsCount(Long.valueOf(objects[4].toString()));
 				history.setCallsCount(Long.valueOf(objects[5].toString()));
-				dailyMap.put(dateKey, history);
+				dailyTrendData.add(history);
 			}
 		}
 
-		return dailyMap;
+		Map<Integer, InsightsGraphDTO> dayTrends = new HashMap<Integer, InsightsGraphDTO>();
+
+		for (InsightsGraphDTO insightsGraphDTO : dailyTrendData) {
+
+			Date date = insightsGraphDTO.getDate();
+			int dayOfWeek = getDayOfWeek(date);
+			InsightsGraphDTO existingInsights  = dayTrends.get(dayOfWeek);
+			if(existingInsights==null) {
+				//System.out.println("adding first time for" + dayOfWeek);
+				dayTrends.put(dayOfWeek, insightsGraphDTO);
+			}else {
+				existingInsights = dayTrends.get(dayOfWeek);
+				Long viewCount = existingInsights.getTotalViewCount() +  insightsGraphDTO.getTotalViewCount();
+				Long actionsCount = existingInsights.getTotalActionCount() +  insightsGraphDTO.getTotalActionCount();
+				Long webSiteCount = existingInsights.getWebsiteCount() +  insightsGraphDTO.getWebsiteCount();
+				Long directionsCount = existingInsights.getDirectionsCount() +  insightsGraphDTO.getDirectionsCount();
+				Long callsCount = existingInsights.getCallsCount() +  insightsGraphDTO.getCallsCount();
+				existingInsights.setTotalViewCount(viewCount);
+				existingInsights.setTotalActionCount(actionsCount);
+				existingInsights.setWebsiteCount(webSiteCount);
+				existingInsights.setDirectionsCount(directionsCount);
+				existingInsights.setCallsCount(callsCount);
+				dayTrends.put(dayOfWeek, existingInsights);
+			}
+
+		}
+
+		return dayTrends;
 	}
 
-	public List<String> getStoresNames(String brand) {
+	public int getDayOfWeek(Date date) {
+
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		return calendar.get(Calendar.DAY_OF_WEEK);
+	}
+
+	public Map<Long, String> getLBLStoreMapByCleintId(Integer clientId) {
+		// TODO Auto-generated method stub
 		Session session = sessionFactory.getCurrentSession();
-		Criteria criteria = session.createCriteria(LocalBusinessEntity.class);
-		criteria.add(Restrictions.eq("client", brand));
-		List<String> storeList = new ArrayList<String>();
-		List<LocalBusinessEntity> list = criteria.list();
-		for (LocalBusinessEntity businessBean : list) {
-			LocalBusinessDTO businessDTO = new LocalBusinessDTO();
-			BeanUtils.copyProperties(businessBean, businessDTO);
-			storeList.add(businessDTO.getStore());
+		Criteria criteria = session.createCriteria(LBLStoreEntity.class);
+		criteria.add(Restrictions.eq("clientId", clientId));
+		List<LBLStoreDTO> stores = new ArrayList<LBLStoreDTO>();
+
+		Map<Long, String> map = new HashMap<Long, String>();
+
+		List<LBLStoreEntity> list = criteria.list();
+		for (LBLStoreEntity lblStoreEntity : list) {
+
+			map.put(lblStoreEntity.getLblStoreId(), lblStoreEntity.getStore());
+
 		}
-		return storeList;
+		return map;
+	}
+
+	public Long getLBLStorByCleintIdandStore(Integer clientId, String store) {
+		// TODO Auto-generated method stub
+		Session session = sessionFactory.getCurrentSession();
+		Criteria criteria = session.createCriteria(LBLStoreEntity.class);
+		criteria.add(Restrictions.eq("clientId", clientId));
+		criteria.add(Restrictions.eq("store", store));
+		List<LBLStoreDTO> stores = new ArrayList<LBLStoreDTO>();
+
+		Long lblStore = 0L;
+
+		Map<Long, String> map = new HashMap<Long, String>();
+
+		List<LBLStoreEntity> list = criteria.list();
+		for (LBLStoreEntity lblStoreEntity : list) {
+
+			return lblStoreEntity.getLblStoreId();
+
+		}
+		return lblStore;
 	}
 
 	public Map<String, List<InsightsGraphDTO>> getTopandBottomSearches(
-			String brand, String state, Date startDate, Date endDate) {
+			Integer brand, String state, Date startDate, Date endDate) {
+
 
 		Map<String, List<InsightsGraphDTO>> topBottomSearches = new HashMap<String, List<InsightsGraphDTO>>();
 
@@ -11547,7 +12513,7 @@ public class BusinessDaoImpl implements BusinessDao {
 		if (state != null && state.length() > 0) {
 			criteria.add(Restrictions.eq("state", state));
 		}
-		criteria.add(Restrictions.eq("brandName", brand));
+		criteria.add(Restrictions.eq("brandId", brand));
 		criteria.add(Restrictions.ge("date", startDate));
 		criteria.add(Restrictions.le("date", endDate));
 
@@ -11567,11 +12533,17 @@ public class BusinessDaoImpl implements BusinessDao {
 
 		Map<String, InsightsGraphDTO> storesMap = new HashMap<String, InsightsGraphDTO>();
 
+
+		//Map<Long, String> lBL_Client_store_map = getLBLStoreMapByCleintId(brand);
+
 		// Collect all the stores
 		for (InsightsGraphEntity entity : businessEntities) {
 
 			InsightsGraphDTO dto = new InsightsGraphDTO();
 			BeanUtils.copyProperties(entity, dto);
+
+			//dto.setStore(lBL_Client_store_map.get(dto.getLblStoreId()));
+
 			String store = dto.getStore();
 			// searches
 			Long dCount = dto.getDirectCount();
@@ -11769,11 +12741,122 @@ public class BusinessDaoImpl implements BusinessDao {
 		topBottomSearches.put("bView", bViewList);
 		topBottomSearches.put("tAction", tActionList);
 		topBottomSearches.put("bAction", bActionList);
-
+/*
 		System.out.println("topBottomSearches are : "
 				+ topBottomSearches.size());
 		;
+		System.out.println("end time:============> " + new Date());*/
 		return topBottomSearches;
+	}
+
+	public List<BingReportDTO> getAnlyticsForStore(String brand, String store,
+			Date startDate, Date endDate) {
+		// TODO Auto-generated method stub
+		List<BingReportDTO> analyticsData = new ArrayList<BingReportDTO>();
+
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(endDate);
+		cal.add(Calendar.DATE, 1);
+		endDate = cal.getTime();
+
+		Session session = sessionFactory.getCurrentSession();
+
+		StringBuffer sb = new StringBuffer();
+
+		BrandInfoDTO brandInfo = getBrandInfoByBrandName(brand);
+
+		Long lblStorByCleintIdandStore = getLBLStorByCleintIdandStore(
+				brandInfo.getClientId(), store);
+
+		String query = "SELECT date, sum(impressionCount) as totalImpressions FROM BingAnalyticsEntity where date>=? and date<=? and brandId=? and lblStoreId=? group by date";
+
+		Query createQuery = session.createQuery(query);
+
+		createQuery.setDate(0, startDate);
+		createQuery.setDate(1, endDate);
+		createQuery.setInteger(2, brandInfo.getClientId());
+		createQuery.setLong(3, lblStorByCleintIdandStore);
+
+		List<Object[]> dataCount = createQuery.list();
+		for (Object[] objects : dataCount) {
+
+			BingReportDTO history = new BingReportDTO();
+			if (objects[0] != null) {
+				String dateKey = objects[0].toString().substring(0, 10);
+				history.setImpressionCount(Integer.valueOf(objects[1]
+						.toString()));
+				history.setDate(dateKey);
+				analyticsData.add(history);
+			}
+		}
+		return analyticsData;
+
+	}
+
+	public List<BingReportDTO> getAnlytics(Integer brandId, String state,
+			Date startDate, Date endDate) {
+
+		List<BingReportDTO> analyticsData = new ArrayList<BingReportDTO>();
+
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(endDate);
+		cal.add(Calendar.DATE, 1);
+		endDate = cal.getTime();
+
+		Session session = sessionFactory.getCurrentSession();
+
+		StringBuffer sb = new StringBuffer();
+
+		String query = "SELECT date, sum(impressionCount) as totalImpressions FROM BingAnalyticsEntity where date>=? and date<=? and brandId=?";
+
+		String stateQuery = "";
+		if (state != null && state.length() > 0) {
+			stateQuery = " and state=?";
+		}
+
+		String groupQuery = " group by date";
+
+		sb.append(query);
+		if (state != null && state.length() > 0) {
+			sb.append(stateQuery);
+		}
+		sb.append(groupQuery);
+
+		Query createQuery = session.createQuery(sb.toString());
+		createQuery.setDate(0, startDate);
+		createQuery.setDate(1, endDate);
+		createQuery.setInteger(2, brandId);
+		if (state != null && state.length() > 0) {
+			createQuery.setString(3, state);
+		}
+
+		List<Object[]> dataCount = createQuery.list();
+		for (Object[] objects : dataCount) {
+
+			BingReportDTO history = new BingReportDTO();
+			if (objects[0] != null) {
+				String dateKey = objects[0].toString().substring(0, 10);
+				history.setImpressionCount(Integer.valueOf(objects[1]
+						.toString()));
+				history.setDate(dateKey);
+				analyticsData.add(history);
+			}
+		}
+		return analyticsData;
+	}
+
+	public List<String> getStoresNames(String brand) {
+		Session session = sessionFactory.getCurrentSession();
+		Criteria criteria = session.createCriteria(LocalBusinessEntity.class);
+		criteria.add(Restrictions.eq("client", brand));
+		List<String> storeList = new ArrayList<String>();
+		List<LocalBusinessEntity> list = criteria.list();
+		for (LocalBusinessEntity businessBean : list) {
+			LocalBusinessDTO businessDTO = new LocalBusinessDTO();
+			BeanUtils.copyProperties(businessBean, businessDTO);
+			storeList.add(businessDTO.getStore());
+		}
+		return storeList;
 	}
 
 	public void updateStoresWithGMBAccountId(String client,

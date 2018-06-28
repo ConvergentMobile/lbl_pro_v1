@@ -4,7 +4,7 @@ import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 /**
  * 
- * @author Vasanth LBL master template information beans
+ * @author lbl_dev LBL master template information beans
  * 
  */
 
@@ -16,7 +16,8 @@ public class LocalBusinessBean {
 	 * companyName, actionCode, store,countryCode
 	 */
 	private Integer id;	
-	private String store;	
+	private String store;
+	private Long lblStoreId;
 	private String actionCode;
 	private String companyName;
 	private String alternativeName;
@@ -113,6 +114,25 @@ public class LocalBusinessBean {
 	private String businessDescriptionShort;
 	private String googleAccountId;
 	private String googleLocationId;
+	
+	private String trackingId;
+	
+	
+	public Long getLblStoreId() {
+		return lblStoreId;
+	}
+
+	public void setLblStoreId(Long lblStoreId) {
+		this.lblStoreId = lblStoreId;
+	}
+
+	public String getTrackingId() {
+		return trackingId;
+	}
+
+	public void setTrackingId(String trackingId) {
+		this.trackingId = trackingId;
+	}
 
 	public String getGoogleAccountId() {
 		return googleAccountId;

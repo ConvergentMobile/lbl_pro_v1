@@ -25,13 +25,25 @@ public class GMBBrandExcelReport extends AbstractExcelView {
 		String reportName  = (String) model.get("reportName");
 		String startDate  = (String)model.get("startDate");
 		String endDate = (String)model.get("endDate");
+		String brand = (String)model.get("brand");
 		List<InsightsGraphDTO> insightsExcelData = (List<InsightsGraphDTO>)model.get("insightsExcelData");
+		
+		String start[] = startDate.split("/");
+		String end[] = endDate.split("/");
+		String startD = start[2]+""+start[0]+""+start[1];
+		String endD = end[2]+""+end[0]+""+end[1];
+		
+		String fileName  = brand + "-GMB-"+startD+"-"+endD;
 		response.setContentType("application/json");
-		response.setHeader("Content-Disposition", "attachment; filename=\""+reportName+".xls" + "\"");
+		response.setHeader("Content-Disposition", "attachment; filename=\""+fileName+".xls" + "\"");
 		response.setHeader("Pragma", "no-cache");
 		response.setHeader("Cache-Control", "no-cache");
 		
 		GenerateGMBInsightsExcelReport(workbook, insightsExcelData,reportName, startDate,endDate);
+		
+	}
+	
+	public static void main(String[] args) {
 		
 	}
 	

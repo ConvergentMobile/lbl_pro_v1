@@ -3,7 +3,7 @@ package com.business.common.dto;
 import java.util.Date;
 
 /**
- * @author Vasanth It Holds the data Which is used to Transfer the data from UI
+ * @author lbl_dev It Holds the data Which is used to Transfer the data from UI
  *         to BusinessLayer
  * 
  * 

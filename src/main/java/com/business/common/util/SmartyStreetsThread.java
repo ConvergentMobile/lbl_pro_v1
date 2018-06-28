@@ -36,7 +36,7 @@ public Logger logger = Logger.getLogger(ScrappingThread.class);
 		logger.info("start ::  SmartyStreetsThread  ");
 		SmartyStreetsUtil util = new SmartyStreetsUtil();
 		try {
-			Thread.sleep(300*1000);
+			Thread.sleep(3*1000);
 			util.validateAndUpdateResult(this.service,
 					correctBusinessList,
 					updateBusinesList,

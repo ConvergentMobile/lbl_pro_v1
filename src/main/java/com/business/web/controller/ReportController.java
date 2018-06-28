@@ -1,18 +1,36 @@
 package com.business.web.controller;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.transaction.SystemException;
 
@@ -30,42 +48,60 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.business.common.dto.BingAnalyticsDTO;
+import com.business.common.dto.BingReportDTO;
+import com.business.common.dto.BrandInfoDTO;
 import com.business.common.dto.ChangeTrackingDTO;
 import com.business.common.dto.ExportReportDTO;
 import com.business.common.dto.GoogleInsightsReportDTO;
 import com.business.common.dto.InsightsGraphDTO;
-import com.business.common.dto.InsightsHistory;
 import com.business.common.dto.LocalBusinessDTO;
+import com.business.common.dto.MonthlyReportDTO;
+import com.business.common.dto.RankDTO;
 import com.business.common.dto.RenewalReportDTO;
+import com.business.common.dto.SweetIQAccuracyDTO;
+import com.business.common.dto.SweetIQCoverageDTO;
+import com.business.common.dto.TrendDTO;
 import com.business.common.util.ControllerUtil;
 import com.business.common.util.DateUtil;
+import com.business.common.util.LBLConstants;
 import com.business.model.pojo.AuditEntity;
 import com.business.model.pojo.ReportEntity;
 import com.business.model.pojo.ReportParams;
 import com.business.model.pojo.ValueObject;
 import com.business.service.BusinessService;
 import com.business.service.CheckReportService;
+import com.business.service.ListingService;
 import com.business.service.ReportService;
+import com.business.service.SweetIQService;
 import com.business.web.bean.ReportForm;
 import com.business.web.bean.UsersBean;
-import com.ctc.wstx.io.EBCDICCodec;
 
 /**
- * @author Vasanth
+ * @author lbl_dev
  */
 @Controller
 public class ReportController {
 	Logger logger = Logger.getLogger(ReportController.class);
 
 	@Autowired
-	private ReportService reportService;
+	private ReportService reportService;	
 	@Autowired
 	private CheckReportService checkReportService;
 
 	@Autowired
 	private BusinessService service;
 
+	@Autowired
+	private ListingService listingService;
+
+	@Autowired
+	private SweetIQService sweetIQService;
+
 	private ControllerUtil controllerUtil = new ControllerUtil();
+
+	static String pathtoPDF = LBLConstants.PDF_PATH;
+	static String libertyAccessKey = LBLConstants.LIBERTY_ACCESS_KEY;
 
 	/**
 	 * getReports
@@ -86,9 +122,9 @@ public class ReportController {
 		ReportEntity selReport = null;
 		if (request.getParameter("reportId") == null
 				|| request.getParameter("reportId") == "") { // get
-																// the
-																// first
-																// report
+			// the
+			// first
+			// report
 			Iterator<ReportEntity> iterator = reports.iterator();
 			while (iterator.hasNext()) {
 				selReport = iterator.next();
@@ -329,12 +365,38 @@ public class ReportController {
 			@RequestParam(value = "categoryId", required = true) String categoryId,
 			Model model) throws IllegalStateException, SystemException {
 
-		List<String> storeForBrand = reportService.getStoreForBrand(categoryId);
-		logger.info("stores after selecting brand::" + storeForBrand);
+		// List<String> storeForBrand =
+		// reportService.getStoreForBrand(categoryId);
+		// logger.info("stores after selecting brand::" + storeForBrand);
+
+		BrandInfoDTO brandInfoByBrandName = service
+				.getBrandInfoByBrandName(categoryId);
+
+		Map<Long, String> lblStoreMapByCleintId = listingService
+				.getLBLStoreMapByCleintId(brandInfoByBrandName.getClientId());
+
+		List<String> storeForBrand = new ArrayList<String>();
+
+		Set<Long> keySet = lblStoreMapByCleintId.keySet();
+		for (Long lblStoreID : keySet) {
+			storeForBrand.add(lblStoreMapByCleintId.get(lblStoreID));
+		}
 
 		model.addAttribute("storelist", storeForBrand);
 
 		return storeForBrand.toString();
+	}
+
+	@RequestMapping(value = "/statesByBrand", method = RequestMethod.GET)
+	public @ResponseBody
+	String statesByBrand(
+			@RequestParam(value = "brandId", required = true) String brandId,
+			Model model) throws IllegalStateException, SystemException {
+
+		List<String> allStates = service.getAllStatesListByBrand(brandId);
+		logger.info("States after selecting brand::" + brandId);
+
+		return allStates.toString();
 	}
 
 	/**
@@ -836,6 +898,470 @@ public class ReportController {
 		return "header";
 	}
 
+	@RequestMapping(value = "/locPerf.htm", method = RequestMethod.GET)
+	public String locPerf(Model model,
+			HttpServletRequest request, HttpSession session) throws Exception {
+
+		String brand = request.getParameter("b");
+		String store = request.getParameter("s");
+		String duration = request.getParameter("d");
+
+
+		BrandInfoDTO brandInfoByBrand = service.getBrandInfoByBrand(brand);
+
+		String[] startandEndDates = getPastDates(0);
+
+		Date startDate = getFormattedDate(startandEndDates[0]);
+		Date endDate = getFormattedDate(startandEndDates[1]);
+
+		Integer clientId = brandInfoByBrand.getClientId();
+
+
+		SweetIQCoverageDTO sweetIQPerf = sweetIQService.getListingCoverage(
+				clientId, startDate, endDate, store);
+		Integer coverage = sweetIQPerf.getCoverage();
+		model.addAttribute("coverage", coverage);
+		Integer totalListingCount = sweetIQPerf.getTotalListingCount();
+		model.addAttribute("totalListings", totalListingCount);
+		Integer possibleListings = sweetIQPerf.getPossibleListings();
+		model.addAttribute("possibleListings", possibleListings);
+		
+		
+		SweetIQCoverageDTO sweetIQCoverage = sweetIQService
+				.getDirectoryPerformance(startDate, endDate, clientId, store);
+		
+
+		model.addAttribute("google", sweetIQCoverage.getGoogleCoverage());
+		model.addAttribute("facebook", sweetIQCoverage.getFacebookCoverage());
+		model.addAttribute("bing", sweetIQCoverage.getBingCoverage());
+		model.addAttribute("yellowpages",
+				sweetIQCoverage.getYellowPagesCoverage());
+		model.addAttribute("yahoo",
+				sweetIQCoverage.getFourSquareCoverage());
+		
+		
+		List<SweetIQAccuracyDTO> accuracy = sweetIQService.getAccuarcyForStore(
+				clientId, startDate, endDate, store);
+		
+		Integer googleAccuracy = 0;
+		Integer facebookAccuray = 0;
+		Integer yellowPagesAccuracy = 0;
+		Integer bingAccuracy = 0;
+		Integer yahooAccuracy = 0;
+		
+		int i=0;
+		for (SweetIQAccuracyDTO sweetIQAccuracyDTO : accuracy) {
+			i++;
+			String directory = sweetIQAccuracyDTO.getDirectory();
+			String averageAcuuracy = sweetIQAccuracyDTO.getAverage_Match();
+			Double percentage = Double.parseDouble(averageAcuuracy);
+			Integer accuracyPercentage = percentage.intValue();
+			if(directory.contains("google")) {
+				googleAccuracy = accuracyPercentage;
+			}
+			else if(directory.contains("facebook") || directory.equalsIgnoreCase("facebook")) {
+				facebookAccuray = accuracyPercentage;
+			}
+			else if(directory.contains("bing")) {
+				 bingAccuracy = accuracyPercentage;
+			}
+			else if(directory.contains("yahoo") || directory.equalsIgnoreCase("foursquare")) {
+				yahooAccuracy = accuracyPercentage;
+			}
+			else if(directory.contains("yellowpages")) {
+				yellowPagesAccuracy = accuracyPercentage;
+			}
+		}
+		
+		Integer averageAccuracy = 0;
+			if(i>0)
+				averageAccuracy = (googleAccuracy + facebookAccuray + yellowPagesAccuracy + bingAccuracy + yahooAccuracy)/i;
+			
+		model.addAttribute("averageAccuracy",averageAccuracy);
+		
+		List<String> storesList = new ArrayList<String>();
+
+		Map<Long, String> lblStoreMapByCleintId = listingService
+				.getLBLStoreMapByCleintId(brandInfoByBrand.getClientId());
+		Set<Long> storeSet = lblStoreMapByCleintId.keySet();
+		for (Long lblStoreId : storeSet) {
+			storesList.add(lblStoreMapByCleintId.get(lblStoreId));
+		}
+		java.util.Collections.sort(storesList);
+
+		model.addAttribute("storeList", storesList);
+		
+		String[] startandEnd = getPastDates(1);
+		Date start = getFormattedDate(startandEnd[0]);
+		Date end= getFormattedDate(startandEnd[1]);
+		
+
+		SweetIQCoverageDTO sweetIQPerfOld = sweetIQService.getListingCoverage(
+				clientId, start, end, store);
+		Integer coverageOld = sweetIQPerfOld.getCoverage();
+		
+		int increment = coverage - coverageOld;
+
+		
+		
+		SweetIQCoverageDTO sweetIQCoverageOld = sweetIQService
+				.getDirectoryPerformance(start, end, clientId, "");
+
+		model.addAttribute("googleDiff", sweetIQCoverage.getGoogleCoverage()-sweetIQCoverageOld.getGoogleCoverage());
+		model.addAttribute("facebookDiff", sweetIQCoverage.getFacebookCoverage()-sweetIQCoverageOld.getFacebookCoverage());
+		model.addAttribute("bingDiff", sweetIQCoverage.getBingCoverage()-sweetIQCoverageOld.getFacebookCoverage());
+		model.addAttribute("yellowpagesDiff",
+				sweetIQCoverage.getYellowPagesCoverage()-sweetIQCoverageOld.getYellowPagesCoverage());
+		model.addAttribute("yahooDiff",
+				sweetIQCoverage.getFourSquareCoverage()-sweetIQCoverageOld.getFourSquareCoverage());
+
+		model.addAttribute("accuracy", accuracy);
+		model.addAttribute("brand", brand);
+		
+		int d = Integer.parseInt(duration);
+		
+		model.addAttribute("increment", increment);
+		model.addAttribute("months", d);
+		model.addAttribute("duration", duration);
+		model.addAttribute("store", store);
+
+		return "location-perf";
+
+	}
+
+	@RequestMapping(value = "/brandPerf.htm", method = RequestMethod.GET)
+	public String brandPerf(Model model,
+			HttpServletRequest request, HttpSession session) throws Exception {
+
+		String brand = request.getParameter("b");
+		String duration = request.getParameter("d");
+		String store = "";
+
+		BrandInfoDTO brandInfoByBrand = service.getBrandInfoByBrand(brand);
+
+		String[] startandEndDates = getPastDates(0);
+		
+		
+		Date startDate = getFormattedDate(startandEndDates[0]);
+		Date endDate = getFormattedDate(startandEndDates[1]);
+
+		Integer clientId = brandInfoByBrand.getClientId();
+		
+		
+
+		SweetIQCoverageDTO sweetIQPerf = sweetIQService.getListingCoverage(
+				clientId, startDate, endDate, store);
+		Integer coverage = sweetIQPerf.getCoverage();
+		model.addAttribute("coverage", coverage);
+		Integer totalListingCount = sweetIQPerf.getTotalListingCount();
+		
+		
+		model.addAttribute("totalListings", totalListingCount);
+		Integer possibleListings = sweetIQPerf.getPossibleListings();
+		
+	
+		
+		model.addAttribute("possibleListings", possibleListings);
+		
+		SweetIQCoverageDTO sweetIQCoverage = sweetIQService
+				.getDirectoryPerformance(startDate, endDate, clientId, "");
+
+		model.addAttribute("google", sweetIQCoverage.getGoogleCoverage());
+		model.addAttribute("facebook", sweetIQCoverage.getFacebookCoverage());
+		model.addAttribute("bing", sweetIQCoverage.getBingCoverage());
+		model.addAttribute("yellowpages",
+				sweetIQCoverage.getYellowPagesCoverage());
+		model.addAttribute("yahoo",
+				sweetIQCoverage.getFourSquareCoverage());
+		
+		
+		List<SweetIQAccuracyDTO> accuracy = sweetIQService.getAccuarcy(
+				clientId, startDate, endDate, store);
+		
+		Integer googleAccuracy = 0;
+		Integer facebookAccuray = 0;
+		Integer yellowPagesAccuracy = 0;
+		Integer bingAccuracy = 0;
+		Integer yahooAccuracy = 0;
+		
+		
+		for (SweetIQAccuracyDTO sweetIQAccuracyDTO : accuracy) {
+			String directory = sweetIQAccuracyDTO.getDirectory();
+			String averageAcuuracy = sweetIQAccuracyDTO.getAverage_Match();
+			Double percentage = Double.parseDouble(averageAcuuracy);
+			Integer accuracyPercentage = percentage.intValue();
+			if(directory.contains("google")) {
+				googleAccuracy = accuracyPercentage;
+			}
+			else if(directory.contains("facebook") || directory.equalsIgnoreCase("facebook")) {
+				facebookAccuray = accuracyPercentage;
+			}
+			else if(directory.contains("bing")) {
+				 bingAccuracy = accuracyPercentage;
+			}
+			else if(directory.contains("yahoo") || directory.equalsIgnoreCase("foursquare")) {
+				yahooAccuracy = accuracyPercentage;
+			}
+			else if(directory.contains("yellowpages")) {
+				yellowPagesAccuracy = accuracyPercentage;
+			}
+		}
+		
+		Integer averageAccuracy =  (googleAccuracy + facebookAccuray + yellowPagesAccuracy + bingAccuracy + yahooAccuracy)/5;
+		model.addAttribute("averageAccuracy", averageAccuracy);
+		model.addAttribute("googleAccuracy", googleAccuracy);
+		model.addAttribute("facebookAccuray", facebookAccuray);
+		model.addAttribute("yellowPagesAccuracy", yellowPagesAccuracy);
+		model.addAttribute("bingAccuracy", bingAccuracy);
+		model.addAttribute("yahooAccuracy", yahooAccuracy);
+		
+		
+		
+		String[] startandEnd = getPastDates(1);
+		Date start = getFormattedDate(startandEnd[0]);
+		Date end= getFormattedDate(startandEnd[1]);
+		
+
+		SweetIQCoverageDTO sweetIQPerfOld = sweetIQService.getListingCoverage(
+				clientId, start, end, store);
+		Integer coverageOld = sweetIQPerfOld.getCoverage();
+		
+		int increment = coverage - coverageOld;
+
+		
+		
+		SweetIQCoverageDTO sweetIQCoverageOld = sweetIQService
+				.getDirectoryPerformance(start, end, clientId, "");
+
+		model.addAttribute("googleDiff", sweetIQCoverage.getGoogleCoverage()-sweetIQCoverageOld.getGoogleCoverage());
+		model.addAttribute("facebookDiff", sweetIQCoverage.getFacebookCoverage()-sweetIQCoverageOld.getFacebookCoverage());
+		model.addAttribute("bingDiff", sweetIQCoverage.getBingCoverage()-sweetIQCoverageOld.getFacebookCoverage());
+		model.addAttribute("yellowpagesDiff",
+				sweetIQCoverage.getYellowPagesCoverage()-sweetIQCoverageOld.getYellowPagesCoverage());
+		model.addAttribute("yahooDiff",
+				sweetIQCoverage.getFourSquareCoverage()-sweetIQCoverageOld.getFourSquareCoverage());
+
+		
+		
+		List<SweetIQAccuracyDTO> accuracyOld = sweetIQService.getAccuarcy(
+				clientId, start, end, store);
+		
+		Integer googleAccuracyOld = 0;
+		Integer facebookAccurayOld = 0;
+		Integer yellowPagesAccuracyOld = 0;
+		Integer bingAccuracyOld = 0;
+		Integer yahooAccuracyOld = 0;
+		
+		
+		for (SweetIQAccuracyDTO sweetIQAccuracyDTO : accuracyOld) {
+			String directory = sweetIQAccuracyDTO.getDirectory();
+			String averageAcuuracy = sweetIQAccuracyDTO.getAverage_Match();
+			Double percentage = Double.parseDouble(averageAcuuracy);
+			Integer accuracyPercentage = percentage.intValue();
+			if(directory.contains("google")) {
+				googleAccuracyOld = accuracyPercentage;
+			}
+			else if(directory.contains("facebook") || directory.equalsIgnoreCase("facebook")) {
+				facebookAccurayOld = accuracyPercentage;
+			}
+			else if(directory.contains("bing")) {
+				bingAccuracyOld = accuracyPercentage;
+			}
+			else if(directory.contains("yahoo") || directory.equalsIgnoreCase("foursquare")) {
+				yahooAccuracyOld = accuracyPercentage;
+			}
+			else if(directory.contains("yellowpages")) {
+				yellowPagesAccuracyOld = accuracyPercentage;
+			}
+		}
+		
+		model.addAttribute("googleAccuracyDiff", googleAccuracy-googleAccuracyOld);
+		model.addAttribute("facebookAccurayDiff", facebookAccuray-facebookAccurayOld);
+		model.addAttribute("yellowPagesAccuracyDiff", yellowPagesAccuracy-yellowPagesAccuracyOld);
+		model.addAttribute("bingAccuracyDiff", bingAccuracy-bingAccuracyOld);
+		model.addAttribute("yahooAccuracyDiff", yahooAccuracy-yahooAccuracyOld);
+		
+		int d = Integer.parseInt(duration);
+		
+		model.addAttribute("increment", increment);
+		model.addAttribute("months", d);
+		model.addAttribute("brand", brand);
+
+		model.addAttribute("duration", duration);
+
+		return "brand-perf";
+
+	}
+
+	@RequestMapping(value = "/ranking.htm", method = RequestMethod.GET)
+	public String rankingReport(Model model, HttpServletRequest request,
+			HttpSession session) throws Exception {
+
+		String brand = request.getParameter("b");
+		String store = request.getParameter("s");
+		String duration = request.getParameter("d");
+
+		String engine = request.getParameter("e");
+		String type = request.getParameter("t");
+		if (engine == null || engine == "") {
+			engine = "google";
+		}
+		if (type == null || type == "") {
+			type = "local";
+		}
+
+		BrandInfoDTO brandInfoByBrand = service.getBrandInfoByBrand(brand);
+		List<String> storesList = new ArrayList<String>();
+
+		Map<Long, String> lblStoreMapByCleintId = listingService
+				.getLBLStoreMapByCleintId(brandInfoByBrand.getClientId());
+		Set<Long> storeSet = lblStoreMapByCleintId.keySet();
+		for (Long lblStoreId : storeSet) {
+			storesList.add(lblStoreMapByCleintId.get(lblStoreId));
+		}
+		java.util.Collections.sort(storesList);
+
+		model.addAttribute("storeList", storesList);
+
+		String[] startandEndDates = getPastDates(0);
+		
+		Date startDate = getFormattedDate(startandEndDates[0]);
+		Date endDate = getFormattedDate(startandEndDates[1]);
+
+		RankDTO rankDTO = sweetIQService.getRanking(
+				brandInfoByBrand.getClientId(), store, engine, type, startDate,
+				endDate);
+
+
+
+		List<TrendDTO> trends = rankDTO.getTrends();
+
+		List<String> cTrends = new ArrayList<String>();
+		List<String> rTrends = new ArrayList<String>();
+
+		for (TrendDTO trendDTO : trends) {
+			Date date = trendDTO.getDate();
+
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(date);
+
+			cTrends.add("{x:new Date(" + cal.get(Calendar.YEAR) + ","
+					+ cal.get(Calendar.MONTH) + "," + 1 + "),  y: "
+					+ trendDTO.getCoverage() + " }");
+
+			rTrends.add("{x:new Date(" + cal.get(Calendar.YEAR) + ","
+					+ cal.get(Calendar.MONTH) + "," + 1 + "),  y: "
+					+ trendDTO.getRank() + " }");
+		}
+		if (trends.size() == 0) {
+			cTrends.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+					+ "),  y: " + 0 + " }");
+			rTrends.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+					+ "),  y: " + 0 + " }");
+		}
+
+		model.addAttribute("rTrends", rTrends);
+		model.addAttribute("cTrends", cTrends);
+
+		model.addAttribute("rank", rankDTO);
+		model.addAttribute("keywordList", rankDTO.getKeywords());
+		model.addAttribute("brand", brand);
+		model.addAttribute("store", store);
+		model.addAttribute("duration", duration);
+		model.addAttribute("coverage", rankDTO.getCoverage());
+
+		model.addAttribute("engine", engine);
+		model.addAttribute("type", type);
+		return "ranking";
+
+	}
+
+	@RequestMapping(value = "/coverage.htm", method = RequestMethod.GET)
+	public String coverage(Model model, HttpServletRequest request,
+			HttpSession session) throws Exception {
+
+		String brand = request.getParameter("b");
+		String store = request.getParameter("s");
+		String duration = request.getParameter("d");
+
+		BrandInfoDTO brandInfoByBrand = service.getBrandInfoByBrand(brand);
+		List<String> storesList = new ArrayList<String>();
+
+		Integer clientId = brandInfoByBrand.getClientId();
+		Map<Long, String> lblStoreMapByCleintId = listingService
+				.getLBLStoreMapByCleintId(clientId);
+		Set<Long> storeSet = lblStoreMapByCleintId.keySet();
+		for (Long lblStoreId : storeSet) {
+			storesList.add(lblStoreMapByCleintId.get(lblStoreId));
+		}
+
+		String[] startandEndDates = getPastDates(0);
+
+		Date startDate = getFormattedDate(startandEndDates[0]);
+		Date endDate = getFormattedDate(startandEndDates[1]);
+
+		SweetIQCoverageDTO sweetIQCoverage = sweetIQService.getListingCoverage(
+				clientId, startDate, endDate, store);
+
+		java.util.Collections.sort(storesList);
+
+		model.addAttribute("storeList", storesList);
+
+		Integer coverage = sweetIQCoverage.getCoverage();
+		model.addAttribute("coverage", coverage);
+		Integer totalListingCount = sweetIQCoverage.getTotalListingCount();
+		model.addAttribute("totalListings", totalListingCount);
+		Integer possibleListings = sweetIQCoverage.getPossibleListings();
+		model.addAttribute("possibleListings", possibleListings);
+
+		model.addAttribute("brand", brand);
+
+		model.addAttribute("duration", duration);
+
+		return "coverage";
+
+	}
+
+	@RequestMapping(value = "/accuracy.htm", method = RequestMethod.GET)
+	public String accuracyReport(Model model, HttpServletRequest request,
+			HttpSession session) throws Exception {
+
+		String brand = request.getParameter("b");
+		String store = request.getParameter("s");
+		String duration = request.getParameter("d");
+
+		BrandInfoDTO brandInfoByBrand = service.getBrandInfoByBrand(brand);
+
+		List<String> storesList = new ArrayList<String>();
+
+		Integer clientId = brandInfoByBrand.getClientId();
+		Map<Long, String> lblStoreMapByCleintId = listingService
+				.getLBLStoreMapByCleintId(clientId);
+		Set<Long> storeSet = lblStoreMapByCleintId.keySet();
+		for (Long lblStoreId : storeSet) {
+			storesList.add(lblStoreMapByCleintId.get(lblStoreId));
+		}
+
+		String[] startandEndDates = getPastDates(0);
+		
+		Date startDate = getFormattedDate(startandEndDates[0]);
+		Date endDate = getFormattedDate(startandEndDates[1]);
+
+		List<SweetIQAccuracyDTO> accuracy = sweetIQService.getAccuarcy(
+				clientId, startDate, endDate, store);
+
+		java.util.Collections.sort(storesList);
+
+		model.addAttribute("storeList", storesList);
+		model.addAttribute("accuracyList", accuracy);
+		model.addAttribute("store", store);
+		model.addAttribute("brand", brand);
+		model.addAttribute("duration", duration);
+
+		return "accuracy";
+
+	}
+
 	@RequestMapping(value = "/runGMBLocation.htm", method = RequestMethod.GET)
 	public String runGMBLocation(Model model, HttpServletRequest request,
 			HttpSession session) throws Exception {
@@ -844,6 +1370,10 @@ public class ReportController {
 		String store = request.getParameter("store");
 		String start = request.getParameter("start");
 		String end = request.getParameter("end");
+
+		BrandInfoDTO brandInfo = service.getBrandInfoByBrandName(brand);
+
+		Integer brandId = brandInfo.getClientId();
 
 		logger.info("StoreName name in reports page ::" + store);
 		logger.info("clientName in reports page ::" + brand);
@@ -882,7 +1412,25 @@ public class ReportController {
 		List<String> websites = new ArrayList<String>();
 		List<String> directions = new ArrayList<String>();
 		List<String> calls = new ArrayList<String>();
-		Integer count = service.getInsightCountsForBrand(brand, store);
+		List<String> anlytics = new ArrayList<String>();
+		Long count = service.getInsightCountsForBrand(brandId, store,
+				startDate, endDate);
+
+		// List<String> storesList = service.getStoresNames(brand);
+
+		BrandInfoDTO brandInfoByBrand = service.getBrandInfoByBrand(brand);
+		List<String> storesList = new ArrayList<String>();
+
+		Map<Long, String> lblStoreMapByCleintId = listingService
+				.getLBLStoreMapByCleintId(brandInfoByBrand.getClientId());
+		Set<Long> storeSet = lblStoreMapByCleintId.keySet();
+		for (Long lblStoreId : storeSet) {
+			storesList.add(lblStoreMapByCleintId.get(lblStoreId));
+		}
+
+		java.util.Collections.sort(storesList);
+
+		logger.info("storesList ::" + storesList.size());
 
 		if (count != null && count == 0) {
 			model.addAttribute("noDataMessage", true);
@@ -912,13 +1460,16 @@ public class ReportController {
 			directions.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
 					+ "),  y: " + 0 + " }");
 
+			anlytics.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+					+ "),  y: " + 0 + " }");
+
 			model.addAttribute("viewsHistory", views);
 			model.addAttribute("actionsHistory", maps);
 
 			model.addAttribute("websitesHistory", websites);
 			model.addAttribute("directionsHistory", directions);
 			model.addAttribute("callsHistory", calls);
-
+			model.addAttribute("anlytics", anlytics);
 			model.addAttribute("brand", brand);
 			model.addAttribute("store", store);
 			model.addAttribute("start", getFormattedDate(startDate));
@@ -935,17 +1486,19 @@ public class ReportController {
 			model.addAttribute("directions", 0);
 			model.addAttribute("calls", 0);
 			model.addAttribute("actions", 0);
+			java.util.Collections.sort(storesList);
+
+			int index = storesList.indexOf(store);
+			storesList.remove(index);
+			storesList.add(0, store);
+			model.addAttribute("storeList", storesList);
 
 		} else {
 			model.addAttribute("noDataMessage", false);
 			Map<String, Long> insightsDataMap = service
-					.getInsightsDataForBrandAndStore(brand, store, startDate,
+					.getInsightsDataForBrandAndStore(brandId, store, startDate,
 							endDate);
 			// List<String> allStates = service.getAllStates();
-
-			List<String> storesList = service.getStoresNames(brand);
-			java.util.Collections.sort(storesList);
-			logger.info("storesList ::" + storesList.size());
 
 			Long directCount = 0L;
 			Long discoveryCount = 0L;
@@ -980,7 +1533,7 @@ public class ReportController {
 			List<String> keys = new ArrayList<String>();
 
 			Map<String, InsightsGraphDTO> dailyMap = service
-					.getHistoryForStore(brand, store, startDate, endDate);
+					.getHistoryForStore(brandId, store, startDate, endDate);
 
 			Set<String> keySet = dailyMap.keySet();
 
@@ -1024,6 +1577,27 @@ public class ReportController {
 						+ "),  y: " + callsCounts + " }");
 
 			}
+
+			List<BingReportDTO> anlyticsData = service.getAnlyticsForStore(
+					brand, store, startDate, endDate);
+
+			for (BingReportDTO bingAnalyticsDTO : anlyticsData) {
+
+				String[] date = bingAnalyticsDTO.getDate().split("-");
+				Integer year = Integer.parseInt(date[0]);
+				Integer month = Integer.parseInt(date[1]);
+				Integer day = Integer.parseInt(date[2]);
+
+				anlytics.add("{x:new Date(" + year + "," + (month - 1) + ","
+						+ day + "),  y: "
+						+ bingAnalyticsDTO.getImpressionCount() + " }");
+			}
+			if (anlyticsData != null && anlyticsData.size() == 0) {
+				anlytics.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+						+ "),  y: " + 0 + " }");
+			}
+
+			model.addAttribute("anlytics", anlytics);
 
 			model.addAttribute("days", listofWeeks.size());
 			model.addAttribute("minYear", calStart.get(Calendar.YEAR));
@@ -1093,6 +1667,10 @@ public class ReportController {
 
 		}
 
+		BrandInfoDTO brandInfo = service.getBrandInfoByBrandName(brand);
+
+		Integer brandId = brandInfo.getClientId();
+
 		Calendar cal = Calendar.getInstance();
 
 		cal.setTime(endDate);
@@ -1112,7 +1690,12 @@ public class ReportController {
 		List<String> websites = new ArrayList<String>();
 		List<String> directions = new ArrayList<String>();
 		List<String> calls = new ArrayList<String>();
-		Integer count = service.getInsightCountsForBrand(brand, "");
+		List<String> anlytics = new ArrayList<String>();
+		Long count = service.getInsightCountsForBrand(brandId, "", startDate,
+				endDate);
+		List<String> storesList = service.getStoresNames(brand);
+		java.util.Collections.sort(storesList);
+		logger.info("storesList ::" + storesList.size());
 
 		if (count != null && count == 0) {
 			model.addAttribute("noDataMessage", true);
@@ -1142,6 +1725,10 @@ public class ReportController {
 			directions.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
 					+ "),  y: " + 0 + " }");
 
+			anlytics.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+					+ "),  y: " + 0 + " }");
+
+			model.addAttribute("anlytics", anlytics);
 			model.addAttribute("viewsHistory", views);
 			model.addAttribute("actionsHistory", maps);
 
@@ -1169,13 +1756,9 @@ public class ReportController {
 		} else {
 			model.addAttribute("noDataMessage", false);
 			Map<String, Long> insightsDataMap = service
-					.getInsightsDataForBrandAndStore(brand, store, startDate,
+					.getInsightsDataForBrandAndStore(brandId, store, startDate,
 							endDate);
 			// List<String> allStates = service.getAllStates();
-
-			List<String> storesList = service.getStoresNames(brand);
-			java.util.Collections.sort(storesList);
-			logger.info("storesList ::" + storesList.size());
 
 			Long directCount = 0L;
 			Long discoveryCount = 0L;
@@ -1210,7 +1793,7 @@ public class ReportController {
 			List<String> keys = new ArrayList<String>();
 
 			Map<String, InsightsGraphDTO> dailyMap = service
-					.getHistoryForStore(brand, store, startDate, endDate);
+					.getHistoryForStore(brandId, store, startDate, endDate);
 
 			Set<String> keySet = dailyMap.keySet();
 
@@ -1254,6 +1837,27 @@ public class ReportController {
 						+ "),  y: " + callsCounts + " }");
 			}
 			Calendar calStart = Calendar.getInstance();
+
+			List<BingReportDTO> anlyticsData = service.getAnlyticsForStore(
+					brand, store, startDate, endDate);
+
+			for (BingReportDTO bingAnalyticsDTO : anlyticsData) {
+
+				String[] date = bingAnalyticsDTO.getDate().split("-");
+				Integer year = Integer.parseInt(date[0]);
+				Integer month = Integer.parseInt(date[1]);
+				Integer day = Integer.parseInt(date[2]);
+
+				anlytics.add("{x:new Date(" + year + "," + (month - 1) + ","
+						+ day + "),  y: "
+						+ bingAnalyticsDTO.getImpressionCount() + " }");
+			}
+			if (anlyticsData != null && anlyticsData.size() == 0) {
+				anlytics.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+						+ "),  y: " + 0 + " }");
+			}
+
+			model.addAttribute("anlytics", anlytics);
 
 			calStart.setTime(startDate);
 			model.addAttribute("days", listofWeeks.size());
@@ -1343,12 +1947,18 @@ public class ReportController {
 		endDate = cal.getTime();
 		logger.info("startDate ::" + startDate);
 		logger.info("endDate::" + endDate);
+
+		BrandInfoDTO brandInfo = service.getBrandInfoByBrandName(brand);
+
+		Integer brandId = brandInfo.getClientId();
+
 		List<String> views = new ArrayList<String>();
 		List<String> maps = new ArrayList<String>();
 		List<String> websites = new ArrayList<String>();
 		List<String> directions = new ArrayList<String>();
 		List<String> calls = new ArrayList<String>();
-		Integer count = service.getInsightCountsForBrand(brand, "");
+		Long count = service.getInsightCountsForBrand(brandId, store,
+				startDate, endDate);
 
 		if (count != null && count == 0) {
 			model.addAttribute("noDataMessage", true);
@@ -1406,7 +2016,7 @@ public class ReportController {
 		} else {
 			model.addAttribute("noDataMessage", false);
 			Map<String, Long> insightsDataMap = service
-					.getInsightsDataForBrandAndStore(brand, store, startDate,
+					.getInsightsDataForBrandAndStore(brandId, store, startDate,
 							endDate);
 			// List<String> allStates = service.getAllStates();
 
@@ -1447,7 +2057,7 @@ public class ReportController {
 			List<String> keys = new ArrayList<String>();
 
 			Map<String, InsightsGraphDTO> dailyMap = service
-					.getHistoryForStore(brand, store, startDate, endDate);
+					.getHistoryForStore(brandId, store, startDate, endDate);
 
 			Set<String> keySet = dailyMap.keySet();
 
@@ -1567,8 +2177,8 @@ public class ReportController {
 		Calendar cal = Calendar.getInstance();
 
 		cal.setTime(endDate);
-		cal.add(Calendar.HOUR_OF_DAY, 23);
-		cal.add(Calendar.MINUTE, 59);
+		cal.set(Calendar.HOUR_OF_DAY, 23);
+		cal.set(Calendar.MINUTE, 59);
 		endDate = cal.getTime();
 		logger.info("startDate ::" + startDate);
 		logger.info("endDate ::" + endDate);
@@ -1577,14 +2187,244 @@ public class ReportController {
 				.getInsightsBrandExcelData(brand, state, startDate, endDate);
 		model.addAttribute("startDate", start);
 		model.addAttribute("endDate", end);
+		model.addAttribute("brand", brand);
 		model.addAttribute("insightsExcelData", insightsExcelData);
 		model.addAttribute("reportName", "GmbInsights-" + brand);
 
 		return "gmbbrandexcel";
 	}
 
-	@RequestMapping(value = "/runGMBBrand.htm", method = RequestMethod.GET)
-	public String runGMBBrand(Model model, HttpServletRequest request,
+	@RequestMapping(value = "/runGMBMonthlyReport.htm", method = RequestMethod.GET)
+	public String runGMBMonthlyReport(Model model, HttpServletRequest request,
+			HttpSession session) throws Exception {
+
+		String brand = request.getParameter("brand");
+		String type = request.getParameter("type");
+
+		Calendar cal = Calendar.getInstance();
+
+		Date endDate = cal.getTime();
+		cal.add(Calendar.HOUR_OF_DAY, 23);
+
+		Calendar startCal = Calendar.getInstance();
+		startCal.setTime(endDate);
+		startCal.add(Calendar.MONTH, -11);
+		Date startDate = startCal.getTime();
+
+		logger.info("startDate ::" + startDate);
+		logger.info("endDate ::" + endDate);
+
+		List<InsightsGraphDTO> insightsExcelData = service
+				.getMonthlyReportData(brand, type);
+
+		Map<String, List<InsightsGraphDTO>> excelData = new HashMap<String, List<InsightsGraphDTO>>();
+
+		if (type.equalsIgnoreCase("location")) {
+			for (InsightsGraphDTO insightsGraphDTO : insightsExcelData) {
+
+				String store = insightsGraphDTO.getStore();
+
+				if (excelData.get(store) != null) {
+					List<InsightsGraphDTO> existingStoreData = excelData
+							.get(store);
+					existingStoreData.add(insightsGraphDTO);
+					excelData.put(store, existingStoreData);
+				} else {
+					List<InsightsGraphDTO> storeData = new ArrayList<InsightsGraphDTO>();
+					storeData.add(insightsGraphDTO);
+					excelData.put(store, storeData);
+				}
+			}
+		} else {
+			for (InsightsGraphDTO insightsGraphDTO : insightsExcelData) {
+
+				String store = insightsGraphDTO.getState();
+
+				if (excelData.get(store) != null) {
+					List<InsightsGraphDTO> existingStoreData = excelData
+							.get(store);
+					existingStoreData.add(insightsGraphDTO);
+					excelData.put(store, existingStoreData);
+				} else {
+					List<InsightsGraphDTO> storeData = new ArrayList<InsightsGraphDTO>();
+					storeData.add(insightsGraphDTO);
+					excelData.put(store, storeData);
+				}
+			}
+		}
+
+		List<MonthlyReportDTO> monthlyData = new ArrayList<MonthlyReportDTO>();
+
+		List<String> lastTwelveMonths = getLastTwelveMonths();
+
+		SortedSet<String> storeorStates = new TreeSet<String>(
+				excelData.keySet());
+		// Set<String> storeorStates = excelData.keySet();
+		for (String key : storeorStates) {
+			MonthlyReportDTO dto = new MonthlyReportDTO();
+			if (type.equalsIgnoreCase("location")) {
+				dto.setStore(key);
+			} else {
+				dto.setState(key);
+			}
+			List<InsightsGraphDTO> list = excelData.get(key);
+
+			for (InsightsGraphDTO insightsGraphDTO : list) {
+
+				String[] monthAndName = getMonthName(
+						insightsGraphDTO.getDate(), lastTwelveMonths);
+				int index = Integer.valueOf(monthAndName[0]);
+				String monthName = monthAndName[1];
+				Long totalSearchCount = insightsGraphDTO.getTotalSearchCount();
+				Long totalViewCount = insightsGraphDTO.getTotalViewCount();
+				Long totalActionCount = insightsGraphDTO.getTotalActionCount();
+				if (index == 1) {
+					dto.setMonth1(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 2) {
+					dto.setMonth2(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 3) {
+					dto.setMonth3(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 4) {
+					dto.setMonth4(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 5) {
+					dto.setMonth5(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 6) {
+					dto.setMonth6(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 7) {
+					dto.setMonth7(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 8) {
+					dto.setMonth8(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 9) {
+					dto.setMonth9(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 10) {
+					dto.setMonth10(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 11) {
+					dto.setMonth11(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+				if (index == 12) {
+					dto.setMonth12(monthName + "|" + totalSearchCount + "|"
+							+ totalViewCount + "|" + totalActionCount);
+				}
+			}
+			monthlyData.add(dto);
+		}
+		model.addAttribute("excelData", monthlyData);
+		model.addAttribute("months", lastTwelveMonths);
+		model.addAttribute("reportType", type);
+
+		model.addAttribute("reportName", "GMB-MonthlyResultsBy" + type);
+
+		return "gmbmonthlyexcel";
+	}
+
+
+	private static String getMonthYear(Date date) {
+		SimpleDateFormat monthDate = new SimpleDateFormat("MMM-yyyy");
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(date);
+		String month_year = monthDate.format(cal.getTime());
+		return month_year;
+	}
+
+	private static String[] getMonthName(Date date,
+			List<String> lastTwelveMonths) {
+
+		String[] indexAndName = new String[2];
+
+		SimpleDateFormat monthDate = new SimpleDateFormat("MMM-yyyy");
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(date);
+		// cal.add(Calendar.MONTH, -1);
+		String month_name = monthDate.format(cal.getTime());
+
+		int monthIndex = lastTwelveMonths.indexOf(month_name);
+
+		// System.out.println((12- monthIndex) + "==" + month_name);
+
+		indexAndName[0] = String.valueOf(12 - monthIndex);
+		indexAndName[1] = month_name;
+		// System.out.println(indexAndName[0] + "==" + indexAndName[1] );
+
+		return indexAndName;
+
+	}
+
+	// getLastYearMonths();
+	// getCurrentYearMonths();
+
+	static List<String> months = Arrays.asList("Jan", "Feb", "Mar", "Apr",
+			"May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+
+	private static Map<String, Long> getLastYearMonths() {
+		Map<String, Long> allDates = new LinkedHashMap<String, Long>();
+
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy");
+
+		Calendar prevYear = Calendar.getInstance();
+		prevYear.add(Calendar.YEAR, -1);
+
+		for (int i = 0; i < months.size(); i++) {
+			String year = dateFormat.format(prevYear.getTime());
+			allDates.put(months.get(i) + "-" + year, 0L);
+		}
+		// System.out.println(allDates);
+		return allDates;
+	}
+
+	private static Map<String, Long> getCurrentYearMonths() {
+		Map<String, Long> allDates = new LinkedHashMap<String, Long>();
+
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy");
+
+		Calendar prevYear = Calendar.getInstance();
+
+		for (int i = 0; i < months.size(); i++) {
+			String year = dateFormat.format(prevYear.getTime());
+			allDates.put(months.get(i) + "-" + year, 0L);
+		}
+		// System.out.println(allDates);
+		return allDates;
+	}
+
+	private static List<String> getLastTwelveMonths() {
+		List<String> allDates = new ArrayList<String>();
+
+		SimpleDateFormat monthDate = new SimpleDateFormat("MMM-yyyy");
+		Calendar cal = Calendar.getInstance();
+
+		for (int i = 1; i <= 12; i++) {
+			String month_name1 = monthDate.format(cal.getTime());
+			// System.out.println(month_name1);
+			allDates.add(month_name1);
+			cal.add(Calendar.MONTH, -1);
+		}
+		// System.out.println(allDates);
+		return allDates;
+	}
+
+	@RequestMapping(value = "/insights.htm", method = RequestMethod.GET)
+	public String insights(Model model, HttpServletRequest request,
 			HttpSession session) throws Exception {
 
 		String brand = request.getParameter("brand");
@@ -1592,6 +2432,406 @@ public class ReportController {
 		String start = request.getParameter("start");
 		String end = request.getParameter("end");
 
+		Date startDate = null;
+		Date endDate = null;
+		if (start.length() > 0 || end.length() > 0) {
+			SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
+			startDate = sdf.parse(start);
+			endDate = sdf.parse(end);
+		}
+		Calendar cal = Calendar.getInstance();
+
+		cal.setTime(endDate);
+		cal.set(Calendar.HOUR_OF_DAY, 23);
+		cal.set(Calendar.MINUTE, 59);
+		endDate = cal.getTime();
+
+		//BrandInfoDTO brandInfo = service.getBrandInfoByBrandName(brand);
+
+		Integer brandId = Integer.parseInt(brand);
+		
+		System.out.println("brandId: "+ brandId);
+
+	/*	Map<String, Long> insightsDataMap = service.getInsightsBrandData(
+				brandId, state, startDate, endDate);
+		
+		System.out.println("insightsDataMap: "+ insightsDataMap.size());
+		*/
+		
+
+		Map<String, InsightsGraphDTO> dailyMap = service.getHistory(brandId,
+				state, startDate, endDate);
+		
+		InsightsGraphDTO totals = dailyMap.get("TotalCounts");
+
+
+		Long directCount = 0L;
+		Long discoveryCount = 0L;
+
+		Long searchCount = 0L;
+		Long mapsCount = 0L;
+		Long viewsCount = 0L;
+
+		Long websiteCount = 0L;
+		Long phoneCount = 0L;
+		Long directionsCount = 0L;
+		Long actionsCount = 0L;
+
+		if (totals != null) {
+			directCount = totals.getDirectCount();
+			discoveryCount = totals.getInDirectCount();
+
+			searchCount = totals.getSearchCount();
+			mapsCount = totals.getMapCount();
+
+			websiteCount = totals.getWebsiteCount();
+			phoneCount = totals.getCallsCount();
+			directionsCount = totals.getDirectionsCount();
+
+		}
+		viewsCount = searchCount + mapsCount;
+		actionsCount = websiteCount + phoneCount + directionsCount;
+
+		List<String[]> listofWeeks = getListofDates(startDate, endDate);
+
+		Map<String, InsightsGraphDTO> weeklyInsights = new HashMap<String, InsightsGraphDTO>();
+		List<String> keys = new ArrayList<String>();
+
+		Set<String> keySet = dailyMap.keySet();
+
+		for (String key : keySet) {
+			InsightsGraphDTO insightsGraphDTO = dailyMap.get(key);
+			weeklyInsights.put(key, insightsGraphDTO);
+			if(!"TotalCounts".equalsIgnoreCase(key))
+				keys.add(key);
+		}
+
+		Long maxSerchCounts = 0L;
+		Long maxCallCounts = 0L;
+
+		List<String> views = new ArrayList<String>();
+		List<String> maps = new ArrayList<String>();
+		List<String> websites = new ArrayList<String>();
+		List<String> directions = new ArrayList<String>();
+		List<String> calls = new ArrayList<String>();
+
+		for (int i = 0; i < keys.size(); i++) {
+			String key = keys.get(i);
+			InsightsGraphDTO dto = weeklyInsights.get(key);
+			Long mapCounts = dto.getMapCount();
+			Long searchCounts = dto.getSearchCount();
+			Long websiteCounts = dto.getWebsiteCount();
+			Long directionsCounts = dto.getDirectionsCount();
+			Long callsCounts = dto.getCallsCount();
+
+			if (searchCounts > maxSerchCounts)
+				maxSerchCounts = searchCounts;
+			if (callsCounts > maxCallCounts)
+				maxCallCounts = callsCounts;
+
+			String[] date = key.split("-");
+			Integer year = Integer.parseInt(date[0]);
+			Integer month = Integer.parseInt(date[1]);
+			Integer day = Integer.parseInt(date[2]);
+
+			views.add("{x:new Date(" + year + "," + (month - 1) + "," + day
+					+ "),  y: " + searchCounts + " }");
+			maps.add("{x:new Date(" + year + "," + (month - 1) + "," + day
+					+ "),  y: " + mapCounts + " }");
+			websites.add("{x:new Date(" + year + "," + (month - 1) + "," + day
+					+ "),  y: " + websiteCounts + " }");
+			directions.add("{x:new Date(" + year + "," + (month - 1) + ","
+					+ day + "),  y: " + directionsCounts + " }");
+			calls.add("{x:new Date(" + year + "," + (month - 1) + "," + day
+					+ "),  y: " + callsCounts + " }");
+
+		}
+		Calendar calStart = Calendar.getInstance();
+		calStart.setTime(startDate);
+		model.addAttribute("days", listofWeeks.size());
+		model.addAttribute("minYear", calStart.get(Calendar.YEAR));
+		model.addAttribute("minMonth", calStart.get(Calendar.MONTH));
+		model.addAttribute("minDate", calStart.get(Calendar.DAY_OF_MONTH));
+		model.addAttribute("maxYear", cal.get(Calendar.YEAR));
+		model.addAttribute("maxMonth", cal.get(Calendar.MONTH));
+		model.addAttribute("maxDate", cal.get(Calendar.DAY_OF_MONTH));
+
+		model.addAttribute("yActions", Math.round(maxCallCounts / 2));
+		model.addAttribute("yViews", Math.round(maxSerchCounts / 2));
+		model.addAttribute("ySearches", Math.round(discoveryCount / 2));
+
+		model.addAttribute("searchHistory", views);
+		model.addAttribute("mapsHistory", maps);
+
+		model.addAttribute("websitesHistory", websites);
+		model.addAttribute("directionsHistory", directions);
+		model.addAttribute("callsHistory", calls);
+
+		model.addAttribute("direct", directCount);
+		model.addAttribute("discovery", discoveryCount);
+
+		model.addAttribute("search", searchCount);
+		model.addAttribute("maps", mapsCount);
+		model.addAttribute("views", viewsCount);
+
+		model.addAttribute("website", websiteCount);
+		model.addAttribute("directions", directionsCount);
+		model.addAttribute("calls", phoneCount);
+		model.addAttribute("actions", actionsCount);
+
+		model.addAttribute("viewCount", viewsCount);
+		model.addAttribute("actionCount", actionsCount);
+		model.addAttribute("webCount", websiteCount);
+		model.addAttribute("dirCount", directionsCount);
+		model.addAttribute("callCount", phoneCount);
+
+		System.out.println(startDate + "==" + endDate);
+		model.addAttribute("mainPage", false);
+		model.addAttribute("brand", brand);
+		model.addAttribute("state", state);
+		model.addAttribute("start", getFormattedDate(startDate));
+		model.addAttribute("end", getFormattedDate(endDate));
+
+		return "insights";
+	}
+
+	@RequestMapping(value = "/topBottom.htm", method = RequestMethod.GET)
+	public String topBottom(Model model, HttpServletRequest request,
+			HttpSession session) throws Exception {
+
+		String brand = request.getParameter("brand");
+		String state = request.getParameter("state");
+		String start = request.getParameter("start");
+		String end = request.getParameter("end");
+
+		Date startDate = null;
+		Date endDate = null;
+		if (start.length() > 0 || end.length() > 0) {
+			SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
+			startDate = sdf.parse(start);
+			endDate = sdf.parse(end);
+		}
+		Calendar cal = Calendar.getInstance();
+
+		cal.setTime(endDate);
+		cal.set(Calendar.HOUR_OF_DAY, 23);
+		cal.set(Calendar.MINUTE, 59);
+		endDate = cal.getTime();
+
+		//BrandInfoDTO brandInfo = service.getBrandInfoByBrandName(brand);
+
+		//Integer brandId = brandInfo.getClientId();
+		Integer brandId = Integer.parseInt(brand);
+		Map<String, List<InsightsGraphDTO>> topBottomSearches = service
+				.getTopandBottomSearches(brandId, state, startDate, endDate);
+
+		List<InsightsGraphDTO> topSearchList = topBottomSearches.get("tSearch");
+		List<InsightsGraphDTO> bottomSearchList = topBottomSearches
+				.get("bSearch");
+		List<InsightsGraphDTO> topViewList = topBottomSearches.get("tView");
+		List<InsightsGraphDTO> bottomViewList = topBottomSearches.get("bView");
+		List<InsightsGraphDTO> topActionList = topBottomSearches.get("tAction");
+		List<InsightsGraphDTO> bottomActionList = topBottomSearches
+				.get("bAction");
+
+		List<GoogleInsightsReportDTO> topTenSearches = new ArrayList<GoogleInsightsReportDTO>();
+		List<GoogleInsightsReportDTO> bottomTenSearches = new ArrayList<GoogleInsightsReportDTO>();
+		List<GoogleInsightsReportDTO> topTenViews = new ArrayList<GoogleInsightsReportDTO>();
+		List<GoogleInsightsReportDTO> bottomTenViews = new ArrayList<GoogleInsightsReportDTO>();
+		List<GoogleInsightsReportDTO> topTenActions = new ArrayList<GoogleInsightsReportDTO>();
+		List<GoogleInsightsReportDTO> bottomTenActions = new ArrayList<GoogleInsightsReportDTO>();
+
+		for (InsightsGraphDTO graphDTO : topSearchList) {
+			GoogleInsightsReportDTO dto = new GoogleInsightsReportDTO();
+			dto.setStore(graphDTO.getStore());
+			dto.setState(graphDTO.getState());
+			dto.setCity(graphDTO.getCity());
+			dto.setTopDirectCount(graphDTO.getDirectCount());
+			dto.setTopDiscoveryCount(graphDTO.getInDirectCount());
+			dto.setTotalTopSearchCount(graphDTO.getTotalSearchCount());
+			topTenSearches.add(dto);
+		}
+
+		for (InsightsGraphDTO graphDTO : bottomSearchList) {
+			GoogleInsightsReportDTO dto = new GoogleInsightsReportDTO();
+			dto.setStore(graphDTO.getStore());
+			dto.setState(graphDTO.getState());
+			dto.setCity(graphDTO.getCity());
+			dto.setBottomDirectCount(graphDTO.getDirectCount());
+			dto.setBottomDiscoveryCount(graphDTO.getInDirectCount());
+			dto.setTotalBottomSearchCount(graphDTO.getTotalSearchCount());
+			bottomTenSearches.add(dto);
+		}
+
+		for (InsightsGraphDTO graphDTO : topViewList) {
+			GoogleInsightsReportDTO dto = new GoogleInsightsReportDTO();
+			dto.setStore(graphDTO.getStore());
+			dto.setState(graphDTO.getState());
+			dto.setCity(graphDTO.getCity());
+			dto.setTopViewSearchCount(graphDTO.getSearchCount());
+			dto.setTopViewMapsCount(graphDTO.getMapCount());
+			dto.setTotalTopViewsCount(graphDTO.getTotalViewCount());
+			topTenViews.add(dto);
+		}
+
+		for (InsightsGraphDTO graphDTO : bottomViewList) {
+			GoogleInsightsReportDTO dto = new GoogleInsightsReportDTO();
+			dto.setStore(graphDTO.getStore());
+			dto.setState(graphDTO.getState());
+			dto.setCity(graphDTO.getCity());
+			dto.setBottomViewSearchCount(graphDTO.getSearchCount());
+			dto.setBottomViewMapsCount(graphDTO.getMapCount());
+			dto.setTotalBottomViewsCount(graphDTO.getTotalViewCount());
+			bottomTenViews.add(dto);
+		}
+
+		for (InsightsGraphDTO graphDTO : topActionList) {
+			GoogleInsightsReportDTO dto = new GoogleInsightsReportDTO();
+			dto.setStore(graphDTO.getStore());
+			dto.setState(graphDTO.getState());
+			dto.setCity(graphDTO.getCity());
+			dto.setTopWebsiteCount(graphDTO.getWebsiteCount());
+			dto.setTopDirectionsCount(graphDTO.getDirectionsCount());
+			dto.setTopCallsCount(graphDTO.getCallsCount());
+			dto.setTotalTopActionsCount(graphDTO.getTotalActionCount());
+			topTenActions.add(dto);
+		}
+
+		for (InsightsGraphDTO graphDTO : bottomActionList) {
+			GoogleInsightsReportDTO dto = new GoogleInsightsReportDTO();
+			dto.setStore(graphDTO.getStore());
+			dto.setState(graphDTO.getState());
+			dto.setCity(graphDTO.getCity());
+			dto.setBottomWebsiteCount(graphDTO.getWebsiteCount());
+			dto.setBottomDirectionsCount(graphDTO.getDirectionsCount());
+			dto.setBottomCallsCount(graphDTO.getCallsCount());
+			dto.setTotalBottomActionsCount(graphDTO.getTotalActionCount());
+			bottomTenActions.add(dto);
+		}
+
+		model.addAttribute("topTenSearches", topTenSearches);
+		model.addAttribute("bottomTenSearches", bottomTenSearches);
+		model.addAttribute("topTenViews", topTenViews);
+		model.addAttribute("bottomTenViews", bottomTenViews);
+		model.addAttribute("topTenActions", topTenActions);
+		model.addAttribute("bottomTenActions", bottomTenActions);
+
+		model.addAttribute("brand", brand);
+		model.addAttribute("mainPage", false);
+		model.addAttribute("state", state);
+		model.addAttribute("start", getFormattedDate(startDate));
+		model.addAttribute("end", getFormattedDate(endDate));
+
+		return "topBottom";
+	}
+
+	@RequestMapping(value = "/bing.htm", method = RequestMethod.GET)
+	public String bing(Model model, HttpServletRequest request,
+			HttpSession session) throws Exception {
+
+		String brand = request.getParameter("brand");
+		String state = request.getParameter("state");
+		String start = request.getParameter("start");
+		String end = request.getParameter("end");
+
+		Date startDate = null;
+		Date endDate = null;
+		if (start.length() > 0 || end.length() > 0) {
+			SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
+			startDate = sdf.parse(start);
+			endDate = sdf.parse(end);
+		}
+		Calendar cal = Calendar.getInstance();
+
+		cal.setTime(endDate);
+		cal.set(Calendar.HOUR_OF_DAY, 23);
+		cal.set(Calendar.MINUTE, 59);
+		endDate = cal.getTime();
+
+		BrandInfoDTO brandInfo = service.getBrandInfoByBrandName(brand);
+
+		Integer brandId = brandInfo.getClientId();
+
+		List<String> anlytics = new ArrayList<String>();
+
+		Long count = service.getInsightCountsForBrand(brandId, "", startDate,
+				endDate);
+		if (count != null && count == 0) {
+			model.addAttribute("noDataMessage", true);
+
+			anlytics.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+					+ "),  y: " + 0 + " }");
+		}
+
+		else {
+			List<BingReportDTO> anlyticsData = service.getAnlytics(brandId,
+					state, startDate, endDate);
+
+			for (BingReportDTO bingAnalyticsDTO : anlyticsData) {
+
+				String[] date = bingAnalyticsDTO.getDate().split("-");
+				Integer year = Integer.parseInt(date[0]);
+				Integer month = Integer.parseInt(date[1]);
+				Integer day = Integer.parseInt(date[2]);
+
+				anlytics.add("{x:new Date(" + year + "," + (month - 1) + ","
+						+ day + "),  y: "
+						+ bingAnalyticsDTO.getImpressionCount() + " }");
+			}
+			if (anlyticsData != null && anlyticsData.size() == 0) {
+				anlytics.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+						+ "),  y: " + 0 + " }");
+			}
+
+			Map<String, List<BingAnalyticsDTO>> topAnalytics = service
+					.getTopandBottomAnalytics(brandId, state, startDate,
+							endDate);
+
+			List<BingAnalyticsDTO> tTenAnalytics = topAnalytics
+					.get("topAnalytics");
+			List<BingAnalyticsDTO> bTenAnalytics = topAnalytics
+					.get("bottomAnalytics");
+
+			model.addAttribute("topAnalytics", tTenAnalytics);
+			model.addAttribute("bAnalytics", bTenAnalytics);
+			model.addAttribute("anlytics", anlytics);
+
+		}
+		List<String[]> listofWeeks = getListofDates(startDate, endDate);
+
+		Calendar calStart = Calendar.getInstance();
+		calStart.setTime(startDate);
+		model.addAttribute("days", listofWeeks.size());
+		model.addAttribute("minYear", calStart.get(Calendar.YEAR));
+		model.addAttribute("minMonth", calStart.get(Calendar.MONTH));
+		model.addAttribute("minDate", calStart.get(Calendar.DAY_OF_MONTH));
+		model.addAttribute("maxYear", cal.get(Calendar.YEAR));
+		model.addAttribute("maxMonth", cal.get(Calendar.MONTH));
+		model.addAttribute("maxDate", cal.get(Calendar.DAY_OF_MONTH));
+
+		model.addAttribute("mainPage", false);
+		model.addAttribute("brand", brand);
+		model.addAttribute("state", state);
+		model.addAttribute("start", getFormattedDate(startDate));
+		model.addAttribute("end", getFormattedDate(endDate));
+
+		return "bing";
+	}
+
+	@RequestMapping(value = "/runGMBBrand.htm", method = RequestMethod.GET)
+	public String runGMBBrand(Model model, HttpServletRequest request,
+			HttpSession session) throws Exception {
+
+		long startTimeInMillis = Calendar.getInstance().getTimeInMillis();
+
+		System.out.println(startTimeInMillis);
+
+		String brand = request.getParameter("brand");
+		String state = request.getParameter("state");
+		String start = request.getParameter("start");
+		String end = request.getParameter("end");
+
+		model.addAttribute("mainPage", true);
 		if (state == null) {
 			state = "";
 		}
@@ -1612,11 +2852,13 @@ public class ReportController {
 		Calendar cal = Calendar.getInstance();
 
 		cal.setTime(endDate);
-		cal.add(Calendar.HOUR_OF_DAY, 23);
-		cal.add(Calendar.MINUTE, 59);
+		cal.set(Calendar.HOUR_OF_DAY, 23);
+		cal.set(Calendar.MINUTE, 59);
 		endDate = cal.getTime();
-		logger.info("startDate ::" + startDate);
-		logger.info("endDate ::" + endDate);
+
+		BrandInfoDTO brandInfo = service.getBrandInfoByBrandName(brand);
+
+		Integer brandId = brandInfo.getClientId();
 
 		String contextPath = request.getServerName() + request.getContextPath();
 
@@ -1630,13 +2872,38 @@ public class ReportController {
 		}
 		model.addAttribute("url", url);
 
+		String insightsURL = "insights.htm?state=" + state + "&&brand=" + brandId
+				+ "&&start=" + start + "&&end=" + end;
+		String topBottomURL = "topBottom.htm?state=" + state + "&&brand="
+				+ brandId + "&&start=" + start + "&&end=" + end;
+
+
+		model.addAttribute("url", url);
+		model.addAttribute("insightsURL", insightsURL);
+		model.addAttribute("topBottomURL", topBottomURL);
+
+		String startYY = getYYYYMMDD(startDate);
+		String endYY = getYYYYMMDD(endDate);
+
+		model.addAttribute("reportName", brand + "-GMB-" + startYY + "-"
+				+ endYY);
+
 		List<String> views = new ArrayList<String>();
 		List<String> maps = new ArrayList<String>();
 		List<String> websites = new ArrayList<String>();
 		List<String> directions = new ArrayList<String>();
 		List<String> calls = new ArrayList<String>();
 
-		Integer count = service.getInsightCountsForBrand(brand, "");
+		List<String> anlytics = new ArrayList<String>();
+
+		List<String> dailyViewTrends = new ArrayList<String>();
+		List<String> dailyActionTrends = new ArrayList<String>();
+		List<String> dailyWebsiteTrends = new ArrayList<String>();
+		List<String> dailyCallsTrends = new ArrayList<String>();
+		List<String> dailyDrivingTrends = new ArrayList<String>();
+
+		Long count = 1L;/* service.getInsightCountsForBrand(brandId, "", startDate,
+				endDate);*/
 		if (count != null && count == 0) {
 			model.addAttribute("noDataMessage", true);
 
@@ -1650,6 +2917,7 @@ public class ReportController {
 
 			model.addAttribute("yActions", 0);
 			model.addAttribute("yViews", 0);
+			model.addAttribute("ySearches", 0);
 
 			views.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0 + "),  y: "
 					+ 0 + " }");
@@ -1662,8 +2930,32 @@ public class ReportController {
 			calls.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0 + "),  y: "
 					+ 0 + " }");
 
+			anlytics.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+					+ "),  y: " + 0 + " }");
+
 			directions.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
 					+ "),  y: " + 0 + " }");
+
+			String colorCode = "Blue";
+			String color = "'" + colorCode + "'";
+
+			String day = "SU";
+			int cnt = 0;
+
+			dailyViewTrends.add("{label: " + day + "," + "y:" + cnt + ","
+					+ "color:" + color + "}");
+
+			dailyActionTrends.add("{label: " + day + "," + "y:" + cnt + ","
+					+ "color:" + color + "}");
+
+			dailyWebsiteTrends.add("{label: " + day + "," + "y:" + cnt + ","
+					+ "color:" + color + "}");
+
+			dailyCallsTrends.add("{label: " + day + "," + "y:" + cnt + ","
+					+ "color:" + color + "}");
+
+			dailyDrivingTrends.add("{label: " + day + "," + "y:" + cnt + ","
+					+ "color:" + color + "}");
 
 			model.addAttribute("searchHistory", views);
 			model.addAttribute("mapsHistory", maps);
@@ -1672,6 +2964,32 @@ public class ReportController {
 			model.addAttribute("directionsHistory", directions);
 			model.addAttribute("callsHistory", calls);
 
+			List<String> searchPreTrends = new ArrayList<String>();
+
+			searchPreTrends.add("{label: Jan,y:0}");
+
+			model.addAttribute("searchPreTrends", searchPreTrends);
+			model.addAttribute("searchCurTrends", searchPreTrends);
+
+			model.addAttribute("actionPreTrends", searchPreTrends);
+			model.addAttribute("actionCurTrends", searchPreTrends);
+
+			model.addAttribute("viewPreTrends", searchPreTrends);
+			model.addAttribute("viewCurTrends", searchPreTrends);
+			model.addAttribute("anlytics", anlytics);
+
+			model.addAttribute("dailyViewTrends", dailyViewTrends);
+			model.addAttribute("dailyActionTrends", dailyActionTrends);
+			model.addAttribute("dailyWebsiteTrends", dailyWebsiteTrends);
+			model.addAttribute("dailyCallsTrends", dailyCallsTrends);
+			model.addAttribute("dailyDrivingTrends", dailyDrivingTrends);
+
+			model.addAttribute("viewCount", 0);
+			model.addAttribute("actionCount", 0);
+			model.addAttribute("webCount", 0);
+			model.addAttribute("dirCount", 0);
+			model.addAttribute("callCount", 0);
+
 			model.addAttribute("brand", brand);
 			model.addAttribute("state", state);
 			model.addAttribute("start", getFormattedDate(startDate));
@@ -1679,208 +2997,437 @@ public class ReportController {
 
 		} else {
 			model.addAttribute("noDataMessage", false);
+
 			List<String> allStates = service.getAllStatesListByBrand(brand);
 
-			Map<String, Long> insightsDataMap = service.getInsightsBrandData(
-					brand, state, startDate, endDate);
+			/*
+			 * Map<String, Long> insightsDataMap = service.getInsightsBrandData(
+			 * brandId, state, startDate, endDate);
+			 * 
+			 * java.util.Collections.sort(allStates);
+			 * 
+			 * Long directCount = 0L; Long discoveryCount = 0L;
+			 * 
+			 * Long searchCount = 0L; Long mapsCount = 0L; Long viewsCount = 0L;
+			 * 
+			 * Long websiteCount = 0L; Long phoneCount = 0L; Long
+			 * directionsCount = 0L; Long actionsCount = 0L;
+			 * 
+			 * logger.info("States List ::" + allStates.size());
+			 * 
+			 * if (insightsDataMap != null && insightsDataMap.size() > 0) {
+			 * directCount = insightsDataMap.get("QUERIES_DIRECT");
+			 * discoveryCount = insightsDataMap.get("QUERIES_INDIRECT");
+			 * 
+			 * searchCount = insightsDataMap.get("VIEWS_SEARCH"); mapsCount =
+			 * insightsDataMap.get("VIEWS_MAPS");
+			 * 
+			 * websiteCount = insightsDataMap.get("ACTIONS_WEBSITE"); phoneCount
+			 * = insightsDataMap.get("ACTIONS_PHONE"); directionsCount =
+			 * insightsDataMap .get("ACTIONS_DRIVING_DIRECTIONS");
+			 * 
+			 * } viewsCount = searchCount + mapsCount; actionsCount =
+			 * websiteCount + phoneCount + directionsCount;
+			 * 
+			 * List<String[]> listofWeeks = getListofDates(startDate, endDate);
+			 * 
+			 * Map<String, InsightsGraphDTO> weeklyInsights = new
+			 * HashMap<String, InsightsGraphDTO>(); List<String> keys = new
+			 * ArrayList<String>();
+			 * 
+			 * Map<String, InsightsGraphDTO> dailyMap =
+			 * service.getHistory(brandId, state, startDate, endDate);
+			 * 
+			 * Set<String> keySet = dailyMap.keySet();
+			 * 
+			 * for (String key : keySet) { InsightsGraphDTO insightsGraphDTO =
+			 * dailyMap.get(key); weeklyInsights.put(key, insightsGraphDTO);
+			 * keys.add(key); }
+			 * 
+			 * Long maxSerchCounts = 0L; Long maxCallCounts = 0L;
+			 * 
+			 * for (int i = 0; i < keys.size(); i++) { String key = keys.get(i);
+			 * InsightsGraphDTO dto = weeklyInsights.get(key); Long mapCounts =
+			 * dto.getMapCount(); Long searchCounts = dto.getSearchCount(); Long
+			 * websiteCounts = dto.getWebsiteCount(); Long directionsCounts =
+			 * dto.getDirectionsCount(); Long callsCounts = dto.getCallsCount();
+			 * 
+			 * if (searchCounts > maxSerchCounts) maxSerchCounts = searchCounts;
+			 * if (callsCounts > maxCallCounts) maxCallCounts = callsCounts;
+			 * 
+			 * String[] date = key.split("-"); Integer year =
+			 * Integer.parseInt(date[0]); Integer month =
+			 * Integer.parseInt(date[1]); Integer day =
+			 * Integer.parseInt(date[2]);
+			 * 
+			 * views.add("{x:new Date(" + year + "," + (month - 1) + "," + day +
+			 * "),  y: " + searchCounts + " }"); maps.add("{x:new Date(" + year
+			 * + "," + (month - 1) + "," + day + "),  y: " + mapCounts + " }");
+			 * websites.add("{x:new Date(" + year + "," + (month - 1) + "," +
+			 * day + "),  y: " + websiteCounts + " }");
+			 * directions.add("{x:new Date(" + year + "," + (month - 1) + "," +
+			 * day + "),  y: " + directionsCounts + " }");
+			 * calls.add("{x:new Date(" + year + "," + (month - 1) + "," + day +
+			 * "),  y: " + callsCounts + " }");
+			 * 
+			 * }
+			 */
 
-			java.util.Collections.sort(allStates);
+			System.out.println("start:" + new Date());
+			
+			List<InsightsGraphDTO> insightstrendData = service
+					.getMonthlyTrends(brandId, state);
+			
+			System.out.println("end:" + new Date());
+			
 
-			Long directCount = 0L;
-			Long discoveryCount = 0L;
+			List<String> searchPreTrends = new ArrayList<String>();
+			List<String> searchCurTrends = new ArrayList<String>();
 
-			Long searchCount = 0L;
-			Long mapsCount = 0L;
-			Long viewsCount = 0L;
+			List<String> viewPreTrends = new ArrayList<String>();
+			List<String> viewCurTrends = new ArrayList<String>();
 
-			Long websiteCount = 0L;
-			Long phoneCount = 0L;
-			Long directionsCount = 0L;
-			Long actionsCount = 0L;
+			List<String> actionPreTrends = new ArrayList<String>();
+			List<String> actionCurTrends = new ArrayList<String>();
 
-			logger.info("States List ::" + allStates.size());
+			// Action Trends
 
-			if (insightsDataMap != null && insightsDataMap.size() > 0) {
-				directCount = insightsDataMap.get("QUERIES_DIRECT");
-				discoveryCount = insightsDataMap.get("QUERIES_INDIRECT");
+			Map<String, Long> lastYearActonMonths = getLastYearMonths();
+			Map<String, Long> currentYearActionMonths = getCurrentYearMonths();
 
-				searchCount = insightsDataMap.get("VIEWS_SEARCH");
-				mapsCount = insightsDataMap.get("VIEWS_MAPS");
+			for (InsightsGraphDTO insightsGraphDTO : insightstrendData) {
 
-				websiteCount = insightsDataMap.get("ACTIONS_WEBSITE");
-				phoneCount = insightsDataMap.get("ACTIONS_PHONE");
-				directionsCount = insightsDataMap
-						.get("ACTIONS_DRIVING_DIRECTIONS");
-
+				String monthYear = getMonthYear(insightsGraphDTO.getDate());
+				if (lastYearActonMonths.containsKey(monthYear)) {
+					lastYearActonMonths.put(monthYear,
+							insightsGraphDTO.getTotalActionCount());
+				}
+				if (currentYearActionMonths.containsKey(monthYear)) {
+					currentYearActionMonths.put(monthYear,
+							insightsGraphDTO.getTotalActionCount());
+				}
 			}
-			viewsCount = searchCount + mapsCount;
-			actionsCount = websiteCount + phoneCount + directionsCount;
-
-			List<String[]> listofWeeks = getListofDates(startDate, endDate);
-
-			Map<String, InsightsGraphDTO> weeklyInsights = new HashMap<String, InsightsGraphDTO>();
-			List<String> keys = new ArrayList<String>();
-
-			Map<String, InsightsGraphDTO> dailyMap = service.getHistory(brand,
-					state, startDate, endDate);
-
-			Set<String> keySet = dailyMap.keySet();
-
-			for (String key : keySet) {
-				InsightsGraphDTO insightsGraphDTO = dailyMap.get(key);
-				weeklyInsights.put(key, insightsGraphDTO);
-				keys.add(key);
-			}
-
-			Long maxSerchCounts = 0L;
-			Long maxCallCounts = 0L;
-
-			for (int i = 0; i < keys.size(); i++) {
-				String key = keys.get(i);
-				InsightsGraphDTO dto = weeklyInsights.get(key);
-				Long mapCounts = dto.getMapCount();
-				Long searchCounts = dto.getSearchCount();
-				Long websiteCounts = dto.getWebsiteCount();
-				Long directionsCounts = dto.getDirectionsCount();
-				Long callsCounts = dto.getCallsCount();
-
-				if (searchCounts > maxSerchCounts)
-					maxSerchCounts = searchCounts;
-				if (callsCounts > maxCallCounts)
-					maxCallCounts = callsCounts;
-
-				// System.out.println("maxSerchCounts: "+ maxSerchCounts +
-				// ", maxCallCounts: "+ maxCallCounts);
-
-				// System.out.println("date is: "+ key);
-				String[] date = key.split("-");
-				Integer year = Integer.parseInt(date[0]);
-				Integer month = Integer.parseInt(date[1]);
-				Integer day = Integer.parseInt(date[2]);
-
-				views.add("{x:new Date(" + year + "," + (month - 1) + "," + day
-						+ "),  y: " + searchCounts + " }");
-				maps.add("{x:new Date(" + year + "," + (month - 1) + "," + day
-						+ "),  y: " + mapCounts + " }");
-				websites.add("{x:new Date(" + year + "," + (month - 1) + ","
-						+ day + "),  y: " + websiteCounts + " }");
-				directions.add("{x:new Date(" + year + "," + (month - 1) + ","
-						+ day + "),  y: " + directionsCounts + " }");
-				calls.add("{x:new Date(" + year + "," + (month - 1) + "," + day
-						+ "),  y: " + callsCounts + " }");
-
-			}
-
-			Map<String, List<InsightsGraphDTO>> topBottomSearches = service
-					.getTopandBottomSearches(brand, state, startDate, endDate);
-
-			List<InsightsGraphDTO> topSearchList = topBottomSearches
-					.get("tSearch");
-			List<InsightsGraphDTO> bottomSearchList = topBottomSearches
-					.get("bSearch");
-			List<InsightsGraphDTO> topViewList = topBottomSearches.get("tView");
-			List<InsightsGraphDTO> bottomViewList = topBottomSearches
-					.get("bView");
-			List<InsightsGraphDTO> topActionList = topBottomSearches
-					.get("tAction");
-			List<InsightsGraphDTO> bottomActionList = topBottomSearches
-					.get("bAction");
-
-			List<GoogleInsightsReportDTO> topTenSearches = new ArrayList<GoogleInsightsReportDTO>();
-			List<GoogleInsightsReportDTO> bottomTenSearches = new ArrayList<GoogleInsightsReportDTO>();
-			List<GoogleInsightsReportDTO> topTenViews = new ArrayList<GoogleInsightsReportDTO>();
-			List<GoogleInsightsReportDTO> bottomTenViews = new ArrayList<GoogleInsightsReportDTO>();
-			List<GoogleInsightsReportDTO> topTenActions = new ArrayList<GoogleInsightsReportDTO>();
-			List<GoogleInsightsReportDTO> bottomTenActions = new ArrayList<GoogleInsightsReportDTO>();
-
-			for (InsightsGraphDTO graphDTO : topSearchList) {
-				GoogleInsightsReportDTO dto = new GoogleInsightsReportDTO();
-				dto.setStore(graphDTO.getStore());
-				dto.setState(graphDTO.getState());
-				dto.setCity(graphDTO.getCity());
-				dto.setTopDirectCount(graphDTO.getDirectCount());
-				dto.setTopDiscoveryCount(graphDTO.getInDirectCount());
-				dto.setTotalTopSearchCount(graphDTO.getTotalSearchCount());
-				topTenSearches.add(dto);
+			Set<String> lastYearSet = lastYearActonMonths.keySet();
+			for (String key : lastYearSet) {
+				Long value = lastYearActonMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				actionPreTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
 			}
 
-			for (InsightsGraphDTO graphDTO : bottomSearchList) {
-				GoogleInsightsReportDTO dto = new GoogleInsightsReportDTO();
-				dto.setStore(graphDTO.getStore());
-				dto.setState(graphDTO.getState());
-				dto.setCity(graphDTO.getCity());
-				dto.setBottomDirectCount(graphDTO.getDirectCount());
-				dto.setBottomDiscoveryCount(graphDTO.getInDirectCount());
-				dto.setTotalBottomSearchCount(graphDTO.getTotalSearchCount());
-				bottomTenSearches.add(dto);
+			Set<String> lcurrentYearSet = currentYearActionMonths.keySet();
+			for (String key : lcurrentYearSet) {
+				Long value = currentYearActionMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				actionCurTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
 			}
 
-			for (InsightsGraphDTO graphDTO : topViewList) {
-				GoogleInsightsReportDTO dto = new GoogleInsightsReportDTO();
-				dto.setStore(graphDTO.getStore());
-				dto.setState(graphDTO.getState());
-				dto.setCity(graphDTO.getCity());
-				dto.setTopViewSearchCount(graphDTO.getSearchCount());
-				dto.setTopViewMapsCount(graphDTO.getMapCount());
-				dto.setTotalTopViewsCount(graphDTO.getTotalViewCount());
-				topTenViews.add(dto);
+			// View Trends
+			Map<String, Long> lastYearViewMonths = getLastYearMonths();
+			Map<String, Long> currentYearViewMonths = getCurrentYearMonths();
+
+			for (InsightsGraphDTO insightsGraphDTO : insightstrendData) {
+
+				String monthYear = getMonthYear(insightsGraphDTO.getDate());
+				if (lastYearViewMonths.containsKey(monthYear)) {
+					lastYearViewMonths.put(monthYear,
+							insightsGraphDTO.getTotalViewCount());
+				}
+				if (currentYearViewMonths.containsKey(monthYear)) {
+					currentYearViewMonths.put(monthYear,
+							insightsGraphDTO.getTotalViewCount());
+				}
+			}
+			Set<String> lastYearViewSet = lastYearViewMonths.keySet();
+			for (String key : lastYearViewSet) {
+				Long value = lastYearViewMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				viewPreTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
 			}
 
-			for (InsightsGraphDTO graphDTO : bottomViewList) {
-				GoogleInsightsReportDTO dto = new GoogleInsightsReportDTO();
-				dto.setStore(graphDTO.getStore());
-				dto.setState(graphDTO.getState());
-				dto.setCity(graphDTO.getCity());
-				dto.setBottomViewSearchCount(graphDTO.getSearchCount());
-				dto.setBottomViewMapsCount(graphDTO.getMapCount());
-				dto.setTotalBottomViewsCount(graphDTO.getTotalViewCount());
-				bottomTenViews.add(dto);
+			Set<String> currentYearViewSet = currentYearViewMonths.keySet();
+			for (String key : currentYearViewSet) {
+				Long value = currentYearViewMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				viewCurTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
 			}
 
-			for (InsightsGraphDTO graphDTO : topActionList) {
-				GoogleInsightsReportDTO dto = new GoogleInsightsReportDTO();
-				dto.setStore(graphDTO.getStore());
-				dto.setState(graphDTO.getState());
-				dto.setCity(graphDTO.getCity());
-				dto.setTopWebsiteCount(graphDTO.getWebsiteCount());
-				dto.setTopDirectionsCount(graphDTO.getDirectionsCount());
-				dto.setTopCallsCount(graphDTO.getCallsCount());
-				dto.setTotalTopActionsCount(graphDTO.getTotalActionCount());
-				topTenActions.add(dto);
+			// search Trends
+			Map<String, Long> lastYearMonths = getLastYearMonths();
+			Map<String, Long> currentYearMonths = getCurrentYearMonths();
+
+			for (InsightsGraphDTO insightsGraphDTO : insightstrendData) {
+
+				String monthYear = getMonthYear(insightsGraphDTO.getDate());
+				if (lastYearMonths.containsKey(monthYear)) {
+					lastYearMonths.put(monthYear,
+							insightsGraphDTO.getTotalSearchCount());
+				}
+				if (currentYearMonths.containsKey(monthYear)) {
+					currentYearMonths.put(monthYear,
+							insightsGraphDTO.getTotalSearchCount());
+				}
+			}
+			Set<String> lastYearsSet = lastYearMonths.keySet();
+			for (String key : lastYearsSet) {
+				Long value = lastYearMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				searchPreTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
 			}
 
-			for (InsightsGraphDTO graphDTO : bottomActionList) {
-				GoogleInsightsReportDTO dto = new GoogleInsightsReportDTO();
-				dto.setStore(graphDTO.getStore());
-				dto.setState(graphDTO.getState());
-				dto.setCity(graphDTO.getCity());
-				dto.setBottomWebsiteCount(graphDTO.getWebsiteCount());
-				dto.setBottomDirectionsCount(graphDTO.getDirectionsCount());
-				dto.setBottomCallsCount(graphDTO.getCallsCount());
-				dto.setTotalBottomActionsCount(graphDTO.getTotalActionCount());
-				bottomTenActions.add(dto);
+			Set<String> lcurrentYearsSet = currentYearMonths.keySet();
+			for (String key : lcurrentYearsSet) {
+				Long value = currentYearMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				searchCurTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
 			}
-			Calendar calStart = Calendar.getInstance();
 
-			calStart.setTime(startDate);
-			model.addAttribute("days", listofWeeks.size());
-			model.addAttribute("minYear", calStart.get(Calendar.YEAR));
-			model.addAttribute("minMonth", calStart.get(Calendar.MONTH));
-			model.addAttribute("minDate", calStart.get(Calendar.DAY_OF_MONTH));
-			model.addAttribute("maxYear", cal.get(Calendar.YEAR));
-			model.addAttribute("maxMonth", cal.get(Calendar.MONTH));
-			model.addAttribute("maxDate", cal.get(Calendar.DAY_OF_MONTH));
+			/*
+			 * // Daily trends Map<Integer, InsightsGraphDTO> dailyTrends =
+			 * service .getDailyTrends(brand, state, startDate, endDate);
+			 * 
+			 * Set<Integer> keyPair = dailyTrends.keySet(); String[] days = {
+			 * "SU", "MO", "TU", "WE", "TH", "FR", "SA" };
+			 * 
+			 * Map<String, Integer> maxKey = getMaxKey(dailyTrends);
+			 * 
+			 * Long viewCount = 0L; Long actionCount = 0L; Long webCount = 0L;
+			 * Long dirCount = 0L; Long callCount = 0L;
+			 * 
+			 * String colorCode = "#00BFFF"; String color = "'" + colorCode +
+			 * "'"; String colorG = "GREEN"; String greenColor = "'" + colorG +
+			 * "'";
+			 * 
+			 * for (Integer integer : keyPair) { InsightsGraphDTO
+			 * insightsGraphDTO = dailyTrends.get(integer); String day = "'" +
+			 * days[integer - 1] + "'"; Long totalViewCount =
+			 * insightsGraphDTO.getTotalViewCount(); Long totalActionCount =
+			 * insightsGraphDTO.getTotalActionCount(); Long websiteCount2 =
+			 * insightsGraphDTO.getWebsiteCount(); Long directionsCount2 =
+			 * insightsGraphDTO.getDirectionsCount(); Long callsCount =
+			 * insightsGraphDTO.getCallsCount();
+			 * 
+			 * viewCount = viewCount + totalViewCount; actionCount = actionCount
+			 * + totalActionCount; webCount = webCount + websiteCount2; dirCount
+			 * = dirCount + directionsCount2; callCount = callCount +
+			 * callsCount;
+			 * 
+			 * Integer viewMax = maxKey.get("view"); Integer actionMax =
+			 * maxKey.get("action"); Integer websiteMax = maxKey.get("website");
+			 * Integer callsMax = maxKey.get("calls"); Integer directionsMax =
+			 * maxKey.get("directions");
+			 * 
+			 * if (integer == viewMax) { dailyViewTrends.add("{label: " + day +
+			 * "," + "y:" + totalViewCount + "," + "color:" + greenColor + "}");
+			 * } else { dailyViewTrends.add("{label: " + day + "," + "y:" +
+			 * totalViewCount + "," + "color:" + color + "}"); } if (integer ==
+			 * actionMax) { dailyActionTrends.add("{label: " + day + "," + "y:"
+			 * + totalActionCount + "," + "color:" + greenColor + "}"); } else {
+			 * dailyActionTrends.add("{label: " + day + "," + "y:" +
+			 * totalActionCount + "," + "color:" + color + "}"); } if (integer
+			 * == websiteMax) {
+			 * 
+			 * dailyWebsiteTrends .add("{label: " + day + "," + "y:" +
+			 * websiteCount2 + "," + "color:" + greenColor + "}"); } else {
+			 * dailyWebsiteTrends.add("{label: " + day + "," + "y:" +
+			 * websiteCount2 + "," + "color:" + color + "}"); } if (integer ==
+			 * callsMax) { dailyCallsTrends.add("{label: " + day + "," + "y:" +
+			 * callsCount + "," + "color:" + greenColor + "}"); } else {
+			 * dailyCallsTrends.add("{label: " + day + "," + "y:" + callsCount +
+			 * "," + "color:" + color + "}"); } if (integer == directionsMax) {
+			 * dailyDrivingTrends.add("{label: " + day + "," + "y:" +
+			 * directionsCount2 + "," + "color:" + greenColor + "}"); } else {
+			 * dailyDrivingTrends.add("{label: " + day + "," + "y:" +
+			 * directionsCount2 + "," + "color:" + color + "}"); } }
+			 */
 
-			model.addAttribute("yActions", Math.round(maxCallCounts / 2));
-			model.addAttribute("yViews", Math.round(maxSerchCounts / 2));
-			model.addAttribute("ySearches", Math.round(discoveryCount / 2));
+			model.addAttribute("dailyViewTrends", dailyViewTrends);
+			model.addAttribute("dailyActionTrends", dailyActionTrends);
+			model.addAttribute("dailyWebsiteTrends", dailyWebsiteTrends);
+			model.addAttribute("dailyCallsTrends", dailyCallsTrends);
+			model.addAttribute("dailyDrivingTrends", dailyDrivingTrends);
 
-			model.addAttribute("topTenSearches", topTenSearches);
-			model.addAttribute("bottomTenSearches", bottomTenSearches);
-			model.addAttribute("topTenViews", topTenViews);
-			model.addAttribute("bottomTenViews", bottomTenViews);
-			model.addAttribute("topTenActions", topTenActions);
-			model.addAttribute("bottomTenActions", bottomTenActions);
+			/*
+			 * model.addAttribute("viewCount", viewsCount);
+			 * model.addAttribute("actionCount", actionsCount);
+			 * model.addAttribute("webCount", websiteCount);
+			 * model.addAttribute("dirCount", directionsCount);
+			 * model.addAttribute("callCount", phoneCount);
+			 */
+
+			// daily trends
+
+			/*
+			 * List<BingReportDTO> anlyticsData = service.getAnlytics(brandId,
+			 * state, startDate, endDate);
+			 * 
+			 * for (BingReportDTO bingAnalyticsDTO : anlyticsData) {
+			 * 
+			 * String[] date = bingAnalyticsDTO.getDate().split("-"); Integer
+			 * year = Integer.parseInt(date[0]); Integer month =
+			 * Integer.parseInt(date[1]); Integer day =
+			 * Integer.parseInt(date[2]);
+			 * 
+			 * anlytics.add("{x:new Date(" + year + "," + (month - 1) + "," +
+			 * day + "),  y: " + bingAnalyticsDTO.getImpressionCount() + " }");
+			 * } if (anlyticsData != null && anlyticsData.size() == 0) {
+			 * anlytics.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0 +
+			 * "),  y: " + 0 + " }"); }
+			 * 
+			 * Map<String, List<InsightsGraphDTO>> topBottomSearches = service
+			 * .getTopandBottomSearches(brandId, state, startDate, endDate);
+			 * 
+			 * List<InsightsGraphDTO> topSearchList = topBottomSearches
+			 * .get("tSearch"); List<InsightsGraphDTO> bottomSearchList =
+			 * topBottomSearches .get("bSearch"); List<InsightsGraphDTO>
+			 * topViewList = topBottomSearches.get("tView");
+			 * List<InsightsGraphDTO> bottomViewList = topBottomSearches
+			 * .get("bView"); List<InsightsGraphDTO> topActionList =
+			 * topBottomSearches .get("tAction"); List<InsightsGraphDTO>
+			 * bottomActionList = topBottomSearches .get("bAction");
+			 * 
+			 * List<GoogleInsightsReportDTO> topTenSearches = new
+			 * ArrayList<GoogleInsightsReportDTO>();
+			 * List<GoogleInsightsReportDTO> bottomTenSearches = new
+			 * ArrayList<GoogleInsightsReportDTO>();
+			 * List<GoogleInsightsReportDTO> topTenViews = new
+			 * ArrayList<GoogleInsightsReportDTO>();
+			 * List<GoogleInsightsReportDTO> bottomTenViews = new
+			 * ArrayList<GoogleInsightsReportDTO>();
+			 * List<GoogleInsightsReportDTO> topTenActions = new
+			 * ArrayList<GoogleInsightsReportDTO>();
+			 * List<GoogleInsightsReportDTO> bottomTenActions = new
+			 * ArrayList<GoogleInsightsReportDTO>();
+			 * 
+			 * for (InsightsGraphDTO graphDTO : topSearchList) {
+			 * GoogleInsightsReportDTO dto = new GoogleInsightsReportDTO();
+			 * dto.setStore(graphDTO.getStore());
+			 * dto.setState(graphDTO.getState());
+			 * dto.setCity(graphDTO.getCity());
+			 * dto.setTopDirectCount(graphDTO.getDirectCount());
+			 * dto.setTopDiscoveryCount(graphDTO.getInDirectCount());
+			 * dto.setTotalTopSearchCount(graphDTO.getTotalSearchCount());
+			 * topTenSearches.add(dto); }
+			 * 
+			 * for (InsightsGraphDTO graphDTO : bottomSearchList) {
+			 * GoogleInsightsReportDTO dto = new GoogleInsightsReportDTO();
+			 * dto.setStore(graphDTO.getStore());
+			 * dto.setState(graphDTO.getState());
+			 * dto.setCity(graphDTO.getCity());
+			 * dto.setBottomDirectCount(graphDTO.getDirectCount());
+			 * dto.setBottomDiscoveryCount(graphDTO.getInDirectCount());
+			 * dto.setTotalBottomSearchCount(graphDTO.getTotalSearchCount());
+			 * bottomTenSearches.add(dto); }
+			 * 
+			 * for (InsightsGraphDTO graphDTO : topViewList) {
+			 * GoogleInsightsReportDTO dto = new GoogleInsightsReportDTO();
+			 * dto.setStore(graphDTO.getStore());
+			 * dto.setState(graphDTO.getState());
+			 * dto.setCity(graphDTO.getCity());
+			 * dto.setTopViewSearchCount(graphDTO.getSearchCount());
+			 * dto.setTopViewMapsCount(graphDTO.getMapCount());
+			 * dto.setTotalTopViewsCount(graphDTO.getTotalViewCount());
+			 * topTenViews.add(dto); }
+			 * 
+			 * for (InsightsGraphDTO graphDTO : bottomViewList) {
+			 * GoogleInsightsReportDTO dto = new GoogleInsightsReportDTO();
+			 * dto.setStore(graphDTO.getStore());
+			 * dto.setState(graphDTO.getState());
+			 * dto.setCity(graphDTO.getCity());
+			 * dto.setBottomViewSearchCount(graphDTO.getSearchCount());
+			 * dto.setBottomViewMapsCount(graphDTO.getMapCount());
+			 * dto.setTotalBottomViewsCount(graphDTO.getTotalViewCount());
+			 * bottomTenViews.add(dto); }
+			 * 
+			 * for (InsightsGraphDTO graphDTO : topActionList) {
+			 * GoogleInsightsReportDTO dto = new GoogleInsightsReportDTO();
+			 * dto.setStore(graphDTO.getStore());
+			 * dto.setState(graphDTO.getState());
+			 * dto.setCity(graphDTO.getCity());
+			 * dto.setTopWebsiteCount(graphDTO.getWebsiteCount());
+			 * dto.setTopDirectionsCount(graphDTO.getDirectionsCount());
+			 * dto.setTopCallsCount(graphDTO.getCallsCount());
+			 * dto.setTotalTopActionsCount(graphDTO.getTotalActionCount());
+			 * topTenActions.add(dto); }
+			 * 
+			 * for (InsightsGraphDTO graphDTO : bottomActionList) {
+			 * GoogleInsightsReportDTO dto = new GoogleInsightsReportDTO();
+			 * dto.setStore(graphDTO.getStore());
+			 * dto.setState(graphDTO.getState());
+			 * dto.setCity(graphDTO.getCity());
+			 * dto.setBottomWebsiteCount(graphDTO.getWebsiteCount());
+			 * dto.setBottomDirectionsCount(graphDTO.getDirectionsCount());
+			 * dto.setBottomCallsCount(graphDTO.getCallsCount());
+			 * dto.setTotalBottomActionsCount(graphDTO.getTotalActionCount());
+			 * bottomTenActions.add(dto); }
+			 * 
+			 * Map<String, List<BingAnalyticsDTO>> topAnalytics = service
+			 * .getTopandBottomAnalytics(brandId, state, startDate, endDate);
+			 * 
+			 * List<BingAnalyticsDTO> tTenAnalytics = topAnalytics
+			 * .get("topAnalytics"); List<BingAnalyticsDTO> bTenAnalytics =
+			 * topAnalytics .get("bottomAnalytics");
+			 * 
+			 * model.addAttribute("topAnalytics", tTenAnalytics);
+			 * model.addAttribute("bAnalytics", bTenAnalytics);
+			 * 
+			 * Calendar calStart = Calendar.getInstance();
+			 * 
+			 * calStart.setTime(startDate); model.addAttribute("days",
+			 * listofWeeks.size()); model.addAttribute("minYear",
+			 * calStart.get(Calendar.YEAR)); model.addAttribute("minMonth",
+			 * calStart.get(Calendar.MONTH)); model.addAttribute("minDate",
+			 * calStart.get(Calendar.DAY_OF_MONTH));
+			 * model.addAttribute("maxYear", cal.get(Calendar.YEAR));
+			 * model.addAttribute("maxMonth", cal.get(Calendar.MONTH));
+			 * model.addAttribute("maxDate", cal.get(Calendar.DAY_OF_MONTH));
+			 * 
+			 * model.addAttribute("yActions", Math.round(maxCallCounts / 2));
+			 * model.addAttribute("yViews", Math.round(maxSerchCounts / 2));
+			 * model.addAttribute("ySearches", Math.round(discoveryCount / 2));
+			 * 
+			 * model.addAttribute("topTenSearches", topTenSearches);
+			 * model.addAttribute("bottomTenSearches", bottomTenSearches);
+			 * model.addAttribute("topTenViews", topTenViews);
+			 * model.addAttribute("bottomTenViews", bottomTenViews);
+			 * model.addAttribute("topTenActions", topTenActions);
+			 * model.addAttribute("bottomTenActions", bottomTenActions);
+			 */
 
 			// for graph .........
 			model.addAttribute("brand", brand);
@@ -1891,44 +3438,192 @@ public class ReportController {
 			model.addAttribute("sd", start);
 			model.addAttribute("ed", end);
 
-			model.addAttribute("searchHistory", views);
-			model.addAttribute("mapsHistory", maps);
+			/*
+			 * model.addAttribute("searchHistory", views);
+			 * model.addAttribute("mapsHistory", maps);
+			 * 
+			 * model.addAttribute("websitesHistory", websites);
+			 * model.addAttribute("directionsHistory", directions);
+			 * model.addAttribute("callsHistory", calls);
+			 */
 
-			model.addAttribute("websitesHistory", websites);
-			model.addAttribute("directionsHistory", directions);
-			model.addAttribute("callsHistory", calls);
+			model.addAttribute("searchPreTrends", searchPreTrends);
+			model.addAttribute("searchCurTrends", searchCurTrends);
+
+			model.addAttribute("actionPreTrends", actionPreTrends);
+			model.addAttribute("actionCurTrends", actionCurTrends);
+
+			model.addAttribute("viewPreTrends", viewPreTrends);
+			model.addAttribute("viewCurTrends", viewCurTrends);
+
+			//model.addAttribute("anlytics", anlytics);
 
 			java.util.Collections.sort(allStates);
 
 			model.addAttribute("statesList", allStates);
 
-			model.addAttribute("direct", directCount);
-			model.addAttribute("discovery", discoveryCount);
-
-			model.addAttribute("search", searchCount);
-			model.addAttribute("maps", mapsCount);
-			model.addAttribute("views", viewsCount);
-
-			model.addAttribute("website", websiteCount);
-			model.addAttribute("directions", directionsCount);
-			model.addAttribute("calls", phoneCount);
-			model.addAttribute("actions", actionsCount);
+			/*
+			 * model.addAttribute("direct", directCount);
+			 * model.addAttribute("discovery", discoveryCount);
+			 * 
+			 * model.addAttribute("search", searchCount);
+			 * model.addAttribute("maps", mapsCount);
+			 * model.addAttribute("views", viewsCount);
+			 * 
+			 * model.addAttribute("website", websiteCount);
+			 * model.addAttribute("directions", directionsCount);
+			 * model.addAttribute("calls", phoneCount);
+			 * model.addAttribute("actions", actionsCount);
+			 */
 
 			logger.info("allStates ::" + allStates.size());
 		}
 
-		return "reports-gmbbrand";
+		long endTimeInMillis = Calendar.getInstance().getTimeInMillis();
+
+		long seconds = (endTimeInMillis - startTimeInMillis) / 1000;
+
+		return "gmb-brand";
+	}
+
+	Map<String, Integer> getMaxKey(Map<Integer, InsightsGraphDTO> dailyTrends) {
+
+		HashMap<Integer, Long> viewMap = new HashMap<Integer, Long>();
+		HashMap<Integer, Long> actionMap = new HashMap<Integer, Long>();
+		HashMap<Integer, Long> websiteMap = new HashMap<Integer, Long>();
+		HashMap<Integer, Long> callsMap = new HashMap<Integer, Long>();
+		HashMap<Integer, Long> directionsMap = new HashMap<Integer, Long>();
+
+		HashMap<String, Integer> indexMap = new HashMap<String, Integer>();
+
+		Set<Integer> keyPair = dailyTrends.keySet();
+
+		for (Integer key : keyPair) {
+			InsightsGraphDTO insightsGraphDTO = dailyTrends.get(key);
+			viewMap.put(key, insightsGraphDTO.getTotalViewCount());
+			actionMap.put(key, insightsGraphDTO.getTotalActionCount());
+			websiteMap.put(key, insightsGraphDTO.getWebsiteCount());
+			callsMap.put(key, insightsGraphDTO.getCallsCount());
+			directionsMap.put(key, insightsGraphDTO.getDirectionsCount());
+		}
+
+		Integer maxKeyView = getKey(viewMap);
+		Integer maxKeyAction = getKey(actionMap);
+		Integer maxKeyWebsite = getKey(websiteMap);
+		Integer maxKeyCalls = getKey(callsMap);
+		Integer maxKeyDirections = getKey(directionsMap);
+
+		indexMap.put("view", maxKeyView);
+		indexMap.put("action", maxKeyAction);
+		indexMap.put("website", maxKeyWebsite);
+		indexMap.put("calls", maxKeyCalls);
+		indexMap.put("directions", maxKeyDirections);
+
+		return indexMap;
+
+	}
+
+	Integer getKey(HashMap<Integer, Long> map) {
+		Iterator<Integer> it = map.keySet().iterator();
+		Integer viewMapKey = it.next();
+		Long viewMapKeyMaxValue = map.get(viewMapKey);
+		while (it.hasNext()) {
+			Integer k = it.next();
+			Long val = map.get(k);
+			if (val > viewMapKeyMaxValue) {
+				viewMapKeyMaxValue = val;
+				viewMapKey = k;
+			}
+		}
+		return viewMapKey;
+	}
+
+	@RequestMapping(value = "/generatePDF.htm", method = RequestMethod.GET)
+	public void generatePDF(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		logger.info("PDF is getting created");
+		String apiURL = request.getParameter("url");
+		String fileName = request.getParameter("report");
+		String BaseURL = "http://api.html2pdfrocket.com/pdf";
+
+		// PDFRocketAPI.createPDF(pathtoPDF, apiURL, fileName);
+
+		String APIKey = "ff60aa04-d396-44bc-a262-e75b163071bc";
+		String ExtraParams = "JavascriptDelay=3000&MarginBottom=15&MarginLeft=0.25&MarginRight=0.25&MarginTop=0.25&PageWidth=215.9&PageHeight=279.4&FooterUrl=http://23.23.203.174/lbl_pro/pdfheader.htm";
+		String value = apiURL;
+
+		URL url;
+		String Params = "";
+		String file = "";
+		try {
+			if (ExtraParams != null && !"".equals(ExtraParams)) {
+				Params = ExtraParams;
+				if (!Params.substring(0, 1).equals("&")) {
+					Params = "&" + Params;
+				}
+			}
+
+			value = URLEncoder.encode(value,
+					java.nio.charset.StandardCharsets.UTF_8.toString());
+			value += Params;
+
+			// Validate parameters
+			if (APIKey == null || "".equals(APIKey))
+				throw (new Exception("API key is empty"));
+			if (fileName == null || "".equals(fileName))
+				throw (new Exception("Filename is empty"));
+
+			// Append parameters for API call
+			url = new URL(BaseURL + "?apikey=" + APIKey + "&value=" + value);
+
+			// Download PDF file
+			URLConnection connection = url.openConnection();
+			InputStream Instream = connection.getInputStream();
+
+			// Write PDF file
+			BufferedInputStream BISin = new BufferedInputStream(Instream);
+			file = pathtoPDF + File.separatorChar + fileName + ".pdf";
+			File f = new File(file);
+			FileOutputStream FOSfile = new FileOutputStream(f);
+			BufferedOutputStream out = new BufferedOutputStream(FOSfile);
+
+			int i;
+			while ((i = BISin.read()) != -1) {
+				out.write(i);
+			}
+
+			/*
+			 * // Clean up out.flush(); out.close();
+			 */
+			System.out.println("File " + fileName + " created");
+			logger.info("PDF " + fileName + "is getting created");
+
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		File fileToD = new File("C:\\Code\\lbl_pro\\pdf.pdf");
+		FileInputStream fileIn = new FileInputStream(fileToD);
+		ServletOutputStream out = response.getOutputStream();
+
+		byte[] outputByte = new byte[4096];
+		// copy binary contect to output stream
+		while (fileIn.read(outputByte, 0, 4096) != -1) {
+			out.write(outputByte, 0, 4096);
+		}
+		fileIn.close();
+		out.flush();
+		out.close();
+
 	}
 
 	@RequestMapping(value = "/pdfGMBBrand.htm", method = RequestMethod.GET)
 	public String pdfGMBBrand(Model model, HttpServletRequest request,
 			HttpSession session) throws Exception {
-
-		/*
-		 * String url =
-		 * "pdfGMBBrand.htm?data="+brand+"-"+state+"-"+start+"-"+end;
-		 * model.addAttribute("url", url);
-		 */
 
 		String data = request.getParameter("data");
 		String[] dataArray = data.split("-");
@@ -1953,6 +3648,29 @@ public class ReportController {
 		logger.info("state ::" + state);
 		logger.info("brand in Controller ::" + brand);
 
+		Map<String, String> channelImageBytes = service
+				.getChannelImageBytes(brand);
+
+		BrandInfoDTO brandInfo = service.getBrandInfoByBrandName(brand);
+
+		Integer brandId = brandInfo.getClientId();
+
+		/*
+		 * byte[] encoded = org.apache.commons.codec.binary.Base64
+		 * .encodeBase64(channelImageBytes.get("cImage")); String encodedString
+		 * = new String(encoded);
+		 * 
+		 * model.addAttribute("channelImageData", encodedString);
+		 * 
+		 * byte[] bEncoded = org.apache.commons.codec.binary.Base64
+		 * .encodeBase64(channelImageBytes.get("bImage")); String encodedBrad =
+		 * new String(bEncoded);
+		 * 
+		 * model.addAttribute("brandImageData", encodedBrad);
+		 */
+		model.addAttribute("brandImage", channelImageBytes.get("bImage"));
+		model.addAttribute("channelImage", channelImageBytes.get("cImage"));
+
 		Date startDate = null;
 		Date endDate = null;
 		if (start.length() > 0 || end.length() > 0) {
@@ -1974,8 +3692,16 @@ public class ReportController {
 		List<String> websites = new ArrayList<String>();
 		List<String> directions = new ArrayList<String>();
 		List<String> calls = new ArrayList<String>();
+		List<String> anlytics = new ArrayList<String>();
 
-		Integer count = service.getInsightCountsForBrand(brand, "");
+		List<String> dailyViewTrends = new ArrayList<String>();
+		List<String> dailyActionTrends = new ArrayList<String>();
+		List<String> dailyWebsiteTrends = new ArrayList<String>();
+		List<String> dailyCallsTrends = new ArrayList<String>();
+		List<String> dailyDrivingTrends = new ArrayList<String>();
+
+		Long count = service.getInsightCountsForBrand(brandId, "", startDate,
+				endDate);
 		if (count != null && count == 0) {
 			model.addAttribute("noDataMessage", true);
 
@@ -1989,6 +3715,7 @@ public class ReportController {
 
 			model.addAttribute("yActions", 0);
 			model.addAttribute("yViews", 0);
+			model.addAttribute("ySearches", 0);
 
 			views.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0 + "),  y: "
 					+ 0 + " }");
@@ -2001,8 +3728,32 @@ public class ReportController {
 			calls.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0 + "),  y: "
 					+ 0 + " }");
 
+			anlytics.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+					+ "),  y: " + 0 + " }");
+
 			directions.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
 					+ "),  y: " + 0 + " }");
+
+			String colorCode = "Blue";
+			String color = "'" + colorCode + "'";
+
+			String day = "SU";
+			int cnt = 0;
+
+			dailyViewTrends.add("{label: " + day + "," + "y:" + cnt + ","
+					+ "color:" + color + "}");
+
+			dailyActionTrends.add("{label: " + day + "," + "y:" + cnt + ","
+					+ "color:" + color + "}");
+
+			dailyWebsiteTrends.add("{label: " + day + "," + "y:" + cnt + ","
+					+ "color:" + color + "}");
+
+			dailyCallsTrends.add("{label: " + day + "," + "y:" + cnt + ","
+					+ "color:" + color + "}");
+
+			dailyDrivingTrends.add("{label: " + day + "," + "y:" + cnt + ","
+					+ "color:" + color + "}");
 
 			model.addAttribute("searchHistory", views);
 			model.addAttribute("mapsHistory", maps);
@@ -2010,6 +3761,20 @@ public class ReportController {
 			model.addAttribute("websitesHistory", websites);
 			model.addAttribute("directionsHistory", directions);
 			model.addAttribute("callsHistory", calls);
+
+			List<String> searchPreTrends = new ArrayList<String>();
+
+			searchPreTrends.add("{label: Jan,y:0}");
+
+			model.addAttribute("searchPreTrends", searchPreTrends);
+			model.addAttribute("searchCurTrends", searchPreTrends);
+
+			model.addAttribute("actionPreTrends", searchPreTrends);
+			model.addAttribute("actionCurTrends", searchPreTrends);
+
+			model.addAttribute("viewPreTrends", searchPreTrends);
+			model.addAttribute("viewCurTrends", searchPreTrends);
+			model.addAttribute("anlytics", anlytics);
 
 			model.addAttribute("brand", brand);
 			model.addAttribute("state", state);
@@ -2021,7 +3786,7 @@ public class ReportController {
 			List<String> allStates = service.getAllStatesListByBrand(brand);
 
 			Map<String, Long> insightsDataMap = service.getInsightsBrandData(
-					brand, state, startDate, endDate);
+					brandId, state, startDate, endDate);
 
 			java.util.Collections.sort(allStates);
 
@@ -2060,8 +3825,8 @@ public class ReportController {
 			Map<String, InsightsGraphDTO> weeklyInsights = new HashMap<String, InsightsGraphDTO>();
 			List<String> keys = new ArrayList<String>();
 
-			Map<String, InsightsGraphDTO> dailyMap = service.getHistory(brand,
-					state, startDate, endDate);
+			Map<String, InsightsGraphDTO> dailyMap = service.getHistory(
+					brandId, state, startDate, endDate);
 
 			Set<String> keySet = dailyMap.keySet();
 
@@ -2110,8 +3875,178 @@ public class ReportController {
 
 			}
 
+			Map<String, List<BingAnalyticsDTO>> topAnalytics = service
+					.getTopandBottomAnalytics(brandId, state, startDate,
+							endDate);
+
+			List<BingAnalyticsDTO> tTenAnalytics = topAnalytics
+					.get("topAnalytics");
+			List<BingAnalyticsDTO> bTenAnalytics = topAnalytics
+					.get("bottomAnalytics");
+
+			model.addAttribute("topAnalytics", tTenAnalytics);
+			model.addAttribute("bAnalytics", bTenAnalytics);
+
+			List<InsightsGraphDTO> insightstrendData = service
+					.getMonthlyTrends(brandId, state);
+
+			List<String> searchPreTrends = new ArrayList<String>();
+			List<String> searchCurTrends = new ArrayList<String>();
+
+			List<String> viewPreTrends = new ArrayList<String>();
+			List<String> viewCurTrends = new ArrayList<String>();
+
+			List<String> actionPreTrends = new ArrayList<String>();
+			List<String> actionCurTrends = new ArrayList<String>();
+
+			// Action Trends
+
+			Map<String, Long> lastYearActonMonths = getLastYearMonths();
+			Map<String, Long> currentYearActionMonths = getCurrentYearMonths();
+
+			for (InsightsGraphDTO insightsGraphDTO : insightstrendData) {
+
+				String monthYear = getMonthYear(insightsGraphDTO.getDate());
+				if (lastYearActonMonths.containsKey(monthYear)) {
+					lastYearActonMonths.put(monthYear,
+							insightsGraphDTO.getTotalActionCount());
+				}
+				if (currentYearActionMonths.containsKey(monthYear)) {
+					currentYearActionMonths.put(monthYear,
+							insightsGraphDTO.getTotalActionCount());
+				}
+			}
+			Set<String> lastYearSet = lastYearActonMonths.keySet();
+			for (String key : lastYearSet) {
+				Long value = lastYearActonMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				actionPreTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
+			}
+
+			Set<String> lcurrentYearSet = currentYearActionMonths.keySet();
+			for (String key : lcurrentYearSet) {
+				Long value = currentYearActionMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				actionCurTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
+			}
+
+			// View Trends
+			Map<String, Long> lastYearViewMonths = getLastYearMonths();
+			Map<String, Long> currentYearViewMonths = getCurrentYearMonths();
+
+			for (InsightsGraphDTO insightsGraphDTO : insightstrendData) {
+
+				String monthYear = getMonthYear(insightsGraphDTO.getDate());
+				if (lastYearViewMonths.containsKey(monthYear)) {
+					lastYearViewMonths.put(monthYear,
+							insightsGraphDTO.getTotalViewCount());
+				}
+				if (currentYearViewMonths.containsKey(monthYear)) {
+					currentYearViewMonths.put(monthYear,
+							insightsGraphDTO.getTotalViewCount());
+				}
+			}
+			Set<String> lastYearViewSet = lastYearViewMonths.keySet();
+			for (String key : lastYearViewSet) {
+				Long value = lastYearViewMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				viewPreTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
+			}
+
+			Set<String> currentYearViewSet = currentYearViewMonths.keySet();
+			for (String key : currentYearViewSet) {
+				Long value = currentYearViewMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				viewCurTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
+			}
+
+			// search Trends
+			Map<String, Long> lastYearMonths = getLastYearMonths();
+			Map<String, Long> currentYearMonths = getCurrentYearMonths();
+
+			for (InsightsGraphDTO insightsGraphDTO : insightstrendData) {
+
+				String monthYear = getMonthYear(insightsGraphDTO.getDate());
+				if (lastYearMonths.containsKey(monthYear)) {
+					lastYearMonths.put(monthYear,
+							insightsGraphDTO.getTotalSearchCount());
+				}
+				if (currentYearMonths.containsKey(monthYear)) {
+					currentYearMonths.put(monthYear,
+							insightsGraphDTO.getTotalSearchCount());
+				}
+			}
+			Set<String> lastYearsSet = lastYearMonths.keySet();
+			for (String key : lastYearsSet) {
+				Long value = lastYearMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				searchPreTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
+			}
+
+			Set<String> lcurrentYearsSet = currentYearMonths.keySet();
+			for (String key : lcurrentYearsSet) {
+				Long value = currentYearMonths.get(key);
+				if (value == null) {
+					value = 0L;
+				}
+				String name[] = key.split("-");
+				String nameM = "'" + name[0] + "'";
+				String monthV = nameM.replace('\'', '\"');
+				searchCurTrends.add("{label: " + monthV + "," + "y:" + value
+						+ "}");
+			}
+
+			List<BingReportDTO> anlyticsData = service.getAnlytics(brandId,
+					state, startDate, endDate);
+
+			for (BingReportDTO bingAnalyticsDTO : anlyticsData) {
+
+				String[] date = bingAnalyticsDTO.getDate().split("-");
+				Integer year = Integer.parseInt(date[0]);
+				Integer month = Integer.parseInt(date[1]);
+				Integer day = Integer.parseInt(date[2]);
+
+				anlytics.add("{x:new Date(" + year + "," + (month - 1) + ","
+						+ day + "),  y: "
+						+ bingAnalyticsDTO.getImpressionCount() + " }");
+			}
+			if (anlyticsData != null && anlyticsData.size() == 0) {
+				anlytics.add("{x:new Date(" + 0 + "," + (1 - 1) + "," + 0
+						+ "),  y: " + 0 + " }");
+			}
+
 			Map<String, List<InsightsGraphDTO>> topBottomSearches = service
-					.getTopandBottomSearches(brand, state, startDate, endDate);
+					.getTopandBottomSearches(brandId, state, startDate, endDate);
 
 			List<InsightsGraphDTO> topSearchList = topBottomSearches
 					.get("tSearch");
@@ -2201,6 +4136,103 @@ public class ReportController {
 			}
 			Calendar calStart = Calendar.getInstance();
 
+			// Daily trends
+			Map<Integer, InsightsGraphDTO> dailyTrends = service
+					.getDailyTrends(brand, state, startDate, endDate);
+
+			Set<Integer> keyPair = dailyTrends.keySet();
+			String[] days = { "SU", "MO", "TU", "WE", "TH", "FR", "SA" };
+
+			Map<String, Integer> maxKey = getMaxKey(dailyTrends);
+
+			Long viewCount = 0L;
+			Long actionCount = 0L;
+			Long webCount = 0L;
+			Long dirCount = 0L;
+			Long callCount = 0L;
+
+			String colorCode = "#00BFFF";
+			String color = "'" + colorCode + "'";
+			String colorG = "GREEN";
+			String greenColor = "'" + colorG + "'";
+
+			for (Integer integer : keyPair) {
+				InsightsGraphDTO insightsGraphDTO = dailyTrends.get(integer);
+				String day = "'" + days[integer - 1] + "'";
+				Long totalViewCount = insightsGraphDTO.getTotalViewCount();
+				Long totalActionCount = insightsGraphDTO.getTotalActionCount();
+				Long websiteCount2 = insightsGraphDTO.getWebsiteCount();
+				Long directionsCount2 = insightsGraphDTO.getDirectionsCount();
+				Long callsCount = insightsGraphDTO.getCallsCount();
+
+				viewCount = viewCount + totalViewCount;
+				actionCount = actionCount + totalActionCount;
+				webCount = webCount + websiteCount2;
+				dirCount = dirCount + directionsCount2;
+				callCount = callCount + callsCount;
+
+				Integer viewMax = maxKey.get("view");
+				Integer actionMax = maxKey.get("action");
+				Integer websiteMax = maxKey.get("website");
+				Integer callsMax = maxKey.get("calls");
+				Integer directionsMax = maxKey.get("directions");
+
+				if (integer == viewMax) {
+					dailyViewTrends.add("{label: " + day + "," + "y:"
+							+ totalViewCount + "," + "color:" + greenColor
+							+ "}");
+				} else {
+					dailyViewTrends.add("{label: " + day + "," + "y:"
+							+ totalViewCount + "," + "color:" + color + "}");
+				}
+				if (integer == actionMax) {
+					dailyActionTrends.add("{label: " + day + "," + "y:"
+							+ totalActionCount + "," + "color:" + greenColor
+							+ "}");
+				} else {
+					dailyActionTrends.add("{label: " + day + "," + "y:"
+							+ totalActionCount + "," + "color:" + color + "}");
+				}
+				if (integer == websiteMax) {
+
+					dailyWebsiteTrends
+							.add("{label: " + day + "," + "y:" + websiteCount2
+									+ "," + "color:" + greenColor + "}");
+				} else {
+					dailyWebsiteTrends.add("{label: " + day + "," + "y:"
+							+ websiteCount2 + "," + "color:" + color + "}");
+				}
+				if (integer == callsMax) {
+					dailyCallsTrends.add("{label: " + day + "," + "y:"
+							+ callsCount + "," + "color:" + greenColor + "}");
+				} else {
+					dailyCallsTrends.add("{label: " + day + "," + "y:"
+							+ callsCount + "," + "color:" + color + "}");
+				}
+				if (integer == directionsMax) {
+					dailyDrivingTrends.add("{label: " + day + "," + "y:"
+							+ directionsCount2 + "," + "color:" + greenColor
+							+ "}");
+				} else {
+					dailyDrivingTrends.add("{label: " + day + "," + "y:"
+							+ directionsCount2 + "," + "color:" + color + "}");
+				}
+			}
+
+			model.addAttribute("dailyViewTrends", dailyViewTrends);
+			model.addAttribute("dailyActionTrends", dailyActionTrends);
+			model.addAttribute("dailyWebsiteTrends", dailyWebsiteTrends);
+			model.addAttribute("dailyCallsTrends", dailyCallsTrends);
+			model.addAttribute("dailyDrivingTrends", dailyDrivingTrends);
+
+			model.addAttribute("viewCount", viewCount);
+			model.addAttribute("actionCount", actionCount);
+			model.addAttribute("webCount", webCount);
+			model.addAttribute("dirCount", dirCount);
+			model.addAttribute("callCount", callCount);
+
+			// daily trends
+
 			calStart.setTime(startDate);
 			model.addAttribute("days", listofWeeks.size());
 			model.addAttribute("minYear", calStart.get(Calendar.YEAR));
@@ -2237,6 +4269,16 @@ public class ReportController {
 			model.addAttribute("directionsHistory", directions);
 			model.addAttribute("callsHistory", calls);
 
+			model.addAttribute("searchPreTrends", searchPreTrends);
+			model.addAttribute("searchCurTrends", searchCurTrends);
+
+			model.addAttribute("actionPreTrends", actionPreTrends);
+			model.addAttribute("actionCurTrends", actionCurTrends);
+
+			model.addAttribute("viewPreTrends", viewPreTrends);
+			model.addAttribute("viewCurTrends", viewCurTrends);
+			model.addAttribute("anlytics", anlytics);
+
 			java.util.Collections.sort(allStates);
 
 			model.addAttribute("statesList", allStates);
@@ -2255,6 +4297,8 @@ public class ReportController {
 
 			logger.info("allStates ::" + allStates.size());
 		}
+
+		System.out.println();
 
 		return "pdf-gmbbrand";
 	}
@@ -2369,10 +4413,56 @@ public class ReportController {
 		return listofWeeks;
 	}
 
-	public String getFormattedDate(Date dateValue) {
+	public static String getFormattedDate(Date dateValue) {
 		SimpleDateFormat formatter = new SimpleDateFormat("MMM dd, YYYY");
 		String format = formatter.format(dateValue);
 		return format;
+	}
+
+	public static String getYYYYMMDD(Date dateValue) {
+		SimpleDateFormat formatter = new SimpleDateFormat("YYYYMMdd");
+		String format = formatter.format(dateValue);
+		return format;
+	}
+
+	public static String[] getPastDates(int monthsold) {
+		SimpleDateFormat formatter = new SimpleDateFormat(
+				"yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'");
+
+		String[] dates = new String[2];
+
+		Calendar calendar2 = Calendar.getInstance();
+		calendar2.setTime(calendar2.getTime());
+		calendar2.set(Calendar.DATE, 0);
+		calendar2.set(Calendar.MILLISECOND, 0);
+		calendar2.set(Calendar.SECOND, 0);
+		calendar2.set(Calendar.MINUTE, 0);
+		calendar2.set(Calendar.HOUR, 0);
+		calendar2.set(Calendar.MONTH, -monthsold);
+		String endDate = formatter.format(calendar2.getTime());
+
+		dates[1] = endDate;
+
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(calendar2.getTime());
+		calendar2.set(Calendar.MILLISECOND, 0);
+		calendar2.set(Calendar.SECOND, 0);
+		calendar2.set(Calendar.MINUTE, 0);
+		calendar2.set(Calendar.HOUR, 24);
+		calendar.add(Calendar.DATE, -30);
+		calendar.add(Calendar.DATE, 0);
+
+		String startDate = formatter.format(calendar.getTime());
+		dates[0] = startDate;
+
+		System.out.println(dates[0] + "===="+ dates[1]);
+
+		return dates;
+	}
+	
+	public static void main(String[] args) {
+		//getLastMonthDates(30);
+		getPastDates(1);
 	}
 
 }

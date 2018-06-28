@@ -31,7 +31,7 @@ import com.partners.neustar.NeustarLocalezeClient;
 
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  */
 
@@ -54,10 +54,11 @@ public class SubmissionUtil {
 	 * @param resp
 	 * @throws Exception
 	 */
-	public void doSubmissions(BusinessService service, String client) throws Exception {
+	public void doSubmissions(BusinessService service, String client)
+			throws Exception {
 		this.service = service;
 		submissionUtil = new SubmissionUtil();
-		logger.debug("Submissions Triggered for specific Client from UI ::"
+		logger.debug("Submissions Triggered from UI for Client ::"
 				+ client);
 		logger.debug("******** Start: submitting the data to Providers ***********");
 		Map<String, List<BrandInfoDTO>> allActiveBrandsMap = null;
@@ -77,15 +78,13 @@ public class SubmissionUtil {
 			if (numberOfRecords > 0) {
 				List<BrandInfoDTO> brandInfoDTOs = allActiveBrandsMap
 						.get(brandName);
-				
-				
+
 				for (BrandInfoDTO brandInfoDTO : brandInfoDTOs) {
 					int numberOfFailedRecords = 0;
-					boolean isAPI=false;
+					boolean isAPI = false;
 					// call required APIs
 					if (brandInfoDTO.getSubmisions() != null) {
 						String partner = brandInfoDTO.getSubmisions();
-						
 
 						if (partner.equalsIgnoreCase(LBLConstants.LBL_ACXIOM)) {
 							isAPI = true;
@@ -139,23 +138,24 @@ public class SubmissionUtil {
 							logger.info("Sending info to " + partner
 									+ ", and the total businesses are: "
 									+ numberOfRecords);
-							try{
+							try {
 								FactualClient factualClient = new FactualClient();
 								Map<String, List<String>> errorDetails = factualClient
-										.exportToFactual(localBusinessDTOs, service);
+										.exportToFactual(localBusinessDTOs,
+												service);
 
 								List<String> list = errorDetails
 										.get("errorDetails");
 								sendMail(list, brandName, partner);
 								numberOfFailedRecords = list.size();
-								updateRenewal(localBusinessDTOs, partner, brandInfoDTO.getBrandName());	
-							}catch(Exception e){
+								updateRenewal(localBusinessDTOs, partner,
+										brandInfoDTO.getBrandName());
+							} catch (Exception e) {
 								logger.error("There was a issue while submitting data to Factual for Brand: "
 										+ brandName);
 							}
-							
 
-						} else if (partner
+						} else  if (partner
 								.equalsIgnoreCase(LBLConstants.LBL_INFOGROUP)) {
 							isAPI = true;
 							logger.info("Sending info to " + partner
@@ -163,7 +163,8 @@ public class SubmissionUtil {
 									+ numberOfRecords);
 							try {
 								Map<String, List<String>> errorDetails = InfogroupClient
-										.postToInfogroup(localBusinessDTOs,service);
+										.postToInfogroup(localBusinessDTOs,
+												service);
 
 								List<String> list = errorDetails
 										.get("errorDetails");
@@ -173,18 +174,18 @@ public class SubmissionUtil {
 										brandInfoDTO.getBrandName());
 								numberOfFailedRecords = list.size();
 
-							} catch(Exception e){
+							} catch (Exception e) {
 								logger.error("There was a issue while submitting data to Factual for Brand: "
 										+ brandName);
 							}
 						} else if (partner
 								.equalsIgnoreCase(LBLConstants.LBL_NEUSTAR)) {
 							isAPI = true;
-							try{
-							logger.info("Sending info to " + partner
+							try {
+								logger.info("Sending info to " + partner
 										+ ", and the total businesses are: "
 										+ numberOfRecords);
-								
+
 								Map<String, List<String>> errorDetails = NeustarLocalezeClient
 										.neustarLocalezeAPI(service,
 												localBusinessDTOs);
@@ -192,15 +193,16 @@ public class SubmissionUtil {
 										.get("errorDetails");
 								sendMail(list, brandName, partner);
 								numberOfFailedRecords = list.size();
-								updateRenewal(localBusinessDTOs, partner, brandInfoDTO.getBrandName());
-							}catch(Exception e){
+								updateRenewal(localBusinessDTOs, partner,
+										brandInfoDTO.getBrandName());
+							} catch (Exception e) {
 								logger.error("There was a issue while submitting data to Factual for Brand: "
 										+ brandName);
 							}
-							
-						}
-					}
 
+						} 
+					}
+	
 					java.util.Date currentDate = DateUtil
 							.getCurrentDate("MM/dd/yyyy HH:mm:ss");
 					if (brandInfoDTO.getActiveDate() == null) {
@@ -214,11 +216,13 @@ public class SubmissionUtil {
 					if (channelNameDTO != null) {
 						channelName = channelNameDTO.getChannelName();
 					}
-					if(numberOfRecords!=0 && isAPI){
-						numberOfRecords = numberOfRecords - numberOfFailedRecords;
+					if (numberOfRecords != 0 && isAPI) {
+						numberOfRecords = numberOfRecords
+								- numberOfFailedRecords;
 						ExportReportEntity exportReportEntity = new ExportReportEntity();
 						exportReportEntity.setBrandName(brandName);
-						exportReportEntity.setPartner(brandInfoDTO.getSubmisions());
+						exportReportEntity.setPartner(brandInfoDTO
+								.getSubmisions());
 						exportReportEntity.setChannelName(channelName);
 						exportReportEntity.setNumberOfRecords(Long
 								.valueOf(numberOfRecords));
@@ -226,30 +230,35 @@ public class SubmissionUtil {
 						exportReportEntity.setUserName("CustomSubmission");
 						service.saveExpostInfo(exportReportEntity);
 					}
-					
+
 				}
 			}
 		}
-		
+
 	}
 
-	public void updateRenewal(List<LocalBusinessDTO> localBusinessDTOs, String partner, String brandName) {
-		java.util.Date currentDate = DateUtil.getCurrentDate("MM/dd/yyyy HH:mm:ss");
+	public void updateRenewal(List<LocalBusinessDTO> localBusinessDTOs,
+			String partner, String brandName) {
+		java.util.Date currentDate = DateUtil
+				.getCurrentDate("MM/dd/yyyy HH:mm:ss");
 
 		RenewalReportEntity entity = new RenewalReportEntity();
 		for (LocalBusinessDTO localBusinessDTO : localBusinessDTOs) {
-			RenewalReportEntity reportEntity = service.isStoreExistInRenewal(localBusinessDTO.getStore(),
-					localBusinessDTO.getClientId());
+			RenewalReportEntity reportEntity = service
+					.isStoreExistInRenewal(localBusinessDTO.getStore(),
+							localBusinessDTO.getClientId());
 
 			if (reportEntity != null && reportEntity.getStore() != null) {
 				Calendar cal = Calendar.getInstance();
 				cal.setTime(currentDate);
 				cal.add(Calendar.YEAR, 1);
 				Date renewalDate = cal.getTime();
-				if (partner.equalsIgnoreCase(LBLConstants.LBL_ACXIOM) && reportEntity.getAcxiomActiveDate() == null) {
+				if (partner.equalsIgnoreCase(LBLConstants.LBL_ACXIOM)
+						&& reportEntity.getAcxiomActiveDate() == null) {
 					reportEntity.setAcxiomActiveDate(currentDate);
 				}
-				if (partner.equalsIgnoreCase(LBLConstants.LBL_FACTUAL) && reportEntity.getFactualActiveDate() == null) {
+				if (partner.equalsIgnoreCase(LBLConstants.LBL_FACTUAL)
+						&& reportEntity.getFactualActiveDate() == null) {
 					reportEntity.setFactualActiveDate(currentDate);
 				}
 				if (partner.equalsIgnoreCase(LBLConstants.LBL_INFOGROUP)
@@ -260,7 +269,8 @@ public class SubmissionUtil {
 						&& reportEntity.getLocalezeActiveDate() == null) {
 					reportEntity.setLocalezeActiveDate(currentDate);
 				}
-				if (partner.equalsIgnoreCase(LBLConstants.LBL_ACXIOM) && reportEntity.getAcxiomRenewalDate() == null) {
+				if (partner.equalsIgnoreCase(LBLConstants.LBL_ACXIOM)
+						&& reportEntity.getAcxiomRenewalDate() == null) {
 					reportEntity.setAcxiomRenewalDate(renewalDate);
 				}
 				if (partner.equalsIgnoreCase(LBLConstants.LBL_FACTUAL)
@@ -285,7 +295,8 @@ public class SubmissionUtil {
 				if (renewalDate2 == null) {
 					reportEntity.setRenewalDate(renewalDate);
 					;
-				} else if (renewalDate2 != null && reportEntity.getStatus().equals("cancel")
+				} else if (renewalDate2 != null
+						&& reportEntity.getStatus().equals("cancel")
 						&& new Date().after(renewalDate2)) {
 					Calendar calendar = Calendar.getInstance();
 					calendar.setTime(renewalDate2);
@@ -300,10 +311,14 @@ public class SubmissionUtil {
 
 				service.updateRenewalInfo(reportEntity);
 			} else {
-				Date acxiomActiveDate = service.getActiveDateForClient(brandName, LBLConstants.LBL_ACXIOM);
-				Date infogroupActiveDate = service.getActiveDateForClient(brandName, LBLConstants.LBL_INFOGROUP);
-				Date neustarActiveDate = service.getActiveDateForClient(brandName, LBLConstants.LBL_NEUSTAR);
-				Date factulActiveDate = service.getActiveDateForClient(brandName, LBLConstants.LBL_FACTUAL);
+				Date acxiomActiveDate = service.getActiveDateForClient(
+						brandName, LBLConstants.LBL_ACXIOM);
+				Date infogroupActiveDate = service.getActiveDateForClient(
+						brandName, LBLConstants.LBL_INFOGROUP);
+				Date neustarActiveDate = service.getActiveDateForClient(
+						brandName, LBLConstants.LBL_NEUSTAR);
+				Date factulActiveDate = service.getActiveDateForClient(
+						brandName, LBLConstants.LBL_FACTUAL);
 				entity.setStore(localBusinessDTO.getStore());
 
 				Calendar cal = Calendar.getInstance();
@@ -366,61 +381,82 @@ public class SubmissionUtil {
 	 * @param acxiomBean
 	 * @throws Exception
 	 */
-	public void copyPropertiesFromLocalBusinessDTOToAcxiomBean(BusinessService service,
-			LocalBusinessDTO localBusinessDTO, AcxiomBean acxiomBean) throws Exception {
+	public void copyPropertiesFromLocalBusinessDTOToAcxiomBean(
+			BusinessService service, LocalBusinessDTO localBusinessDTO,
+			AcxiomBean acxiomBean) throws Exception {
 
 		try {
 
 			String hours = getHours(localBusinessDTO);
 
-			acxiomBean.setAdditionalPhoneNumber(getStringValue(localBusinessDTO.getAdditionalNumber()));
+			acxiomBean.setAdditionalPhoneNumber(getStringValue(localBusinessDTO
+					.getAdditionalNumber()));
 
-			acxiomBean.setClientRecordID(getStringValue(localBusinessDTO.getStore()));
+			acxiomBean.setClientRecordID(getStringValue(localBusinessDTO
+					.getStore()));
 			acxiomBean.setAddressPrivacyFlag("");
-			acxiomBean.setAlternateSocialLink(getStringValue(localBusinessDTO.getAlternateSocialLink()));
+			acxiomBean.setAlternateSocialLink(getStringValue(localBusinessDTO
+					.getAlternateSocialLink()));
 			acxiomBean.setAlternativeBusinessName("");
-			acxiomBean.setAnchorHostBusiness(getStringValue(localBusinessDTO.getAnchorOrHostBusiness()));
+			acxiomBean.setAnchorHostBusiness(getStringValue(localBusinessDTO
+					.getAnchorOrHostBusiness()));
 			acxiomBean.setAtm("");
 			acxiomBean.setBanquetMeetingRooms("");
 			acxiomBean.setBrands(getStringValue(localBusinessDTO.getBrands()));
-			acxiomBean.setBusinessMobileNumber(getStringValue(localBusinessDTO.getMobileNumber()));
+			acxiomBean.setBusinessMobileNumber(getStringValue(localBusinessDTO
+					.getMobileNumber()));
 			acxiomBean.setCallTrackingNumber("");
 			acxiomBean.setCertifications("");
 			acxiomBean.setCompany_email(localBusinessDTO.getLocationEmail());
-			acxiomBean.setCompany_Name(getStringValue(localBusinessDTO.getCompanyName()));
-			acxiomBean.setContact_Email(getStringValue(localBusinessDTO.getContactEmail()));
-			acxiomBean.setContactFirstName(getStringValue(localBusinessDTO.getPrimaryContactFirstName()));
+			acxiomBean.setCompany_Name(getStringValue(localBusinessDTO
+					.getCompanyName()));
+			acxiomBean.setContact_Email(getStringValue(localBusinessDTO
+					.getContactEmail()));
+			acxiomBean.setContactFirstName(getStringValue(localBusinessDTO
+					.getPrimaryContactFirstName()));
 			acxiomBean.setContactGender("M");
-			acxiomBean.setContactLastName(getStringValue(localBusinessDTO.getPrimaryContactLastName()));
-			acxiomBean.setContactTitle(getStringValue(localBusinessDTO.getContactTitle()));
-			acxiomBean.setCoupon_Link(getStringValue(localBusinessDTO.getCouponLink()));
+			acxiomBean.setContactLastName(getStringValue(localBusinessDTO
+					.getPrimaryContactLastName()));
+			acxiomBean.setContactTitle(getStringValue(localBusinessDTO
+					.getContactTitle()));
+			acxiomBean.setCoupon_Link(getStringValue(localBusinessDTO
+					.getCouponLink()));
 
 			StringBuffer creditCards = new StringBuffer();
-			if (localBusinessDTO.getaMEX() != null && "Y".equalsIgnoreCase(localBusinessDTO.getaMEX())) {
+			if (localBusinessDTO.getaMEX() != null
+					&& "Y".equalsIgnoreCase(localBusinessDTO.getaMEX())) {
 				creditCards.append("A");
 			}
-			if (localBusinessDTO.getMasterCard() != null && "Y".equalsIgnoreCase(localBusinessDTO.getMasterCard())) {
+			if (localBusinessDTO.getMasterCard() != null
+					&& "Y".equalsIgnoreCase(localBusinessDTO.getMasterCard())) {
 				creditCards.append("M");
 			}
-			if (localBusinessDTO.getDiscover() != null && "Y".equalsIgnoreCase(localBusinessDTO.getDiscover())) {
+			if (localBusinessDTO.getDiscover() != null
+					&& "Y".equalsIgnoreCase(localBusinessDTO.getDiscover())) {
 				creditCards.append("D");
 			}
-			if (localBusinessDTO.getVisa() != null && "Y".equalsIgnoreCase(localBusinessDTO.getVisa())) {
+			if (localBusinessDTO.getVisa() != null
+					&& "Y".equalsIgnoreCase(localBusinessDTO.getVisa())) {
 				creditCards.append("V");
 			}
-			if (localBusinessDTO.getDinersClub() != null && "Y".equalsIgnoreCase(localBusinessDTO.getDinersClub())) {
+			if (localBusinessDTO.getDinersClub() != null
+					&& "Y".equalsIgnoreCase(localBusinessDTO.getDinersClub())) {
 				creditCards.append("C");
 			}
-			if (localBusinessDTO.getCash() != null && "Y".equalsIgnoreCase(localBusinessDTO.getCash())) {
+			if (localBusinessDTO.getCash() != null
+					&& "Y".equalsIgnoreCase(localBusinessDTO.getCash())) {
 				creditCards.append("H");
 			}
-			if (localBusinessDTO.getCheck() != null && "Y".equalsIgnoreCase(localBusinessDTO.getCheck())) {
+			if (localBusinessDTO.getCheck() != null
+					&& "Y".equalsIgnoreCase(localBusinessDTO.getCheck())) {
 				creditCards.append("J");
 			}
-			if (localBusinessDTO.getDebitCard() != null && "Y".equalsIgnoreCase(localBusinessDTO.getDebitCard())) {
+			if (localBusinessDTO.getDebitCard() != null
+					&& "Y".equalsIgnoreCase(localBusinessDTO.getDebitCard())) {
 				creditCards.append("E");
 			}
-			if (localBusinessDTO.getPayPal() != null && "Y".equalsIgnoreCase(localBusinessDTO.getPayPal())) {
+			if (localBusinessDTO.getPayPal() != null
+					&& "Y".equalsIgnoreCase(localBusinessDTO.getPayPal())) {
 				creditCards.append("P");
 			}
 			String cards = creditCards.toString();
@@ -433,39 +469,48 @@ public class SubmissionUtil {
 			acxiomBean.setDirections("");
 			acxiomBean.setDiscountCode("");
 			acxiomBean.setDress_Code("");
-			acxiomBean.setEmployee_Size(getStringValue(localBusinessDTO.getLocationEmployeeSize()));
+			acxiomBean.setEmployee_Size(getStringValue(localBusinessDTO
+					.getLocationEmployeeSize()));
 			acxiomBean.setEquipment_Rentals("");
-			acxiomBean.setFacebook_Link(getStringValue(localBusinessDTO.getFacebookLink()));
+			acxiomBean.setFacebook_Link(getStringValue(localBusinessDTO
+					.getFacebookLink()));
 			acxiomBean.setFax(getStringValue(localBusinessDTO.getFax()));
-			acxiomBean.setFinancing(getStringValue(localBusinessDTO.getFinancing()));
+			acxiomBean.setFinancing(getStringValue(localBusinessDTO
+					.getFinancing()));
 			acxiomBean.setFood_Court("");
 			acxiomBean.setFranchiseChain("");
 			acxiomBean.setFree_Code("");
 			acxiomBean.setFree_Internet("");
 			acxiomBean.setGeneral_Content("");
 			acxiomBean.setGift_Shop("");
-			acxiomBean.setGoogle_Checkout(getStringValue(localBusinessDTO.getGoogleCheckout()));
+			acxiomBean.setGoogle_Checkout(getStringValue(localBusinessDTO
+					.getGoogleCheckout()));
 			acxiomBean.setGreen_Company_Indicator("");
 
 			acxiomBean.setHoursOfOperation(hours);
 			acxiomBean.setInternet_Access("");
-			acxiomBean.setInvoice(getStringValue(localBusinessDTO.getInvoice()));
-			acxiomBean.setKeywords(getStringValue(localBusinessDTO.getKeywords()));
+			acxiomBean
+					.setInvoice(getStringValue(localBusinessDTO.getInvoice()));
+			acxiomBean.setKeywords(getStringValue(localBusinessDTO
+					.getKeywords()));
 			acxiomBean.setLandmark_Address("");
 			acxiomBean.setLandmark_City("");
 			acxiomBean.setLandmark_State("");
 			acxiomBean.setLandmarkZipCode("");
 
-			String languages = getAcxiomLanguages(localBusinessDTO.getLanguages());
+			String languages = getAcxiomLanguages(localBusinessDTO
+					.getLanguages());
 			acxiomBean.setLanguages(languages);
 
-			acxiomBean.setLinkedIn_Link(getStringValue(localBusinessDTO.getLinkedInLink()));
+			acxiomBean.setLinkedIn_Link(getStringValue(localBusinessDTO
+					.getLinkedInLink()));
 
 			AcxiomClient acxiomClinet = new AcxiomClient();
 			// get the listingId for update
 			long listingId = 0;
 			try {
-				listingId = acxiomClinet.getListingId(localBusinessDTO.getStore());
+				listingId = acxiomClinet.getListingId(localBusinessDTO
+						.getStore());
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
@@ -480,45 +525,62 @@ public class SubmissionUtil {
 			acxiomBean.setLive_Entertainment("");
 			String locationAddress = localBusinessDTO.getLocationAddress();
 			if (localBusinessDTO.getSuite() != null) {
-				locationAddress = locationAddress + ", " + localBusinessDTO.getSuite();
+				locationAddress = locationAddress + ", "
+						+ localBusinessDTO.getSuite();
 			}
 			acxiomBean.setLocation_Address(getStringValue(locationAddress));
-			acxiomBean.setLocation_City(getStringValue(localBusinessDTO.getLocationCity()));
-			acxiomBean.setLocation_Phone(getStringValue(localBusinessDTO.getLocationPhone()));
-			acxiomBean.setLocation_State(getStringValue(localBusinessDTO.getLocationState()));
-			acxiomBean.setLocationZipCode(getStringValue(localBusinessDTO.getLocationZipCode()));
+			acxiomBean.setLocation_City(getStringValue(localBusinessDTO
+					.getLocationCity()));
+			acxiomBean.setLocation_Phone(getStringValue(localBusinessDTO
+					.getLocationPhone()));
+			acxiomBean.setLocation_State(getStringValue(localBusinessDTO
+					.getLocationState()));
+			acxiomBean.setLocationZipCode(getStringValue(localBusinessDTO
+					.getLocationZipCode()));
 			acxiomBean.setLodgingCampgrounds("");
-			acxiomBean.setLogo_Link(getStringValue(localBusinessDTO.getLogoLink()));
-			acxiomBean.setLong_Company_Name(getStringValue(localBusinessDTO.getCompanyName()));
+			acxiomBean.setLogo_Link(getStringValue(localBusinessDTO
+					.getLogoLink()));
+			acxiomBean.setLong_Company_Name(getStringValue(localBusinessDTO
+					.getCompanyName()));
 			acxiomBean.setLongLocalWebaddress("");
 			acxiomBean.setMailing_Address("");
 			acxiomBean.setMailing_City("");
 			acxiomBean.setMailing_State("");
 			acxiomBean.setMailingZipCode("");
-			acxiomBean.setMenuLink(getStringValue(localBusinessDTO.getMyspaceLink()));
+			acxiomBean.setMenuLink(getStringValue(localBusinessDTO
+					.getMyspaceLink()));
 			acxiomBean.setOrdering_Methods("");
 			acxiomBean.setParking_Options("");
 			acxiomBean.setParkPermitRequired("");
-			acxiomBean.setPinterest(getStringValue(localBusinessDTO.getPinteristLink()));
+			acxiomBean.setPinterest(getStringValue(localBusinessDTO
+					.getPinteristLink()));
 			acxiomBean.setPresence_of_ECommerce("");
 			acxiomBean.setPrice_Range("");
-			acxiomBean.setProducts(getStringValue(localBusinessDTO.getProducts()));
-			acxiomBean.setProfessional_Associations(getStringValue(localBusinessDTO.getProfessionalAssociations()));
+			acxiomBean.setProducts(getStringValue(localBusinessDTO
+					.getProducts()));
+			acxiomBean
+					.setProfessional_Associations(getStringValue(localBusinessDTO
+							.getProfessionalAssociations()));
 			acxiomBean.setProfessionalsOnStaff("");
 
 			acxiomBean.setReservations("");
 			acxiomBean.setRestaurantBarTypes("");
 			acxiomBean.setSeasonal_Hours("");
-			acxiomBean.setServicearea(getStringValue(localBusinessDTO.getServiceArea()));
-			acxiomBean.setServices(getStringValue(localBusinessDTO.getServices()));
+			acxiomBean.setServicearea(getStringValue(localBusinessDTO
+					.getServiceArea()));
+			acxiomBean.setServices(getStringValue(localBusinessDTO
+					.getServices()));
 			acxiomBean.setShuttle_Service("");
 			acxiomBean.setSlogans("");
 			acxiomBean.setSmoking_Preference("");
-			acxiomBean.setSYPH_1(getSYPHCode(service, localBusinessDTO.getCategory1(), localBusinessDTO.getClientId()));
+			acxiomBean.setSYPH_1(getSYPHCode(service,
+					localBusinessDTO.getCategory1(),
+					localBusinessDTO.getClientId()));
 
 			String syph_1 = acxiomBean.getSYPH_1();
 			if (syph_1 == null || syph_1.length() == 0) {
-				String syphCodeByClientAndCategoryID = service.getSyphCodeByStore(localBusinessDTO.getStore());
+				String syphCodeByClientAndCategoryID = service
+						.getSyphCodeByStore(localBusinessDTO.getStore());
 				acxiomBean.setSYPH_1(syphCodeByClientAndCategoryID);
 			}
 
@@ -540,14 +602,20 @@ public class SubmissionUtil {
 				acxiomBean.setSYPH_2(getSYPHCode(service, category5, clientId));
 			}
 			acxiomBean.setSYPH_6("");
-			acxiomBean.setToll_Free(getStringValue(localBusinessDTO.getTollFree()));
-			acxiomBean.setTwitter_Link(getStringValue(localBusinessDTO.getTwitterLink()));
+			acxiomBean.setToll_Free(getStringValue(localBusinessDTO
+					.getTollFree()));
+			acxiomBean.setTwitter_Link(getStringValue(localBusinessDTO
+					.getTwitterLink()));
 			acxiomBean.setUnofficial_Landmark("");
 			acxiomBean.setValidation_Options("");
 			acxiomBean.setVendor_Id(new Long(localBusinessDTO.getClientId()));
-			acxiomBean.setWebAddressURL(getStringValue(localBusinessDTO.getWebAddress()));
-			acxiomBean.setYearBusinessEstablished(getStringValue(localBusinessDTO.getYearEstablished()));
-			acxiomBean.setYouTubeVideoLink(getStringValue(localBusinessDTO.getYouTubeOrVideoLink()));
+			acxiomBean.setWebAddressURL(getStringValue(localBusinessDTO
+					.getWebAddress()));
+			acxiomBean
+					.setYearBusinessEstablished(getStringValue(localBusinessDTO
+							.getYearEstablished()));
+			acxiomBean.setYouTubeVideoLink(getStringValue(localBusinessDTO
+					.getYouTubeOrVideoLink()));
 			acxiomBean.setZagat_Rating("");
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -575,7 +643,8 @@ public class SubmissionUtil {
 	 * @param isHeadersExist
 	 * @throws Exception
 	 */
-	public void write(List<LocalBusinessDTO> localBusinessDTOs, String path) throws Exception {
+	public void write(List<LocalBusinessDTO> localBusinessDTOs, String path)
+			throws Exception {
 
 		if (submissionUtil == null)
 			submissionUtil = new SubmissionUtil();
@@ -588,49 +657,66 @@ public class SubmissionUtil {
 
 		CsvWriter csvOutput = new CsvWriter(new FileWriter(file, true), ',');
 
-		String[] headers = { "ListingID", "Vendor_Id", "ClientRecordID", "Record_Status", "Company_Name",
-				"Location_Address", "Location_City", "Location_State", "LocationZipCode", "Mailing_Address",
-				"Mailing_City", "Mailing_State", "MailingZipCode", "Landmark_Address", "Landmark_City",
-				"Landmark_State", "LandmarkZipCode", "Location_Phone", "Fax", "SYPH_1", "SYPH_2", "SYPH_3", "SYPH_4",
-				"SYPH_5", "SYPH_6", "FranchiseChain", "ContactFirstName", "ContactLastName", "ContactGender",
-				"ContactTitle", "Contact_Email", "Company_email", "Employee_Size", "WebAddressURL", "Toll_Free",
-				"HoursOfOperation", "CreditCardsAccepted", "Financing", "Google_Checkout", "Invoice",
-				"LongLocalWebaddress", "MenuLink", "Coupon_Link", "Twitter_Link", "LinkedIn_Link", "Facebook_Link",
-				"AlternateSocialLink", "YouTubeVideoLink", "Logo_Link", "Pinterest", "Products", "Services", "Brands",
-				"Keywords", "Ordering_Methods", "BusinessMobileNumber", "CallTrackingNumber", "AdditionalPhoneNumber",
-				"Parking_Options", "Validation_Options", "Professional_Associations", "Certifications", "Atm",
-				"Languages", "AlternativeBusinessName", "AnchorHostBusiness", "Unofficial_Landmark", "Price_Range",
-				"Reservations", "BanquetMeetingRooms", "RestaurantBarTypes", "Dress_Code", "Shuttle_Service",
-				"Free_Internet", "Internet_Access", "Food_Court", "ParkPermitRequired", "Equipment_Rentals",
-				"LodgingCampgrounds", "Live_Entertainment", "Smoking_Preference", "Zagat_Rating", "Gift_Shop",
-				"Presence_of_ECommerce", "Green_Company_Indicator", "Long_Company_Name", "Seasonal_Hours",
-				"DiscountCode", "DeliveryCode", "Free_Code", "YearBusinessEstablished", "Directions", "Slogans",
-				"AddressPrivacyFlag", "Servicearea", "ProfessionalsOnStaff", "General_Content" };
+		String[] headers = { "ListingID", "Vendor_Id", "ClientRecordID",
+				"Record_Status", "Company_Name", "Location_Address",
+				"Location_City", "Location_State", "LocationZipCode",
+				"Mailing_Address", "Mailing_City", "Mailing_State",
+				"MailingZipCode", "Landmark_Address", "Landmark_City",
+				"Landmark_State", "LandmarkZipCode", "Location_Phone", "Fax",
+				"SYPH_1", "SYPH_2", "SYPH_3", "SYPH_4", "SYPH_5", "SYPH_6",
+				"FranchiseChain", "ContactFirstName", "ContactLastName",
+				"ContactGender", "ContactTitle", "Contact_Email",
+				"Company_email", "Employee_Size", "WebAddressURL", "Toll_Free",
+				"HoursOfOperation", "CreditCardsAccepted", "Financing",
+				"Google_Checkout", "Invoice", "LongLocalWebaddress",
+				"MenuLink", "Coupon_Link", "Twitter_Link", "LinkedIn_Link",
+				"Facebook_Link", "AlternateSocialLink", "YouTubeVideoLink",
+				"Logo_Link", "Pinterest", "Products", "Services", "Brands",
+				"Keywords", "Ordering_Methods", "BusinessMobileNumber",
+				"CallTrackingNumber", "AdditionalPhoneNumber",
+				"Parking_Options", "Validation_Options",
+				"Professional_Associations", "Certifications", "Atm",
+				"Languages", "AlternativeBusinessName", "AnchorHostBusiness",
+				"Unofficial_Landmark", "Price_Range", "Reservations",
+				"BanquetMeetingRooms", "RestaurantBarTypes", "Dress_Code",
+				"Shuttle_Service", "Free_Internet", "Internet_Access",
+				"Food_Court", "ParkPermitRequired", "Equipment_Rentals",
+				"LodgingCampgrounds", "Live_Entertainment",
+				"Smoking_Preference", "Zagat_Rating", "Gift_Shop",
+				"Presence_of_ECommerce", "Green_Company_Indicator",
+				"Long_Company_Name", "Seasonal_Hours", "DiscountCode",
+				"DeliveryCode", "Free_Code", "YearBusinessEstablished",
+				"Directions", "Slogans", "AddressPrivacyFlag", "Servicearea",
+				"ProfessionalsOnStaff", "General_Content" };
 		int size = localBusinessDTOs.size();
 		logger.info("size:::::::::::" + size);
 		for (int index = -1; index < size - 1; index++) {
-			RenewalReportDTO renewalReportDTO = service.isRenewed(localBusinessDTOs.get(index + 1).getStore(),
+			RenewalReportDTO renewalReportDTO = service.isRenewed(
+					localBusinessDTOs.get(index + 1).getStore(),
 					localBusinessDTOs.get(index + 1).getClientId());
 			if (renewalReportDTO != null) {
-				Date cancelledEffeciveDate = renewalReportDTO.getCancelledEffeciveDate();
+				Date cancelledEffeciveDate = renewalReportDTO
+						.getCancelledEffeciveDate();
 				boolean isDate = false;
 				if (cancelledEffeciveDate != null) {
 					Date currentDateDate = new Date();
 					isDate = cancelledEffeciveDate.compareTo(currentDateDate) < 0;
 				}
 
-				if ((renewalReportDTO.getStatus().equals("Renewed") || renewalReportDTO.getStatus().equals("Active")
-						|| isDate)) {
+				if ((renewalReportDTO.getStatus().equals("Renewed")
+						|| renewalReportDTO.getStatus().equals("Active") || isDate)) {
 					if (index < 0) {
 						// if (!isHeadersExist) {
 						writeTocsv(headers, null, csvOutput);
 						// }
 						continue;
 					}
-					LocalBusinessDTO localBusinessDTO = localBusinessDTOs.get(index + 1);
+					LocalBusinessDTO localBusinessDTO = localBusinessDTOs
+							.get(index + 1);
 					AcxiomBean acxiomBean = new AcxiomBean();
-					submissionUtil.copyPropertiesFromLocalBusinessDTOToAcxiomBean(service, localBusinessDTO,
-							acxiomBean);
+					submissionUtil
+							.copyPropertiesFromLocalBusinessDTOToAcxiomBean(
+									service, localBusinessDTO, acxiomBean);
 					writeTocsv(headers, acxiomBean, csvOutput);
 				}
 			}
@@ -652,15 +738,18 @@ public class SubmissionUtil {
 	 * @param csvOutput
 	 * @throws IOException
 	 */
-	public static void writeTocsv(String[] headers, AcxiomBean acxiomBean, CsvWriter csvOutput) throws IOException {
+	public static void writeTocsv(String[] headers, AcxiomBean acxiomBean,
+			CsvWriter csvOutput) throws IOException {
 		for (String header : headers) {
 			if (acxiomBean != null) {
 
 				if (!header.startsWith("SYPH")) {
-					header = header.substring(0, 1).toLowerCase() + header.substring(1);
+					header = header.substring(0, 1).toLowerCase()
+							+ header.substring(1);
 				}
 				try {
-					csvOutput.write(org.apache.commons.beanutils.BeanUtils.getProperty(acxiomBean, header));
+					csvOutput.write(org.apache.commons.beanutils.BeanUtils
+							.getProperty(acxiomBean, header));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -672,8 +761,10 @@ public class SubmissionUtil {
 		csvOutput.endRecord();
 	}
 
-	public String getSYPHCode(BusinessService service, String category, Integer clientId) {
-		String syphcode = service.getSyphCodeByClientAndCategoryID(category, clientId);
+	public String getSYPHCode(BusinessService service, String category,
+			Integer clientId) {
+		String syphcode = service.getSyphCodeByClientAndCategoryID(category,
+				clientId);
 		return syphcode;
 	}
 
@@ -734,50 +825,62 @@ public class SubmissionUtil {
 		String sunOpen = localBusinessDTO.getSundayOpen();
 		String sunClose = localBusinessDTO.getSundayClose();
 
-		if ("CLOSE".equalsIgnoreCase(mondayOpen) || "CLOSE".equalsIgnoreCase(mondayClose)) {
+		if ("CLOSE".equalsIgnoreCase(mondayOpen)
+				|| "CLOSE".equalsIgnoreCase(mondayClose)) {
 			workingHours.append("MON CLOSE, ");
 		}
 
-		else if (mondayOpen != null && mondayOpen.trim().length() > 0 && mondayClose != null
-				&& mondayClose.trim().length() > 0) {
+		else if (mondayOpen != null && mondayOpen.trim().length() > 0
+				&& mondayClose != null && mondayClose.trim().length() > 0) {
 			workingHours.append("MON " + mondayOpen + "-" + mondayClose + ", ");
 		}
-		if ("CLOSE".equalsIgnoreCase(mondayOpen) || "CLOSE".equalsIgnoreCase(mondayClose)) {
+		if ("CLOSE".equalsIgnoreCase(mondayOpen)
+				|| "CLOSE".equalsIgnoreCase(mondayClose)) {
 			workingHours.append("TUE CLOSE, ");
-		} else if (tuesdayOpen != null && tuesdayOpen.trim().length() > 0 && tuuesdayClose != null
-				&& tuuesdayClose.trim().length() > 0) {
-			workingHours.append("TUE " + tuesdayOpen + "-" + tuuesdayClose + ", ");
+		} else if (tuesdayOpen != null && tuesdayOpen.trim().length() > 0
+				&& tuuesdayClose != null && tuuesdayClose.trim().length() > 0) {
+			workingHours.append("TUE " + tuesdayOpen + "-" + tuuesdayClose
+					+ ", ");
 		}
 
-		if ("CLOSE".equalsIgnoreCase(wedOpen) || "CLOSE".equalsIgnoreCase(wedClose)) {
+		if ("CLOSE".equalsIgnoreCase(wedOpen)
+				|| "CLOSE".equalsIgnoreCase(wedClose)) {
 			workingHours.append("WED CLOSE, ");
-		} else if (wedOpen != null && wedOpen.trim().length() > 0 && wedClose != null && wedClose.trim().length() > 0) {
+		} else if (wedOpen != null && wedOpen.trim().length() > 0
+				&& wedClose != null && wedClose.trim().length() > 0) {
 			workingHours.append("WED " + wedOpen + "-" + wedClose + ", ");
 		}
 
-		if ("CLOSE".equalsIgnoreCase(thursdayOpen) || "CLOSE".equalsIgnoreCase(thursdayClose)) {
+		if ("CLOSE".equalsIgnoreCase(thursdayOpen)
+				|| "CLOSE".equalsIgnoreCase(thursdayClose)) {
 			workingHours.append("THU CLOSE, ");
-		} else if (tuesdayOpen != null && tuesdayOpen.trim().length() > 0 && tuuesdayClose != null
-				&& tuuesdayClose.trim().length() > 0) {
-			workingHours.append("TUE " + tuesdayOpen + "-" + tuuesdayClose + ", ");
+		} else if (tuesdayOpen != null && tuesdayOpen.trim().length() > 0
+				&& tuuesdayClose != null && tuuesdayClose.trim().length() > 0) {
+			workingHours.append("TUE " + tuesdayOpen + "-" + tuuesdayClose
+					+ ", ");
 		}
 
-		if ("CLOSE".equalsIgnoreCase(fridayOpen) || "CLOSE".equalsIgnoreCase(fridayClose)) {
+		if ("CLOSE".equalsIgnoreCase(fridayOpen)
+				|| "CLOSE".equalsIgnoreCase(fridayClose)) {
 			workingHours.append("FRI CLOSE, ");
-		} else if (fridayOpen != null && fridayOpen.trim().length() > 0 && fridayClose != null
-				&& fridayClose.trim().length() > 0) {
+		} else if (fridayOpen != null && fridayOpen.trim().length() > 0
+				&& fridayClose != null && fridayClose.trim().length() > 0) {
 			workingHours.append("FRI " + fridayOpen + "-" + fridayClose + ", ");
 		}
 
-		if ("CLOSE".equalsIgnoreCase(satOpen) || "CLOSE".equalsIgnoreCase(satClose)) {
+		if ("CLOSE".equalsIgnoreCase(satOpen)
+				|| "CLOSE".equalsIgnoreCase(satClose)) {
 			workingHours.append("SAT CLOSE, ");
-		} else if (satOpen != null && satOpen.trim().length() > 0 && satClose != null && satClose.trim().length() > 0) {
+		} else if (satOpen != null && satOpen.trim().length() > 0
+				&& satClose != null && satClose.trim().length() > 0) {
 			workingHours.append("SAT " + satOpen + "-" + satClose + ", ");
 		}
 
-		if ("CLOSE".equalsIgnoreCase(sunOpen) || "CLOSE".equalsIgnoreCase(sunClose)) {
+		if ("CLOSE".equalsIgnoreCase(sunOpen)
+				|| "CLOSE".equalsIgnoreCase(sunClose)) {
 			workingHours.append("SUN CLOSE");
-		} else if (sunOpen != null && sunOpen.trim().length() > 0 && sunClose != null && sunClose.trim().length() > 0) {
+		} else if (sunOpen != null && sunOpen.trim().length() > 0
+				&& sunClose != null && sunClose.trim().length() > 0) {
 			workingHours.append("SUN" + sunOpen + "-" + sunClose);
 		}
 
@@ -792,7 +895,8 @@ public class SubmissionUtil {
 
 	}
 
-	public static void sendMail(List<String> list, String brandName, String partner) {
+	public static void sendMail(List<String> list, String brandName,
+			String partner) {
 		String body = "";
 		String status = "SUCCESS";
 
@@ -802,7 +906,8 @@ public class SubmissionUtil {
 			status = "FAILED";
 			for (int j = 0; j < list.size(); j++) {
 				if (bodyText.length() == 0) {
-					bodyText.append("Total Stores which are failed to submit are: " + list.size() + ", stores are: ");
+					bodyText.append("Total Stores which are failed to submit from Brand "+ brandName + " to Aggregator: "+ partner+
+							" are : "+ list.size() + ", stores details are: ");
 				}
 				bodyText.append(list.get(j).toString() + ", ");
 			}
@@ -812,7 +917,8 @@ public class SubmissionUtil {
 
 		String toMail = LBLConstants.NOTIFY_MAIL;
 
-		String subject = brandName + " Submission Status to " + partner + " is " + status;
+		String subject = brandName + " Submission Status to " + partner
+				+ " is " + status;
 		if (body.length() == 0) {
 			body = subject;
 		}

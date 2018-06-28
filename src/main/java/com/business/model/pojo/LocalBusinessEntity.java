@@ -5,6 +5,7 @@ import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -15,7 +16,7 @@ import org.hibernate.type.StringClobType;
 
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  *         POJO bean which creates table with the available fields in the
  *         database table on server load-up.
@@ -31,6 +32,7 @@ public class LocalBusinessEntity {
 	@GeneratedValue
 	private Integer id;
 	private String store;
+	private Long lblStoreId;
 	private String actionCode;
 	private String companyName;
 	private String alternativeName;
@@ -130,6 +132,8 @@ public class LocalBusinessEntity {
 	private String ADDRESSPRIVACYFLAG;
 	private Integer clientId;
 
+	
+
 	private String foursquareLink;
 	private String instagramLink;
 	private String menuLink;
@@ -138,6 +142,26 @@ public class LocalBusinessEntity {
 	
 	private String googleAccountId;
 	private String googleLocationId;
+	private String trackingId;
+	
+	
+	
+	
+	public Long getLblStoreId() {
+		return lblStoreId;
+	}
+
+	public void setLblStoreId(Long lblStoreId) {
+		this.lblStoreId = lblStoreId;
+	}
+
+	public String getTrackingId() {
+		return trackingId;
+	}
+
+	public void setTrackingId(String trackingId) {
+		this.trackingId = trackingId;
+	}
 
 	public String getGoogleAccountId() {
 		return googleAccountId;

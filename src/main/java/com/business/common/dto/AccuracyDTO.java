@@ -1,8 +1,5 @@
 package com.business.common.dto;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-
 public class AccuracyDTO {
 
 	private Integer id;

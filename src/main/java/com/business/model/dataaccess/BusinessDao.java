@@ -7,6 +7,8 @@ import java.util.Set;
 
 import com.business.common.dto.AccuracyDTO;
 import com.business.common.dto.AccuracyGraphDTO;
+import com.business.common.dto.BingAnalyticsDTO;
+import com.business.common.dto.BingReportDTO;
 import com.business.common.dto.BrandInfoDTO;
 import com.business.common.dto.CategoryDTO;
 import com.business.common.dto.ChangeTrackingDTO;
@@ -17,7 +19,6 @@ import com.business.common.dto.CustomSubmissionsDTO;
 import com.business.common.dto.ExportReportDTO;
 import com.business.common.dto.ForgotPasswordDto;
 import com.business.common.dto.InsightsGraphDTO;
-import com.business.common.dto.InsightsHistory;
 import com.business.common.dto.LblErrorDTO;
 import com.business.common.dto.LocalBusinessDTO;
 import com.business.common.dto.PartnerDTO;
@@ -41,11 +42,11 @@ import com.business.model.pojo.ValueObject;
 import com.business.web.bean.CustomSubmissionsBean;
 import com.business.web.bean.UploadBusinessBean;
 import com.business.web.bean.UsersBean;
-import com.google.api.services.mybusiness.v3.model.Location;
+import com.google.api.services.mybusiness.v4.model.Location;
 
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  *         BusinessDao Interface to deal with the database operations
  * 
@@ -62,9 +63,9 @@ public interface BusinessDao {
 
 	public List<ExportReportDTO> getListingActivityInf();
 
-	public LocalBusinessDTO getBusinessInfo(Integer id);
+	public LocalBusinessDTO getBusinessInfo(Long id);
 
-	public void deleteBusinessInfo(List<Integer> listIds);
+	public void deleteBusinessInfo(List<Long> listIds);
 
 	public List<LocalBusinessDTO> getBrandsInfo(String brands);
 
@@ -76,7 +77,7 @@ public interface BusinessDao {
 			Date date, String uploadJobId);
 
 	public List<LocalBusinessDTO> getSpecificBusinessInfo(
-			List<Integer> listIds, String services);
+			List<Long> listIds, String services);
 
 	public Set<LocalBusinessDTO> searchBusinessinfo(String companyName,
 			String store, String locationPhone, String brands);
@@ -92,10 +93,10 @@ public interface BusinessDao {
 
 	public Integer getChannelIdByName(String channelName);
 
-	public Integer saveChannel(String channelName, Date startDate);
+	public Integer saveChannel(String channelName, Date startDate, String imagePath);
 
 	public boolean updateChannel(String channelName, Date startDate,
-			Integer channelID);
+			Integer channelID, String imagePath);
 
 	public BrandInfoDTO getBrandByBrandNameAndPartner(String brandName,
 			String submission);
@@ -190,7 +191,7 @@ public interface BusinessDao {
 
 	// public BrandInfoDTO getClientNameById(Integer clientUserId);
 
-	public LblErrorDTO getErrorBusinessInfo(Integer id);
+	public LblErrorDTO getErrorBusinessInfo(Long lblStoreID);
 
 	public boolean isValidState(String state, String countryCode);
 
@@ -202,7 +203,7 @@ public interface BusinessDao {
 
 	public void reomveCorrectErrorData(List<LblErrorDTO> correctDBErrorRecords);
 
-	public List<LblErrorDTO> getSpecificErrorBusinessInfo(List<Integer> listIds);
+	public List<LblErrorDTO> getSpecificErrorBusinessInfo(List<Long> listIds);
 
 	public String getBrandByClientId(Integer clientId);
 
@@ -221,7 +222,7 @@ public interface BusinessDao {
 			String locationAddress, String locationCity, String locationState,
 			String locationZipCode);
 
-	public void deleteErrorBusinessInfo(List<Integer> listIds);
+	public void deleteErrorBusinessInfo(List<Long> listIds);
 
 	public void updateBusinessRecords(
 			List<LocalBusinessDTO> updateBusinessRecords, Date date,
@@ -285,7 +286,7 @@ public interface BusinessDao {
 
 	public boolean saveBrand(String brandName, Date startDate,
 			String locationsInvoiced, String submisions, Integer channelID,
-			String partnerActive, Integer clientId, int brandId, String email);
+			String partnerActive, Integer clientId, int brandId, String email, String imagePath);
 
 	public boolean updateBrand(Integer brandID, String brandName,
 			Date startDate, String locationsInvoiced, String submission,
@@ -346,7 +347,7 @@ public interface BusinessDao {
 	public boolean updateBrand(Integer brandID, String brandName,
 			Date startDate, String inactive, String locationsInvoiced,
 			String submission, Integer channelID, String partnerActive,
-			Integer clientId, Integer id, String email);
+			Integer clientId, Integer id, String email, String imagePath);
 
 	public String getGoogleCategory(String category1);
 
@@ -398,6 +399,8 @@ public interface BusinessDao {
 	public void deleteBusinessInfoByStoreAndClient(UploadBusinessBean uploadBean);
 
 	public void updateErrorBusinessInfoByAddressVerfication(LblErrorDTO errorDTO);
+	
+	public void updateErrorInfoBySmartyStreets(UploadBusinessBean uploadBean);
 
 	public Map<Integer, List<ChangeTrackingDTO>> getBusinessListing(
 			List<String> listofStores, String brand, Date fromDate, Date toDate);
@@ -407,7 +410,7 @@ public interface BusinessDao {
 	public void updateCheckReportInfo(CheckReportDTO highestMatchingStore);
 
 	public ChangeTrackingEntity isClientIdAndStoreExists(Integer clientId,
-			String store);
+			Long store);
 
 	public boolean updateChangeTrackingInfo(ChangeTrackingEntity entity);
 
@@ -523,7 +526,7 @@ public interface BusinessDao {
 	public List<BrandInfoDTO> getChannelBasedClient(String channelName);
 
 	public void addErrorToBusinessList(LocalBusinessDTO localBusinessDTO,
-			Date date, String string,List<Integer> listIds);
+			Date date, String string,List<Long> listIds);
 
 	public List<ValueObject> getData(String string, String string2);
 
@@ -593,7 +596,7 @@ public interface BusinessDao {
 	public LocalBusinessDTO getLocationByGoogleAccount(String googleAccountId, String locationId);
 	
 
-	public Map<String, Long> getInsightsDataForBrandAndStore(String brand, String store, Date startDate,
+	public Map<String, Long> getInsightsDataForBrandAndStore(Integer brand, String store, Date startDate,
 			Date endDate);
 
 	public List<String> getAllStates();
@@ -610,26 +613,26 @@ public interface BusinessDao {
 	public Map<String, Long> getInsightsData(String brand, String store,
 			Date startDate, Date endDate);
 
-	public Map<String, Long> getInsightsBrandData(String brand, String state,
+	public Map<String, Long> getInsightsBrandData(Integer brand, String state,
 			Date startDate, Date endDate);
 
 	public List<InsightsGraphDTO> getBrandViewsHistoryByWeek(String brand,
 			String state, Date startDate, Date endDate);
 
 	public Map<String, List<InsightsGraphDTO>> getTopandBottomSearches(
-			String brand, String state, Date startDate, Date endDate);
+			Integer brand, String state, Date startDate, Date endDate);
 
 	public List<LocalBusinessDTO> getStoresByGMBAccount(String googleAccountId);
 
-	public Integer getInsightCountsForBrand(String brand, String store);
+	public Long getInsightCountsForBrand(Integer brand, String store, Date startDate, Date endDate);
 
 	public void updateStoresWithGMBAccountId(String client,
 			String googleAccountId);
 
-	public  Map<String, InsightsGraphDTO> getHistory(String brand,
+	public  Map<String, InsightsGraphDTO> getHistory(Integer brand,
 			String state, Date startDate, Date endDate);
 
-	public Map<String, InsightsGraphDTO> getHistoryForStore(String brand,
+	public Map<String, InsightsGraphDTO> getHistoryForStore(Integer brand,
 			String store, Date startDate, Date endDate);
 
 	public List<String> getAllStatesListByBrand(String brand);
@@ -638,5 +641,34 @@ public interface BusinessDao {
 			String state, Date startDate, Date endDate);
 
 	public void deleteExistingRecords(Integer clientId, Date formattedEndDate);
+
+	public Map<String, String> getChannelImageBytes(String brand);
+
+	public List<InsightsGraphDTO> getMonthlyReportData(String brand, String type);
+
+	public List<InsightsGraphDTO> getMonthlyTrends(Integer brand, String state);
+
+	public List<BingReportDTO> getAnlytics(Integer brand, String state,
+			Date startDate, Date endDate);
+
+	public List<BingReportDTO> getAnlyticsForStore(String brand, String store,
+			Date startDate, Date endDate);
+
+	public Map<String, List<BingAnalyticsDTO>> getTopandBottomAnalytics(
+			Integer brand, String state, Date startDate, Date endDate);
+
+	public Map<Integer, InsightsGraphDTO> getDailyTrends(String brand,
+			String state, Date startDate, Date endDate);
+
+	public List<ExportReportDTO> getListingActivityInf(
+			LocalBusinessDTO businessDTO);
+
+	public void deleteExistingRecords(Integer clientId, Date formattedDate,
+			Date formattedDate2);
+
+	public void updateInsightMonthlyCountsForStore(LocalBusinessDTO dto,
+			String accountId, String googleLocationId);
+
+
 
 }

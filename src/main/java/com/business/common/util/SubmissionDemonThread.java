@@ -79,7 +79,7 @@ public class SubmissionDemonThread extends Thread {
 					if (partner.equalsIgnoreCase(lblAcxiom)) {
 						isAPI = true;
 
-						if (isToday(acxiomScheduledDate)) {
+						if (acxiomScheduledDate!=null && isToday(acxiomScheduledDate)) {
 
 							logger.info("Writing the data to excel for: "
 									+ partner + " for Brand: "
@@ -152,7 +152,7 @@ public class SubmissionDemonThread extends Thread {
 					}
 					if (partner.equalsIgnoreCase(LBLConstants.LBL_INFOGROUP)) {
 						isAPI = true;
-						if (isToday(infoGroupScheduledDate)) {
+						if (infoGroupScheduledDate!=null  && isToday(infoGroupScheduledDate)) {
 							logger.info("Sending info to " + partner
 									+ ", and the total businesses are: "
 									+ numberOfRecords);
@@ -198,7 +198,7 @@ public class SubmissionDemonThread extends Thread {
 					if (partner.equalsIgnoreCase(LBLConstants.LBL_FACTUAL)) {
 						isAPI = true;
 
-						if (isToday(factualScheduledDate)) {
+						if (factualScheduledDate!=null  && isToday(factualScheduledDate)) {
 							logger.info("Sending info to " + partner
 									+ ", and the total businesses are: "
 									+ numberOfRecords);
@@ -246,7 +246,7 @@ public class SubmissionDemonThread extends Thread {
 					}
 					if (partner.equalsIgnoreCase(LBLConstants.LBL_NEUSTAR)) {
 						isAPI = true;
-						if (isToday(localezeScheduledDate)) {
+						if (localezeScheduledDate!=null &&  isToday(localezeScheduledDate)) {
 
 							logger.info("Sending info to " + partner
 									+ ", and the total businesses are: "
@@ -342,8 +342,10 @@ public class SubmissionDemonThread extends Thread {
 		Calendar cal1 = Calendar.getInstance();
 		Calendar cal2 = Calendar.getInstance();
 		cal1.setTime(new Date());
+		cal1.set(Calendar.HOUR, 0);
 		cal2.setTime(scheduledDate);
-		cal2.add(Calendar.HOUR,-10);
+		cal2.set(Calendar.HOUR, 0);
+		//cal2.add(Calendar.HOUR,-10);
 		boolean sameDay = cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR)
 				&& cal1.get(Calendar.DAY_OF_YEAR) == cal2
 						.get(Calendar.DAY_OF_YEAR);

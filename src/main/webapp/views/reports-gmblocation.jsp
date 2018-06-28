@@ -187,8 +187,14 @@ display: none;
 						Errors</a></li>
 				<li class="si_upload_export"><a href="upload-export.htm">Upload/Export</a></li>
 				<li class="si_reports selected"><a href="reports.htm">Reports</a></li>
-			<li class="si_admin"><a href="admin-listings.htm">CM admin</a></li>
-			<li class="si_mobile_profile "><a href="manage-account.htm">Manage Account</a></li>
+			<%
+						Integer Role=(Integer)session.getAttribute("roleId");				
+							if(Role==LBLConstants.CONVERGENT_MOBILE_ADMIN){						
+						%>
+				<li class="si_admin"><a href="admin-listings.htm">CM admin</a></li>
+				<li class="si_mobile_profile "><a href="manage-account.htm">Manage
+						Account</a></li>
+				<%} %>
 		<!-- 	<li class="si_schduler"><a href="scheduler.htm">Schedule</a></li> -->
 			<!--<li class="si_toolbox"><a href="getConvergentToolbox.htm">Convergent Toolbox</a></li>-->
 			</ul>
@@ -201,11 +207,9 @@ display: none;
 				<h1>REPORTS</h1>
 					<a href="reports.htm" class="back">< Back to Reporting Criteria</a>
 				<p>Convergent Mobile</p>
-				<a class="ico_pdf" href="http://api.html2pdfrocket.com/pdf?value=http://${url}&apikey=109e93d8-268f-495a-ad47-45fcaac321c3&FileName=${brand}-${store}&JavascriptDelay=3000">PDF</a> 
-				
 			</div>
-						
-		  <!-- // subheader -->
+			
+			<!-- // subheader -->
 		  <input name="uploadreportpopup" value="" id="uploadreportpopup" type="hidden">
 		  <form id="reportsForm" action="/lbl_pro/reports.htm" method="post">
 			<div class="inner_box">
@@ -289,7 +293,7 @@ display: none;
 						<div class="clearfix"></div>
 					</div>
 
-					<div class="box-report-graph">
+					<div class="box-report-graph ">
 						<h2>Customer actions</h2>
 						<h3>The most common actions that customers take on your listing</h3>
 						<div class="left-col" id="actionsContainer" >
@@ -314,9 +318,17 @@ display: none;
 									<td><strong><fmt:formatNumber type="number" maxFractionDigits="3" value="${actions}" /></strong></td>
 								</tr>
 							</table>
-
+							<div class="clearfix"></div>
 						</div>
+						
+						<div class="box-report-graph">
+										<h2>Bing Analytics</h2>
+										<h3>Bing Impressions</h3>
+										<div style="width:100%; min-height: 250px; float: left;margin: 0 0 50px 0;" id="bingAnalyticsContainer">
+											<!-- place for graphic -->
+										</div>
 
+									</div>
 						<div class="clearfix"></div>
 					</div>
 
@@ -357,13 +369,12 @@ $(function () {
 	    var maxY = ${maxYear};
 	    var maxM = ${maxMonth};
 	    var maxD = ${maxDate};
+	    
 		var min = new Date(minY, minM,minD);
 		var max = new Date(maxY,maxM,maxD);
 		
 		var days = ${days};
-		var yAction = ${yActions};
-		var yView = ${yViews};
-		
+
 		var intType="";
 		if(days <= 14) {
 			intType = "day";
@@ -373,23 +384,10 @@ $(function () {
 			intType = "month";
 		}
 	
-		
-		var dpsView1 = []; 
-		var dpsView2 = []; 
-
-		
-		var list = ${viewsHistory};
-		$.each(list, function( index, value ) {
-			//alert( index + ": " + value.toString() );
-			dpsView1.push(value);
-		});
-
-		var list2 = ${actionsHistory};
-		$.each(list2, function( index1, value1 ) {
-			//alert( index + ": " + value.toString() );
-			dpsView2.push(value1);
-		});
-		
+	
+		var yAction = ${yActions};
+		var yView = ${yViews};
+	 
 		
  		 var dpsActions1 = []; 
 		 var dpsActions2= []; 
@@ -410,7 +408,7 @@ $(function () {
 		$.each(list5, function( index5, value5 ) {
 			//alert( index + ": " + value.toString() );
 			dpsActions3.push(value5);
-		});
+		}); 
 		
 		var dirVal = $("#directVal").val();
 		var disVal = $('#discoveryVal').val();
@@ -441,7 +439,22 @@ $(function () {
 	      ]
 	    });
 	    
-	    var viewChart = new CanvasJS.Chart("viewContainer",
+	    
+	    var dpsView1 = []; 
+		var dpsView2 = []; 
+
+		
+		var list = ${viewsHistory};
+		$.each(list, function( index, value ) {
+			dpsView1.push(value);
+		});
+
+		var list2 = ${actionsHistory};
+		$.each(list2, function( index1, value1 ) {
+			dpsView2.push(value1);
+		});
+		
+	     var viewChart = new CanvasJS.Chart("viewContainer",
 	    		{
 	    	       
 	    	        animationEnabled: true,
@@ -494,7 +507,7 @@ $(function () {
 	    			}
 	    	    });
 	    
-	    
+	
 	    var actionsChart = new CanvasJS.Chart("actionsContainer",
 	    	    {
 	    	        animationEnabled: true,
@@ -555,6 +568,8 @@ $(function () {
 	    				}
 	    			}
 	    	    });
+	
+	   
 
 		chart.render();
 		viewChart.render();

@@ -540,7 +540,7 @@ if (message != null) {
 
 
 	<div class="pp-body">
-		<spring:form action="addBrand.htm" commandName="BrandInfo"
+		<spring:form action="addBrand.htm" commandName="BrandInfo" enctype="multipart/form-data"
 			method="post">
 			<table width="100%" class="grid grid_11 grid_11_1"
 				style="width: 360px; margin: 10px auto;">
@@ -552,12 +552,22 @@ if (message != null) {
 				<tr>
 					<td class="td_01"><div><label for="channel-name">Channel Name</label></div></td>
 					<td class="td_02"><div class="brands"><!-- <input type="text" value="Convergent Mobil" id="channel-name" name="channel-name"> -->
-					                   <spring:input path="channelName" id="channel-name"  /></div></td>
+					                   <spring:input path="channelName" id="channel-name"  />
+				</tr>
+				<tr>
+					<td class="td_01"><div><label for="channel-name">Channel Image</label></div></td>
+					<td class="td_02"><div class="brands">
+					<input type="file" name="channelImage" value="Upload" /></div></td>
 				</tr>
 				<tr>
 					<td class="td_01"><div><label for="brand-name">Brand Name</label></div></td>
 					<td class="td_02"><div class="brands"><!-- <input type="text" value="Liberty Tax Services" id="brand" name="brand"> -->
 					     <spring:input path="brandName" id="brand"  /></div></td>
+				</tr>
+				<tr>
+					<td class="td_01"><div><label for="channel-name">Brand Image</label></div></td>
+					<td class="td_02"><div class="brands">
+					<input type="file" name="brandImage" value="Upload" /></div></td>
 				</tr>
 				<tr>
 					<td class="td_01"><div><label for="date_start">Client Id</label></div></td>
@@ -620,9 +630,9 @@ if (message != null) {
 			<span class="buttonIndicator b-close"><span>X</span></span> <span>Brand
 				Details</span>
 		</div>
-		
+
 		<div class="pp-body">
-			<spring:form action="addBrand.htm" commandName="BrandInfo"
+			<spring:form action="addBrand.htm" commandName="BrandInfo" enctype="multipart/form-data"
 				method="post">
 
 				<spring:hidden path="saveType" value="update" />
@@ -636,12 +646,24 @@ if (message != null) {
 						<tr>
 					<td class="td_01"><div><label for="channel-name">Channel Name</label></div></td>
 					<td class="td_02"><div class="brands"><!-- <input type="text" value="Convergent Mobil" id="channel-name" name="channel-name"> -->
-					                   <spring:input path="channelName" id="channel-name"  /></div></td>
+					                   <spring:input path="channelName" id="channel-name"  />
+				</tr>
+				<tr>
+					<td class="td_01"><div><label for="channel-name">Channel Image</label></div></td>
+					<td class="td_02"><div class="brands">
+					<input type="file" name="channelImage" value="${cImagePath}" /></div><core:out value="${cImagePath}"></core:out>
+					<input type="hidden" name="cImagePath" value="${cImagePath}" /></td>
 				</tr>
 				<tr>
 					<td class="td_01"><div><label for="brand-name">Brand Name</label></div></td>
 					<td class="td_02"><div class="brands"><!-- <input type="text" value="Liberty Tax Services" id="brand" name="brand"> -->
 					     <spring:input path="brandName" id="brand"  /></div></td>
+				</tr>
+				<tr>
+					<td class="td_01"><div><label for="channel-name">Brand Image</label></div></td>
+					<td class="td_02"><div class="brands">
+					<input type="file" name="brandImage" value="${bImagePath}" /></div><core:out value="${bImagePath}"></core:out>
+					<input type="hidden" name="bImagePath" value="${bImagePath}" /></td>
 				</tr>
 				<tr>
 					<td class="td_01"><div><label for="date_start">Client Id</label></div></td>

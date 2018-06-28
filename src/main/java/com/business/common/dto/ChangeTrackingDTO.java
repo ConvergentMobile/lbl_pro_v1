@@ -7,6 +7,7 @@ public class ChangeTrackingDTO {
 	private Integer clientId;
 	private String businessName;
 	private String store;
+	private Long lblStoreId;
 	private Date date;
 	private String user;
 	private String locationCity;
@@ -27,6 +28,13 @@ public class ChangeTrackingDTO {
 	private String type;
 	
 	
+	
+	public Long getLblStoreId() {
+		return lblStoreId;
+	}
+	public void setLblStoreId(Long lblStoreId) {
+		this.lblStoreId = lblStoreId;
+	}
 	public String getType() {
 		return type;
 	}

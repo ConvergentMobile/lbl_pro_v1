@@ -4,7 +4,7 @@ import java.util.Date;
 
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  *
  */
 
@@ -12,6 +12,7 @@ public class LblErrorBean {
 
 	private Integer id;
 	private String store;
+	private Long lblStoreId;
 	private String actionCode;
 	private String companyName;
 	private String alternativeName;
@@ -111,6 +112,25 @@ public class LblErrorBean {
 	private String businessDescriptionShort;
 	private String googleAccountId;
 	private String googleLocationId;
+	private String trackingId;
+	
+	
+	
+	public Long getLblStoreId() {
+		return lblStoreId;
+	}
+
+	public void setLblStoreId(Long lblStoreId) {
+		this.lblStoreId = lblStoreId;
+	}
+
+	public String getTrackingId() {
+		return trackingId;
+	}
+
+	public void setTrackingId(String trackingId) {
+		this.trackingId = trackingId;
+	}
 
 	public String getGoogleAccountId() {
 		return googleAccountId;

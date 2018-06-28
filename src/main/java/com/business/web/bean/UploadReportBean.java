@@ -5,7 +5,7 @@ import java.util.Date;
 
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  * 
  * View Bean to fetch data from java server pages(jsp's) to DTO's

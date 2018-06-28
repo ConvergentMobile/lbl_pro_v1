@@ -2,7 +2,7 @@ package com.business.web.bean;
 
 /**
  * 
- * @author VASANTH
+ * @author lbl_dev
  * 
  * View Bean to fetch data from java server pages(jsp's) to DTO's
  *

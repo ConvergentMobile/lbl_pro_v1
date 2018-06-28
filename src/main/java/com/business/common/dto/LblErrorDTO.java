@@ -1,10 +1,11 @@
 package com.business.common.dto;
 
+
 import java.io.Serializable;
 import java.util.Date;
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  *
  */
 
@@ -18,6 +19,7 @@ public class LblErrorDTO implements Serializable {
 	
 	private Integer id;
 	private String store;
+	private Long lblStoreId;
 	private String actionCode;
 	private String companyName;
 	private String alternativeName;
@@ -120,7 +122,23 @@ public class LblErrorDTO implements Serializable {
 	private String searchType;
 	private String searchValue;
 	
+	private String trackingId;
 	
+	public Long getLblStoreId() {
+		return lblStoreId;
+	}
+
+	public void setLblStoreId(Long lblStoreId) {
+		this.lblStoreId = lblStoreId;
+	}
+
+	public String getTrackingId() {
+		return trackingId;
+	}
+
+	public void setTrackingId(String trackingId) {
+		this.trackingId = trackingId;
+	}
 
 	public String getSearchType() {
 		return searchType;

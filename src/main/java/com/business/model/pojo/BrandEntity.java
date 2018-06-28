@@ -1,5 +1,6 @@
 package com.business.model.pojo;
 
+import java.sql.Blob;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -10,7 +11,7 @@ import javax.persistence.Table;
 
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  *         POJO bean which creates table with the available fields in the
  *         database table on server load-up.
@@ -45,7 +46,17 @@ public class BrandEntity {
 	private String email;
 	private String inactive;
 	
-	
+	private String  imagePath;
+
+
+	public String getImagePath() {
+		return imagePath;
+	}
+
+	public void setImagePath(String imagePath) {
+		this.imagePath = imagePath;
+	}
+
 	public String getInactive() {
 		return inactive;
 	}

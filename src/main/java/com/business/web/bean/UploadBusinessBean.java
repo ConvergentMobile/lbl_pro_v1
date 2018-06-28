@@ -2,7 +2,7 @@ package com.business.web.bean;
 
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  * View Bean to fetch data from java server pages(jsp's) to DTO's
  * 
@@ -12,6 +12,7 @@ public class UploadBusinessBean {
 
 	private Integer id;	
 	private String store;
+	private String newStore;
 	private String actionCode;
 	private String companyName;
 	private String alternativeName;
@@ -103,7 +104,15 @@ public class UploadBusinessBean {
 	private String yelpLink;
 	private String businessDescriptionShort;
 	
+	
+	
 
+	public String getNewStore() {
+		return newStore;
+	}
+	public void setNewStore(String newStore) {
+		this.newStore = newStore;
+	}
 	public String getYelpLink() {
 		return yelpLink;
 	}

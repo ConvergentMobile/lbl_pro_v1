@@ -406,35 +406,16 @@ function getPhone(flag){
 
  
  
- function showExportPopup(){
-		var form ="";
-		var count = 0;
-		$('input[type=checkbox].checkbox1').each(function () {
-			if($(this).is(":checked")){
-				++count;
-				form = $(".checkbox1").val();
-				}
-		});		
-		if(form!="" && count>=1){
-			 $('#displayExportFilepopup').bPopup();			 
-			 $("ul li").removeClass("selected");
-		 	return true;
-			}else{
-				$('#exportrecordselectionpopup').bPopup();
-				 $("ul li").removeClass("selected");
-				//alert("please select at least one record");		
-				return false;
-			}		
-		}
 
 	function errorDeletePopup(){	 
-		
+		alert("in delete");
 		var form ="";
 		var count = 0;
 		$('input[type=checkbox].checkbox1').each(function () {
 			if($(this).is(":checked")){
 				++count;
 				form = $(".checkbox1").val();
+				alert("value" + form);
 				}
 		});		
 		if(form!="" && count>=1){
@@ -504,6 +485,28 @@ function getPhone(flag){
 		}
 		  
 		}
+	
+	 function showExportPopup(){
+			var form ="";
+			var count = 0;
+			$('input[type=checkbox].checkbox1').each(function () {
+				if($(this).is(":checked")){
+					++count;
+					form = $(".checkbox1").val();
+					}
+			});		
+			if(form!="" && count>=1){
+				 $('#displayExportFilepopup').bPopup();			 
+				 $("ul li").removeClass("selected");
+			 	return true;
+				}else{
+					$('#exportrecordselectionpopup').bPopup();
+					 $("ul li").removeClass("selected");
+					//alert("please select at least one record");		
+					return false;
+				}		
+			}
+
 
 	function sendExportSubmit(){
 		 var serviceName = document.getElementById('serviceName').value;
@@ -1001,7 +1004,7 @@ function getPhone(flag){
 																
 								<core:set value="${checkedvalue }" var="checkedvalue" scope="page"></core:set>								
 																
-					<core:set value="${checked }" var="cheked" scope="page"></core:set>
+							<core:set value="${checked }" var="cheked" scope="page"></core:set>
 							
 							<core:choose>
 
@@ -1056,7 +1059,7 @@ function getPhone(flag){
 							<core:forEach items="${allBusinessInfo}" var="bean" varStatus="i">
 							
 								<tr class="odd">
-									<td class="td_01"><div><input type="checkbox" class="checkbox1"  value="${bean.id}" name="id"></div></td>
+									<td class="td_01"><div><input type="checkbox" class="checkbox1"  value="${bean.lblStoreId}" name="id"></div></td>
 									
 									<td class="td_02"><div><core:out value="${bean.errorMessage}"></core:out></div> </td>
 									<td class="td_03"><div ><core:out value="${bean.store}"></core:out></div></td>

@@ -2,7 +2,7 @@ package com.business.web.bean;
 
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  *         fetching data from dto and send to infoGroup API
  */

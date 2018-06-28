@@ -17,6 +17,7 @@ public class InsightsGraphEntity {
 	private String brandName;
 	private Integer brandId;
 	private String store;
+	private Long lblStoreId;
 	private String state;
 	private String city;
 	private Date date;
@@ -37,6 +38,12 @@ public class InsightsGraphEntity {
 	
 	
 	
+	public Long getLblStoreId() {
+		return lblStoreId;
+	}
+	public void setLblStoreId(Long lblStoreId) {
+		this.lblStoreId = lblStoreId;
+	}
 	public String getCity() {
 		return city;
 	}

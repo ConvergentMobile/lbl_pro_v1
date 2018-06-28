@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.business.common.dto.AccuracyDTO;
 import com.business.common.dto.AccuracyGraphDTO;
+import com.business.common.dto.BingAnalyticsDTO;
+import com.business.common.dto.BingReportDTO;
 import com.business.common.dto.BrandInfoDTO;
 import com.business.common.dto.CategoryDTO;
 import com.business.common.dto.ChangeTrackingDTO;
@@ -22,7 +24,6 @@ import com.business.common.dto.CustomSubmissionsDTO;
 import com.business.common.dto.ExportReportDTO;
 import com.business.common.dto.ForgotPasswordDto;
 import com.business.common.dto.InsightsGraphDTO;
-import com.business.common.dto.InsightsHistory;
 import com.business.common.dto.LblErrorDTO;
 import com.business.common.dto.LocalBusinessDTO;
 import com.business.common.dto.PartnerDTO;
@@ -50,11 +51,11 @@ import com.business.web.bean.CustomSubmissionsBean;
 import com.business.web.bean.UploadBusinessBean;
 /*import com.business.web.bean.CustomSubmissionsBean;*/
 import com.business.web.bean.UsersBean;
-import com.google.api.services.mybusiness.v3.model.Location;
+import com.google.api.services.mybusiness.v4.model.Location;
 
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  *         Service implementation of Business
  * 
@@ -62,6 +63,7 @@ import com.google.api.services.mybusiness.v3.model.Location;
 
 @Service
 public class BusinessServiceImpl implements BusinessService {
+	
 	Logger logger = Logger.getLogger(BusinessServiceImpl.class);
 	@Autowired
 	private BusinessDao businessDao;
@@ -72,7 +74,7 @@ public class BusinessServiceImpl implements BusinessService {
 	}
 
 	@Transactional
-	public void deleteBusinessInfo(List<Integer> listIds) {
+	public void deleteBusinessInfo(List<Long> listIds) {
 
 		businessDao.deleteBusinessInfo(listIds);
 	}
@@ -117,7 +119,7 @@ public class BusinessServiceImpl implements BusinessService {
 
 	@Transactional
 	public List<LocalBusinessDTO> getSpecificBusinessInfo(
-			List<Integer> listIds, String services) {
+			List<Long> listIds, String services) {
 		return businessDao.getSpecificBusinessInfo(listIds, services);
 	}
 
@@ -173,9 +175,16 @@ public class BusinessServiceImpl implements BusinessService {
 	public List<ExportReportDTO> getListingActivityInf() {
 		return businessDao.getListingActivityInf();
 	}
+	
+	@Transactional
+	public List<ExportReportDTO> getListingActivityInf(
+			LocalBusinessDTO businessDTO) {
+
+		return businessDao.getListingActivityInf(businessDTO);
+	}
 
 	@Transactional
-	public LocalBusinessDTO getBusinessInfo(Integer id) {
+	public LocalBusinessDTO getBusinessInfo(Long id) {
 
 		return businessDao.getBusinessInfo(id);
 	}
@@ -201,16 +210,16 @@ public class BusinessServiceImpl implements BusinessService {
 	}
 
 	@Transactional
-	public Integer saveChannel(String channelName, Date startDate) {
+	public Integer saveChannel(String channelName, Date startDate, String imagePath) {
 
-		return businessDao.saveChannel(channelName, startDate);
+		return businessDao.saveChannel(channelName, startDate, imagePath);
 	}
 
 	@Transactional
 	public boolean updateChannel(String channelName, Date startDate,
-			Integer channelID) {
+			Integer channelID, String imagePath) {
 
-		return businessDao.updateChannel(channelName, startDate, channelID);
+		return businessDao.updateChannel(channelName, startDate, channelID, imagePath);
 	}
 
 	@Transactional
@@ -456,8 +465,8 @@ public class BusinessServiceImpl implements BusinessService {
 	 * clientUserId) { return businessDao.getClientNameById(clientUserId); }
 	 */
 	@Transactional
-	public LblErrorDTO getErrorBusinessInfo(Integer id) {
-		return businessDao.getErrorBusinessInfo(id);
+	public LblErrorDTO getErrorBusinessInfo(Long lblStoreID) {
+		return businessDao.getErrorBusinessInfo(lblStoreID);
 	}
 
 	@Transactional
@@ -491,7 +500,7 @@ public class BusinessServiceImpl implements BusinessService {
 	}
 
 	@Transactional
-	public List<LblErrorDTO> getSpecificErrorBusinessInfo(List<Integer> listIds) {
+	public List<LblErrorDTO> getSpecificErrorBusinessInfo(List<Long> listIds) {
 		return businessDao.getSpecificErrorBusinessInfo(listIds);
 	}
 
@@ -531,7 +540,7 @@ public class BusinessServiceImpl implements BusinessService {
 	}
 
 	@Transactional
-	public void deleteErrorBusinessInfo(List<Integer> listIds) {
+	public void deleteErrorBusinessInfo(List<Long> listIds) {
 		businessDao.deleteErrorBusinessInfo(listIds);
 
 	}
@@ -691,10 +700,10 @@ public class BusinessServiceImpl implements BusinessService {
 	@Transactional
 	public boolean saveBrand(String brandName, Date startDateValue,
 			String locationsInvoiced, String submission, Integer channelID,
-			String partnerActive, Integer clientId, int brandId, String email) {
+			String partnerActive, Integer clientId, int brandId, String email, String imagePath) {
 		return businessDao.saveBrand(brandName, startDateValue,
 				locationsInvoiced, submission, channelID, partnerActive,
-				clientId, brandId, email);
+				clientId, brandId, email, imagePath);
 
 	}
 
@@ -846,10 +855,10 @@ public class BusinessServiceImpl implements BusinessService {
 	public boolean updateBrand(Integer brandID, String brandName,
 			Date startDate, String inactive, String locationsInvoiced,
 			String submission, Integer channelID, String partnerActive,
-			Integer clientId, Integer id, String email) {
+			Integer clientId, Integer id, String email, String imagePath) {
 		return businessDao.updateBrand(brandID, brandName, startDate, inactive,
 				locationsInvoiced, submission, channelID, partnerActive,
-				clientId, id, email);
+				clientId, id, email, imagePath);
 
 	}
 
@@ -983,6 +992,12 @@ public class BusinessServiceImpl implements BusinessService {
 
 		businessDao.updateErrorBusinessInfoByAddressVerfication(errorDTO);
 	}
+	
+	@Transactional
+	public void updateErrorInfoBySmartyStreets(UploadBusinessBean uploadBean) {
+		businessDao.updateErrorInfoBySmartyStreets(uploadBean);
+		
+	}
 
 	@Transactional
 	public Map<Integer, List<ChangeTrackingDTO>> getBusinessListing(
@@ -1006,7 +1021,7 @@ public class BusinessServiceImpl implements BusinessService {
 
 	@Transactional
 	public ChangeTrackingEntity isClientIdAndStoreExists(Integer clientId,
-			String store) {
+			Long store) {
 		return businessDao.isClientIdAndStoreExists(clientId, store);
 	}
 
@@ -1303,7 +1318,7 @@ public class BusinessServiceImpl implements BusinessService {
 
 	@Transactional
 	public void addErrorToBusinessList(LocalBusinessDTO localBusinessDTO,
-			Date date, String string, List<Integer> listIds) {
+			Date date, String string, List<Long> listIds) {
 		businessDao.addErrorToBusinessList(localBusinessDTO, date, string,
 				listIds);
 
@@ -1444,7 +1459,7 @@ public class BusinessServiceImpl implements BusinessService {
 
 	@Transactional
 	public boolean isBusinessExcelRecordUnique(LocalBusinessDTO excelRecord) {
-		// TODO Auto-generated method stub
+
 		return businessDao.isBusinessExcelRecordUnique(excelRecord);
 	}
 
@@ -1458,20 +1473,20 @@ public class BusinessServiceImpl implements BusinessService {
 	@Transactional
 	public List<LocalBusinessDTO> getLocationsByGoogleAccount(
 			String googleAccountId) {
-		// TODO Auto-generated method stub
+
 		return businessDao.getLocationsByGoogleAccount(googleAccountId);
 	}
 	@Transactional
 	public LocalBusinessDTO getLocationByGoogleAccount(String googleAccountId,
 			String locationId) {
-		// TODO Auto-generated method stub
+
 		return businessDao.getLocationByGoogleAccount(googleAccountId,locationId);
 	}
 
 	@Transactional
-	public Map<String, Long> getInsightsDataForBrandAndStore(String brand,
+	public Map<String, Long> getInsightsDataForBrandAndStore(Integer brand,
 			String store, Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
+
 		return businessDao.getInsightsDataForBrandAndStore(brand, store,
 				startDate, endDate);
 	}
@@ -1485,28 +1500,25 @@ public class BusinessServiceImpl implements BusinessService {
 	@Transactional
 	public List<InsightsGraphDTO> getViewsHistoryByWeek(String state,
 			String brand, String store, Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
+
 		return businessDao.getViewsHistoryByWeek(state, brand, store,
 				startDate, endDate);
 	}
 	
 	@Transactional
-	public  Map<String, InsightsGraphDTO> getHistory(String brand,
+	public  Map<String, InsightsGraphDTO> getHistory(Integer brand,
 			String state, Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
 		return businessDao.getHistory(brand,
 				state, startDate, endDate);
 	}
 	@Transactional
-	public Map<String, InsightsGraphDTO> getHistoryForStore(String brand,
+	public Map<String, InsightsGraphDTO> getHistoryForStore(Integer brand,
 			String store, Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
 		return businessDao.getHistoryForStore(brand,
 				store, startDate, endDate);
 	}
 	@Transactional
 	public List<String> getAllStatesListByBrand(String brand) {
-		// TODO Auto-generated method stub
 		return businessDao.getAllStatesListByBrand(brand);
 	}
 
@@ -1520,27 +1532,24 @@ public class BusinessServiceImpl implements BusinessService {
 	}
 	@Transactional
 	public List<String> getStoresNames(String brand) {
-		// TODO Auto-generated method stub
 		return businessDao.getStoresNames(brand);
 	}
 	@Transactional
 	public Map<String, Long> getInsightsData(String brand, String store,
 			Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
 		return businessDao.getInsightsData(brand, store, startDate,
 				endDate);
 	}
 	@Transactional
-	public Map<String, Long> getInsightsBrandData(String brand, String state,
+	public Map<String, Long> getInsightsBrandData(Integer brand, String state,
 			Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
 		return businessDao.getInsightsBrandData(brand, state, startDate,
 				endDate);
 	}
 	@Transactional
 	public List<InsightsGraphDTO> getInsightsBrandExcelData(String brand,
 			String state, Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
+
 		return businessDao.getInsightsBrandExcelData(brand, state, startDate,
 				endDate);
 	}
@@ -1548,26 +1557,21 @@ public class BusinessServiceImpl implements BusinessService {
 	@Transactional
 	public List<InsightsGraphDTO> getBrandViewsHistoryByWeek(String brand,
 			String state, Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
+
 		return businessDao.getBrandViewsHistoryByWeek(brand, state, startDate,
 				endDate);
 	}
 	
-	@Transactional
-	public Map<String, List<InsightsGraphDTO>> getTopandBottomSearches(
-			String brand, String state, Date startDate, Date endDate) {
-		// TODO Auto-generated method stub
-		return businessDao.getTopandBottomSearches(brand, state, startDate, endDate);
-	}
+
 	@Transactional
 	public List<LocalBusinessDTO> getStoresByGMBAccount(String googleAccountId) {
-		// TODO Auto-generated method stub
+
 		return businessDao.getStoresByGMBAccount(googleAccountId);
 	}
 	@Transactional
-	public Integer getInsightCountsForBrand(String brand, String store) {
-		// TODO Auto-generated method stub
-		return businessDao.getInsightCountsForBrand(brand, store);
+	public Long getInsightCountsForBrand(Integer brand, String store, Date startDate, Date endDate) {
+
+		return businessDao.getInsightCountsForBrand(brand, store, startDate, endDate);
 	}
 	@Transactional
 	public void updateStoresWithGMBAccountId(String client,
@@ -1577,8 +1581,73 @@ public class BusinessServiceImpl implements BusinessService {
 	}
 	@Transactional
 	public void deleteExistingRecords(Integer clientId, Date formattedEndDate) {
-		// TODO Auto-generated method stub
+
 		businessDao.deleteExistingRecords(clientId,formattedEndDate);
+	}
+	
+	@Transactional
+	public void deleteExistingRecords(Integer clientId, Date formattedDate,
+			Date formattedDate2) {
+		businessDao.deleteExistingRecords(clientId,formattedDate, formattedDate2);
+		
+	}
+	
+	@Transactional
+	public Map<String, String> getChannelImageBytes(String brand) {
+
+		return businessDao.getChannelImageBytes(brand);
+	}
+	@Transactional
+	public List<InsightsGraphDTO> getMonthlyReportData(String brand, String type) {
+
+		return businessDao.getMonthlyReportData(brand, type);
+	}
+	@Transactional
+	public List<InsightsGraphDTO> getMonthlyTrends(Integer brand, String state) {
+
+		return businessDao.getMonthlyTrends(brand, state);
+	}
+	
+	@Transactional
+	public List<BingReportDTO> getAnlytics(Integer brand, String state, Date startDate,
+			Date endDate) {
+		return businessDao.getAnlytics(brand,state,startDate,endDate);
+		
+	}
+	
+	@Transactional
+	public List<BingReportDTO> getAnlyticsForStore(String brand, String store,
+			Date startDate, Date endDate) {
+
+		return businessDao.getAnlyticsForStore(brand,store,startDate,endDate);
+	}
+	
+	@Transactional
+	public Map<String, List<InsightsGraphDTO>> getTopandBottomSearches(
+			Integer brand, String state, Date startDate, Date endDate) {
+
+		return businessDao.getTopandBottomSearches(brand,state,startDate,endDate);
+	}
+	
+	@Transactional
+	public Map<String, List<BingAnalyticsDTO>> getTopandBottomAnalytics(
+			Integer brand, String state, Date startDate, Date endDate) {
+
+		return businessDao.getTopandBottomAnalytics(brand,state,startDate,endDate);
+	}
+	
+	@Transactional
+	public Map<Integer, InsightsGraphDTO> getDailyTrends(String brand,
+			String state, Date startDate, Date endDate) {
+
+		return businessDao.getDailyTrends(brand,state,startDate,endDate);
+	}
+	
+	@Transactional
+	public void updateInsightMonthlyCountsForStore(LocalBusinessDTO dto,
+			String accountId, String googleLocationId) {
+		// TODO Auto-generated method stub
+		businessDao.updateInsightMonthlyCountsForStore(dto, accountId, googleLocationId);
 	}
 
 	

@@ -1,6 +1,7 @@
 package com.business.common.util;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -11,12 +12,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.jfree.util.Log;
 
 import com.business.common.dto.LocalBusinessDTO;
@@ -32,31 +37,33 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
-import com.google.api.services.mybusiness.v3.MyBusiness;
-import com.google.api.services.mybusiness.v3.model.Account;
-import com.google.api.services.mybusiness.v3.model.Address;
-import com.google.api.services.mybusiness.v3.model.Admin;
-import com.google.api.services.mybusiness.v3.model.BasicMetricsRequest;
-import com.google.api.services.mybusiness.v3.model.BusinessHours;
-import com.google.api.services.mybusiness.v3.model.Category;
-import com.google.api.services.mybusiness.v3.model.Date;
-import com.google.api.services.mybusiness.v3.model.DimensionalMetricValue;
-import com.google.api.services.mybusiness.v3.model.GoogleUpdatedLocation;
-import com.google.api.services.mybusiness.v3.model.ListAccountsResponse;
-import com.google.api.services.mybusiness.v3.model.ListLocationAdminsResponse;
-import com.google.api.services.mybusiness.v3.model.ListLocationsResponse;
-import com.google.api.services.mybusiness.v3.model.Location;
-import com.google.api.services.mybusiness.v3.model.LocationMetrics;
-import com.google.api.services.mybusiness.v3.model.MetricRequest;
-import com.google.api.services.mybusiness.v3.model.MetricValue;
-import com.google.api.services.mybusiness.v3.model.OpenInfo;
-import com.google.api.services.mybusiness.v3.model.Photos;
-import com.google.api.services.mybusiness.v3.model.ReportLocationInsightsRequest;
-import com.google.api.services.mybusiness.v3.model.ReportLocationInsightsResponse;
-import com.google.api.services.mybusiness.v3.model.SpecialHourPeriod;
-import com.google.api.services.mybusiness.v3.model.SpecialHours;
-import com.google.api.services.mybusiness.v3.model.TimePeriod;
-import com.google.api.services.mybusiness.v3.model.TimeRange;
+import com.google.api.services.mybusiness.v4.MyBusiness;
+import com.google.api.services.mybusiness.v4.MyBusiness.Accounts.Locations;
+import com.google.api.services.mybusiness.v4.model.Account;
+import com.google.api.services.mybusiness.v4.model.Admin;
+import com.google.api.services.mybusiness.v4.model.BasicMetricsRequest;
+import com.google.api.services.mybusiness.v4.model.BusinessHours;
+import com.google.api.services.mybusiness.v4.model.Category;
+import com.google.api.services.mybusiness.v4.model.Date;
+import com.google.api.services.mybusiness.v4.model.DimensionalMetricValue;
+import com.google.api.services.mybusiness.v4.model.GoogleUpdatedLocation;
+import com.google.api.services.mybusiness.v4.model.ListAccountsResponse;
+import com.google.api.services.mybusiness.v4.model.ListLocationAdminsResponse;
+import com.google.api.services.mybusiness.v4.model.ListLocationsResponse;
+import com.google.api.services.mybusiness.v4.model.ListReviewsResponse;
+import com.google.api.services.mybusiness.v4.model.Location;
+import com.google.api.services.mybusiness.v4.model.LocationMetrics;
+import com.google.api.services.mybusiness.v4.model.MetricRequest;
+import com.google.api.services.mybusiness.v4.model.MetricValue;
+import com.google.api.services.mybusiness.v4.model.OpenInfo;
+import com.google.api.services.mybusiness.v4.model.PostalAddress;
+import com.google.api.services.mybusiness.v4.model.ReportLocationInsightsRequest;
+import com.google.api.services.mybusiness.v4.model.ReportLocationInsightsResponse;
+import com.google.api.services.mybusiness.v4.model.Review;
+import com.google.api.services.mybusiness.v4.model.SpecialHourPeriod;
+import com.google.api.services.mybusiness.v4.model.SpecialHours;
+import com.google.api.services.mybusiness.v4.model.TimePeriod;
+import com.google.api.services.mybusiness.v4.model.TimeRange;
 
 /**
  * Simple client for the Google My Business API.
@@ -64,6 +71,9 @@ import com.google.api.services.mybusiness.v3.model.TimeRange;
 public class GMBClient {
 
 	static Logger logger = Logger.getLogger(GMBClient.class);
+	static String startDate = LBLConstants.GMB_INSIGHTS_STARTDATE;
+	static String endDate = LBLConstants.GMB_INSIGHTS_ENDDATE;
+	static String dataCollectionType = LBLConstants.GMB_INSIGHTS_CoLLECTIONS_TYPE;
 	/**
 	 * Be sure to specify the name of your application. If the application name
 	 * is {@code null} or blank, the application will log a warning. Suggested
@@ -127,6 +137,21 @@ public class GMBClient {
 		return response.getAccounts();
 	}
 
+	public static List<Review> listReviews(String locationName)
+			throws Exception {
+		Locations.Reviews.List reviewsList = mybusiness.accounts().locations()
+				.reviews().list(locationName);
+		ListReviewsResponse response = reviewsList.execute();
+		List<Review> reviews = response.getReviews();
+
+		/*		for (Review review : reviews) {
+			System.out.println(review.toPrettyString());
+
+		}*/
+
+		return reviews;
+	}
+
 	public static Account findPersonalAccount(List<Account> accounts) {
 		for (Account account : accounts) {
 			if (account.getType().equals("PERSONAL")) {
@@ -172,26 +197,12 @@ public class GMBClient {
 	public static List<Location> listLocations(Account account)
 			throws Exception {
 
-		/*
-		 * var locationsListRequest =
-		 * service.Accounts.Locations.List(account.Name);
-		 * locationsListRequest.PageSize = 100; locationsResult =
-		 * locationsListRequest.Execute();
-		 * 
-		 * if (locationsResult != null) {
-		 * PrintLocations(locationsResult.Locations); while
-		 * (locationsResult.NextPageToken != null) {
-		 * locationsListRequest.PageToken = locationsResult.NextPageToken;
-		 * locationsResult = locationsListRequest.Execute();
-		 * PrintLocations(locationsResult.Locations); } } else {
-		 * Console.WriteLine("Account {0} has no locations.", account.Name); }
-		 */
-
 		List<Location> locationsList = new ArrayList<Location>();
 
 		MyBusiness.Accounts.Locations.List locationsListRequest = mybusiness
 				.accounts().locations().list(account.getName());
 		locationsListRequest.setPageSize(100);
+
 		ListLocationsResponse locationsResult = locationsListRequest.execute();
 
 		if (locationsResult != null) {
@@ -212,15 +223,31 @@ public class GMBClient {
 
 		}
 
-		/*
-		 * List<Location> locations = response.getLocations();
-		 * 
-		 * if (locations != null) { for (Location location : locations) {
-		 * //System.out.println(location.getLocationName() + "====" +
-		 * location.getName() + "Location is:"+ location); } } else {
-		 * System.out.printf("Account '%s' has no locations.",
-		 * account.getName()); }
-		 */
+		System.out.println("Total locations Found for Account is: "
+				+ locationsList.size());
+		return locationsList;
+	}
+
+	public static List<Location> list100Locations(Account account)
+			throws Exception {
+
+		List<Location> locationsList = new ArrayList<Location>();
+
+		MyBusiness.Accounts.Locations.List locationsListRequest = mybusiness
+				.accounts().locations().list(account.getName());
+		locationsListRequest.setPageSize(500);
+
+		ListLocationsResponse locationsResult = locationsListRequest.execute();
+
+		if (locationsResult != null) {
+			List<Location> locations = locationsResult.getLocations();
+			// System.out.println("===================>>>: " +
+			// locations.size());
+			if (locations != null)
+				locationsList.addAll(locations);
+
+		}
+
 		System.out.println("Total locations Found for Account is: "
 				+ locationsList.size());
 		return locationsList;
@@ -258,9 +285,8 @@ public class GMBClient {
 
 		MyBusiness.Accounts.Locations.Patch updateLocation = mybusiness
 				.accounts().locations().patch(locationName, location);
-		updateLocation.setFieldMask("location_name");
-
-		updateLocation.setLanguageCode("en-AU");
+		updateLocation.setAttributeMask("location_name");
+		//updateLocation.setLanguageCode("en-AU");
 		Location updatedLocation = updateLocation.execute();
 
 		System.out.printf("Updated Location:\n%s", updatedLocation);
@@ -282,29 +308,30 @@ public class GMBClient {
 		MyBusiness.Accounts.Locations.Patch updateLocation = mybusiness
 				.accounts().locations().patch(locationName, location);
 		updateLocation.getRequestHeaders().set("X-GOOG-API-FORMAT-VERSION", 2);
-		updateLocation.setFieldMask("special_hours");
-		updateLocation.setLanguageCode("en-AU");
+		updateLocation.setAttributeMask("special_hours");
+		//updateLocation.setLanguageCode("en-AU");
 		Location updatedLocation = updateLocation.execute();
 		System.out.println("Holiday hours set:" + updatedLocation);
 	}
 
-	public static void setPhotos(String locationName) throws Exception {
-		Location location = new Location()
-				.setPhotos(new Photos()
-						.setTeamPhotoUrls(
-								Collections
-										.singletonList("https://lh3.googleusercontent.com/-ccTboHHmaWc/Udtina8CDnI/AAAAAAAABFU/hwYAS9RuY7U/s696/R51C4274.jpg"))
-						.setExteriorPhotoUrls(
-								Collections
-										.singletonList("https://lh3.googleusercontent.com/-VdwKC7Sf2r4/UdtiS0PikDI/AAAAAAAABFU/fA3ehF7XsB0/s696/R51C4675.jpg")));
-		MyBusiness.Accounts.Locations.Patch updateLocation = mybusiness
-				.accounts().locations().patch(locationName, location);
-		updateLocation.setLanguageCode("en-AU");
-		updateLocation
-				.setFieldMask("photos.exterior_photo_urls,photos.team_photo_urls");
-		Location updatedLocation = updateLocation.execute();
-		System.out.println("Photos set:" + updatedLocation);
-	}
+//	public static void setPhotos(String locationName) throws Exception {
+//		
+//	
+//		Location location = new Location().setPhotos(new Photos()
+//						.setTeamPhotoUrls(
+//								Collections
+//										.singletonList("https://lh3.googleusercontent.com/-ccTboHHmaWc/Udtina8CDnI/AAAAAAAABFU/hwYAS9RuY7U/s696/R51C4274.jpg"))
+//						.setExteriorPhotoUrls(
+//								Collections
+//										.singletonList("https://lh3.googleusercontent.com/-VdwKC7Sf2r4/UdtiS0PikDI/AAAAAAAABFU/fA3ehF7XsB0/s696/R51C4675.jpg")));
+//		MyBusiness.Accounts.Locations.Patch updateLocation = mybusiness
+//				.accounts().locations().patch(locationName, location);
+//		//updateLocation.setLanguageCode("en-AU");
+//		updateLocation
+//				.setAttributeMask("photos.exterior_photo_urls,photos.team_photo_urls");
+//		Location updatedLocation = updateLocation.execute();
+//		System.out.println("Photos set:" + updatedLocation);
+//	}
 
 	public static void getGoogleUpdates(String locationName) throws Exception {
 		MyBusiness.Accounts.Locations.GetGoogleUpdated googleUpdated = mybusiness
@@ -320,11 +347,11 @@ public class GMBClient {
 		System.out.println("Creating Location");
 
 		// Street address
-		List<String> addressLines = new ArrayList();
+		List addressLines = new ArrayList();
 		addressLines.add("Level 5, 48 Pirrama Road");
-		Address address = new Address().setAddressLines(addressLines)
+		PostalAddress address = new PostalAddress().setAddressLines(addressLines)
 				.setLocality("Pyrmont").setAdministrativeArea("NSW")
-				.setCountry("AU").setPostalCode("2009");
+				.setRegionCode("AU").setPostalCode("2009");
 
 		// Business hours
 		List<TimePeriod> periods = new ArrayList<TimePeriod>();
@@ -337,26 +364,22 @@ public class GMBClient {
 			periods.add(period);
 		}
 		BusinessHours businessHours = new BusinessHours().setPeriods(periods);
-		Location location = new Location().setAddress(address)
+		Location location = new Location()
+				.setAddress(address)
 				.setRegularHours(businessHours)
-				.setLocationName("Google Sydney").setStoreCode("GOOG-SYD")
+				.setLocationName("Google Sydney")
+				.setStoreCode("GOOG-SYD")
 				.setPrimaryPhone("02 9374 4000")
-				.setPrimaryCategory(new Category().setName("Software Company"))
+				.setPrimaryCategory(
+						new Category().setDisplayName("gcid:Software Company"))
 				.setWebsiteUrl("https://www.google.com.au/");
 
 		MyBusiness.Accounts.Locations.Create createLocation = mybusiness
 				.accounts().locations().create(accountName, location);
 		createLocation.setRequestId("1a84939c-ab7d-4581-8930-ee35af6fefac");
-		createLocation.setLanguageCode("en-AU");
-		// If you get a request validation error you can inject the following
-		// header into any call as
-		// shown below to get a more descriptive error and then it will throw
-		// trying to digest that
-		// richer message.
-		// This is a bug in the client library generator that will be fixed in
-		// the future.
-		// createLocation.getRequestHeaders().set("X-GOOG-API-FORMAT-VERSION",
-		// 2);
+		
+		//createLocation.setLanguageCode("en-AU");
+		createLocation.getRequestHeaders().set("X-GOOG-API-FORMAT-VERSION", 2);
 		Location createdLocation = createLocation.execute();
 
 		System.out.printf("Created Location:\n%s", createdLocation);
@@ -445,10 +468,10 @@ public class GMBClient {
 
 			addressLines.add("Suite " + suite);
 		}
-		Address address = new Address().setAddressLines(addressLines)
+		PostalAddress address = new PostalAddress().setAddressLines(addressLines)
 				.setLocality(localBusinessDTO.getLocationCity())
 				.setAdministrativeArea(localBusinessDTO.getLocationState())
-				.setCountry(localBusinessDTO.getCountryCode())
+				.setRegionCode(localBusinessDTO.getCountryCode())
 				.setPostalCode(localBusinessDTO.getLocationZipCode());
 
 		// Business hours
@@ -540,7 +563,7 @@ public class GMBClient {
 				.setStoreCode(localBusinessDTO.getStore())
 				.setPrimaryPhone(localBusinessDTO.getLocationPhone())
 				.setPrimaryCategory(
-						new Category().setName("Credit").setCategoryId(
+						new Category().setDisplayName("Credit").setCategoryId(
 								"gcid:credit_union")).setOpenInfo(openInfo);
 
 		if (localBusinessDTO.getClientId() == 3351) {
@@ -559,8 +582,7 @@ public class GMBClient {
 		// Aspen dental
 		if (localBusinessDTO.getClientId() == 3471) {
 			updateLocation
-					.setLanguageCode("en")
-					.setFieldMask(
+					.setAttributeMask(
 							"storeCode,locationName,address,regularHours,openInfo")
 					.setValidateOnly(false).getRequestHeaders()
 					.set("X-GOOG-API-FORMAT-VERSION", 2);
@@ -570,16 +592,14 @@ public class GMBClient {
 				|| localBusinessDTO.getClientId() == 3456
 				|| localBusinessDTO.getClientId() == 3628) {
 			updateLocation
-					.setLanguageCode("en")
-					.setFieldMask(
+					.setAttributeMask(
 							"storeCode,locationName,address,primaryPhone,regularHours,openInfo")
 					.setValidateOnly(false).getRequestHeaders()
 					.set("X-GOOG-API-FORMAT-VERSION", 2);
 		} else {
 			// all other brands
 			updateLocation
-					.setLanguageCode("en")
-					.setFieldMask(
+					.setAttributeMask(
 							"storeCode,locationName,address,primaryPhone,websiteUrl,regularHours,openInfo")
 					.setValidateOnly(false).getRequestHeaders()
 					.set("X-GOOG-API-FORMAT-VERSION", 2);
@@ -596,9 +616,12 @@ public class GMBClient {
 		// Street address
 		List<String> addressLines = new ArrayList<String>();
 		addressLines.add("310 Pittsboro St");
-		Address address = new Address().setAddressLines(addressLines)
-				.setLocality("Chapel Hill").setAdministrativeArea("NC")
-				.setCountry("US").setPostalCode("27516");
+		
+		//PostalAddress address = new PostalAddress();
+		
+		PostalAddress address = new PostalAddress().setAddressLines(addressLines)
+				.setLocality("Chapel Hill").setAdministrativeArea("NC").setRegionCode("US")
+				.setPostalCode("27516");
 
 		// Additional Phones
 		List<String> additionalPhones = new ArrayList<String>();
@@ -617,6 +640,7 @@ public class GMBClient {
 			periods.add(period);
 		}
 		BusinessHours businessHours = new BusinessHours().setPeriods(periods);
+		
 
 		// OpenInfo
 		OpenInfo openInfo = new OpenInfo();
@@ -631,7 +655,7 @@ public class GMBClient {
 				.setPrimaryPhone("(919) 962-6551")
 				.setAdditionalPhones(additionalPhones)
 				.setPrimaryCategory(
-						new Category().setName("Credit").setCategoryId(
+						new Category().setDisplayName("Credit").setCategoryId(
 								"gcid:credit_union")).setOpenInfo(openInfo);
 
 		MyBusiness.Accounts.Locations.Patch updateLocation = mybusiness
@@ -639,10 +663,8 @@ public class GMBClient {
 				.locations()
 				.patch("accounts/114515985899098925999/locations/16805323811872814884",
 						location);
-		updateLocation
-				.setLanguageCode("en")
-				.setFieldMask(
-						"storeCode,locationName,address,primaryPhone,websiteUrl,regularHours,openInfo")
+		
+		updateLocation.setAttributeMask("storeCode,locationName,address,primaryPhone,websiteUrl,regularHours,openInfo")
 				.setValidateOnly(false).getRequestHeaders()
 				.set("X-GOOG-API-FORMAT-VERSION", 2);
 		Location updatedLocation = updateLocation.execute();
@@ -678,27 +700,60 @@ public class GMBClient {
 		for (Location location : locations) {
 			locationMap.put(location.getStoreCode(), location);
 		}
-		String[] dates = getStartandEndDates(2);
+		String[] dates = null;
+		// Code to modify if re re run
+		/*
+		 * if (dataCollectionType.equalsIgnoreCase("latest")) { dates =
+		 * getStartandEndDates(2); } else if
+		 * (dataCollectionType.equalsIgnoreCase("range")) { dates =
+		 * getStartandEndDates(); }
+		 */
 
-		java.util.Date formattedDate = getFormattedDate(dates[1]);
-		System.out.println("clientId: " + formattedDate
-				+ ", formatted Date is:" + formattedDate);	
-		
-		List<java.util.Date> datesList = new ArrayList<java.util.Date>();
-		datesList.add(formattedDate);
-		
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(formattedDate);
-		cal.add(Calendar.DAY_OF_MONTH, -1);
-		java.util.Date date2 = cal.getTime();
-		
-		datesList.add(date2);
-	
-		// delete records for exising dates
-		for (int i = 0; i < datesList.size(); i++) {
-			service.deleteExistingRecords(clientId, datesList.get(i));
+		dates = getStartandEndDates(dataCollectionType);
+
+		List<java.util.Date> datesList = null;
+
+		if (dataCollectionType.equalsIgnoreCase("latest")) {
+
+			java.util.Date formattedDate = getFormattedDate(dates[1]);
+			System.out.println("clientId: " + clientId + ", formatted Date is:"
+					+ formattedDate);
+
+			datesList = new ArrayList<java.util.Date>();
+			datesList.add(formattedDate);
+
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(formattedDate);
+			cal.add(Calendar.DAY_OF_MONTH, -1);
+			java.util.Date date2 = cal.getTime();
+			datesList.add(date2);
+
+			// delete records for exising dates
+			for (int i = 0; i < datesList.size(); i++) {
+				System.out.println("deleting for " + datesList.get(i));
+				service.deleteExistingRecords(clientId, datesList.get(i));
+			}
+		} else if (dataCollectionType.equalsIgnoreCase("range")) {
+
+			/*
+			 * List<java.util.Date> listOfDates = getListOfDates(
+			 * getFormattedDate(dates[0]), getFormattedDate(dates[1]));
+			 * 
+			 * // delete records for exising dates for (int i = 0; i <
+			 * listOfDates.size(); i++) { System.out.println("deleting for " +
+			 * listOfDates.get(i)); service.deleteExistingRecords(clientId,
+			 * listOfDates.get(i)); }
+			 */
+
+			service.deleteExistingRecords(clientId, getFormattedDate(dates[0]));
+			service.deleteExistingRecords(clientId, getFormattedDate(dates[1]));
+			System.out.println("deleting old records for " + clientId
+					+ " from " + getFormattedDate(dates[0]) + " to "
+					+ getFormattedDate(dates[1]));
+			service.deleteExistingRecords(clientId, getFormattedDate(dates[0]),
+					getFormattedDate(dates[1]));
 		}
-		
+
 		for (String store : stores) {
 
 			Location location = locationMap.get(store);
@@ -785,8 +840,15 @@ public class GMBClient {
 							for (int k = 0; k < metricValues.size(); k++) {
 								MetricValue metricValue = metricValues.get(k);
 
-								if (metricValue.getMetric().equalsIgnoreCase(
-										"QUERIES_DIRECT")) {
+								String metric = metricValue.getMetric();
+								/*
+								 * System.out.println("=====>" + metricValue +
+								 * "  <<<<==== ==> " + metric);
+								 */
+
+								if (metric != null
+										&& metric
+												.equalsIgnoreCase("QUERIES_DIRECT")) {
 									List<DimensionalMetricValue> dimensionalValues = metricValue
 											.getDimensionalValues();
 									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
@@ -803,8 +865,9 @@ public class GMBClient {
 												value);
 									}
 
-								} else if (metricValue.getMetric()
-										.equalsIgnoreCase("QUERIES_INDIRECT")) {
+								} else if (metric != null
+										&& metric
+												.equalsIgnoreCase("QUERIES_INDIRECT")) {
 									List<DimensionalMetricValue> dimensionalValues = metricValue
 											.getDimensionalValues();
 									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
@@ -820,8 +883,9 @@ public class GMBClient {
 												startTime.substring(0, 10),
 												value);
 									}
-								} else if (metricValue.getMetric()
-										.equalsIgnoreCase("VIEWS_SEARCH")) {
+								} else if (metric != null
+										&& metric
+												.equalsIgnoreCase("VIEWS_SEARCH")) {
 									List<DimensionalMetricValue> dimensionalValues = metricValue
 											.getDimensionalValues();
 									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
@@ -837,8 +901,9 @@ public class GMBClient {
 												startTime.substring(0, 10),
 												value);
 									}
-								} else if (metricValue.getMetric()
-										.equalsIgnoreCase("VIEWS_MAPS")) {
+								} else if (metric != null
+										&& metric
+												.equalsIgnoreCase("VIEWS_MAPS")) {
 									List<DimensionalMetricValue> dimensionalValues = metricValue
 											.getDimensionalValues();
 									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
@@ -853,8 +918,9 @@ public class GMBClient {
 										mapsMap.put(startTime.substring(0, 10),
 												value);
 									}
-								} else if (metricValue.getMetric()
-										.equalsIgnoreCase("ACTIONS_WEBSITE")) {
+								} else if (metric != null
+										&& metric
+												.equalsIgnoreCase("ACTIONS_WEBSITE")) {
 									List<DimensionalMetricValue> dimensionalValues = metricValue
 											.getDimensionalValues();
 									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
@@ -870,8 +936,9 @@ public class GMBClient {
 												startTime.substring(0, 10),
 												value);
 									}
-								} else if (metricValue.getMetric()
-										.equalsIgnoreCase("ACTIONS_PHONE")) {
+								} else if (metric != null
+										&& metric
+												.equalsIgnoreCase("ACTIONS_PHONE")) {
 									List<DimensionalMetricValue> dimensionalValues = metricValue
 											.getDimensionalValues();
 									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
@@ -887,9 +954,9 @@ public class GMBClient {
 												startTime.substring(0, 10),
 												value);
 									}
-								} else if (metricValue.getMetric()
-										.equalsIgnoreCase(
-												"ACTIONS_DRIVING_DIRECTIONS")) {
+								} else if (metric != null
+										&& metric
+												.equalsIgnoreCase("ACTIONS_DRIVING_DIRECTIONS")) {
 									List<DimensionalMetricValue> dimensionalValues = metricValue
 											.getDimensionalValues();
 									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
@@ -937,7 +1004,10 @@ public class GMBClient {
 							accountId, googleLocationId, directCount,
 							inDirectCount, searchCount, mapCount, callsCount,
 							directionsCount, websiteCount);
+					
+			
 				}
+				service.updateInsightMonthlyCountsForStore(dto, accountId,googleLocationId);
 
 			} else {
 				Log.info("store in LBL does not found in GMB:" + store);
@@ -948,272 +1018,6 @@ public class GMBClient {
 				+ storesForRemove.size());
 		for (int i = 0; i < storesForRemove.size(); i++) {
 			Log.info("Store not Found is: " + stores.get(i));
-		}
-
-	}
-
-	public static void getReportInsights(Account account) {
-
-		List<Location> locations = new ArrayList<Location>();
-		try {
-			locations = listLocations(account);
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		}
-
-		String name = account.getName();
-		String[] accountIds = name.split("/");
-		String googleAccountId = accountIds[1];
-
-		List<String> stores = new ArrayList<String>();
-		// for (LocalBusinessDTO localBusinessDTO : listOfBussinessByBrandName)
-		// {
-		stores.add("SYR");
-		// }
-
-		List<String[]> listofDays = getListofWeeks();
-		int a = 0;
-		for (Location location : locations) {
-
-			Map<String, Long> drivingDirMap = new HashMap<String, Long>();
-
-			if (a > 1)
-				break;
-			if (stores.contains(location.getStoreCode())) {
-				a++;
-
-				Map<String, Long> directMap = new HashMap<String, Long>();
-				Map<String, Long> inDirectMap = new HashMap<String, Long>();
-				Map<String, Long> searchMap = new HashMap<String, Long>();
-				Map<String, Long> mapsMap = new HashMap<String, Long>();
-				Map<String, Long> websiteMap = new HashMap<String, Long>();
-				Map<String, Long> callsMap = new HashMap<String, Long>();
-
-				String[] dates = listofDays.get(0);
-
-				List<String> locationsNames = new ArrayList<String>();
-
-				String gmbLocation = location.getName();
-				String[] locationDetails = gmbLocation.split("/");
-				locationsNames.add(location.getName());
-
-				String accountId = locationDetails[1];
-				String googleLocationId = locationDetails[3];
-
-				Long directCount = 0L;
-				Long inDirectCount = 0L;
-
-				Long mapCount = 0L;
-				Long searchCount = 0L;
-
-				Long websiteCount = 0L;
-				Long callsCount = 0L;
-				Long directionsCount = 0L;
-
-				ReportLocationInsightsRequest request = new ReportLocationInsightsRequest();
-				request.setLocationNames(locationsNames);
-				request.setBasicRequest(new BasicMetricsRequest());
-				List<MetricRequest> metrics = new ArrayList<MetricRequest>();
-				MetricRequest metric1 = new MetricRequest();
-				MetricRequest metric2 = new MetricRequest();
-
-				List<String> options = new ArrayList<String>();
-				options.add("AGGREGATED_DAILY");
-				metric1.setMetric("ALL");
-				metric2.setMetric("ALL");
-				metric2.setOptions(options);
-				metric1.setOptions(options);
-
-				metrics.add(metric1);
-				metrics.add(metric2);
-
-				request.getBasicRequest().setMetricRequests(metrics);
-				TimeRange time = new TimeRange();
-				String startDate = dates[0];
-				String endDate = dates[1];
-
-				time.setStartTime(startDate);
-				time.setEndTime(endDate);
-
-				System.out.println(startDate + "---" + endDate);
-
-				request.getBasicRequest().setTimeRange(time);
-
-				try {
-					MyBusiness.Accounts.Locations.ReportInsights insights = mybusiness
-							.accounts().locations()
-							.reportInsights(account.getName(), request);
-					ReportLocationInsightsResponse response = insights
-							.execute();
-
-					List<LocationMetrics> locationMetrics = response
-							.getLocationMetrics();
-
-					System.out.println("Location Metric size: "
-							+ locationMetrics.size());
-
-					if (locationMetrics != null) {
-
-						for (int l = 0; l < locationMetrics.size(); l++) {
-							LocationMetrics locationMetric = locationMetrics
-									.get(l);
-							List<MetricValue> metricValues = locationMetric
-									.getMetricValues();
-
-							System.out.println("metricValues  size: "
-									+ metricValues.size());
-
-							for (int k = 0; k < metricValues.size(); k++) {
-								MetricValue metricValue = metricValues.get(k);
-
-								if (metricValue.getMetric().equalsIgnoreCase(
-										"QUERIES_DIRECT")) {
-									List<DimensionalMetricValue> dimensionalValues = metricValue
-											.getDimensionalValues();
-									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
-										String startTime = dimensionalMetricValue
-												.getTimeDimension()
-												.getTimeRange().getStartTime();
-										Long value = dimensionalMetricValue
-												.getValue();
-										System.out.println(startTime + "==== "
-												+ value);
-										directMap.put(
-												startTime.substring(0, 10),
-												value);
-									}
-
-								} else if (metricValue.getMetric()
-										.equalsIgnoreCase("QUERIES_INDIRECT")) {
-									List<DimensionalMetricValue> dimensionalValues = metricValue
-											.getDimensionalValues();
-									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
-										String startTime = dimensionalMetricValue
-												.getTimeDimension()
-												.getTimeRange().getStartTime();
-										Long value = dimensionalMetricValue
-												.getValue();
-										System.out.println(startTime + "==== "
-												+ value);
-										inDirectMap.put(
-												startTime.substring(0, 10),
-												value);
-									}
-								} else if (metricValue.getMetric()
-										.equalsIgnoreCase("VIEWS_SEARCH")) {
-									List<DimensionalMetricValue> dimensionalValues = metricValue
-											.getDimensionalValues();
-									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
-										String startTime = dimensionalMetricValue
-												.getTimeDimension()
-												.getTimeRange().getStartTime();
-										Long value = dimensionalMetricValue
-												.getValue();
-										System.out.println(startTime + "==== "
-												+ value);
-										searchMap.put(
-												startTime.substring(0, 10),
-												value);
-									}
-								} else if (metricValue.getMetric()
-										.equalsIgnoreCase("VIEWS_MAPS")) {
-									List<DimensionalMetricValue> dimensionalValues = metricValue
-											.getDimensionalValues();
-									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
-										String startTime = dimensionalMetricValue
-												.getTimeDimension()
-												.getTimeRange().getStartTime();
-										Long value = dimensionalMetricValue
-												.getValue();
-										System.out.println(startTime + "==== "
-												+ value);
-										mapsMap.put(startTime.substring(0, 10),
-												value);
-									}
-								} else if (metricValue.getMetric()
-										.equalsIgnoreCase("ACTIONS_WEBSITE")) {
-									List<DimensionalMetricValue> dimensionalValues = metricValue
-											.getDimensionalValues();
-									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
-										String startTime = dimensionalMetricValue
-												.getTimeDimension()
-												.getTimeRange().getStartTime();
-										Long value = dimensionalMetricValue
-												.getValue();
-										System.out.println(startTime.substring(
-												0, 10) + "==== " + value);
-										websiteMap.put(
-												startTime.substring(0, 10),
-												value);
-									}
-								} else if (metricValue.getMetric()
-										.equalsIgnoreCase("ACTIONS_PHONE")) {
-									List<DimensionalMetricValue> dimensionalValues = metricValue
-											.getDimensionalValues();
-									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
-										String startTime = dimensionalMetricValue
-												.getTimeDimension()
-												.getTimeRange().getStartTime();
-										Long value = dimensionalMetricValue
-												.getValue();
-										System.out.println(startTime.substring(
-												0, 10) + "==== " + value);
-										callsMap.put(
-												startTime.substring(0, 10),
-												value);
-									}
-								} else if (metricValue.getMetric()
-										.equalsIgnoreCase(
-												"ACTIONS_DRIVING_DIRECTIONS")) {
-									List<DimensionalMetricValue> dimensionalValues = metricValue
-											.getDimensionalValues();
-									for (DimensionalMetricValue dimensionalMetricValue : dimensionalValues) {
-										String startTime = dimensionalMetricValue
-												.getTimeDimension()
-												.getTimeRange().getStartTime();
-										Long value = dimensionalMetricValue
-												.getValue();
-										System.out.println(startTime + "==== "
-												+ value);
-										drivingDirMap.put(
-												startTime.substring(1, 10),
-												value);
-									}
-								}
-							}
-
-							System.out.println(drivingDirMap.size());
-							System.out.println(callsMap.size());
-
-						}
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-
-				Set<String> keySet = drivingDirMap.keySet();
-
-				for (String date : keySet) {
-					directCount = directMap.get(date);
-					inDirectCount = inDirectMap.get(date);
-
-					searchCount = searchMap.get(date);
-					mapCount = mapsMap.get(date);
-
-					websiteCount = websiteMap.get(date);
-					callsCount = callsMap.get(date);
-					directionsCount = drivingDirMap.get(date);
-
-					java.util.Date formattedEndDate = getFormattedDate(date);
-					/*
-					 * service.addInsightGraphDetails(dto, formattedEndDate,
-					 * accountId, googleLocationId, directCount, inDirectCount,
-					 * searchCount, mapCount, callsCount, directionsCount,
-					 * websiteCount);
-					 */
-				}
-
-			}
 
 		}
 
@@ -1222,43 +1026,204 @@ public class GMBClient {
 	public static void main(String[] args) {
 		GMBClient client = new GMBClient(null);
 
-		/*
-		 * String location =
-		 * "accounts/114515985899098925999/locations/7702955619175411989";
-		 * String[] locationDetails = location.split("/");
-		 * System.out.println(locationDetails[1] + "- " + locationDetails[3]);
-		 */
+		List<com.business.common.util.Reviews> allReviews = new ArrayList<com.business.common.util.Reviews>();
 
 		try {
-			// List<String[]> listofWeeks = getListofDates(90);
-			/*
-			 * for (String[] strings : listofWeeks) {
-			 * System.out.println(strings[0] + "==" + strings[1]); }
-			 */
-			String[] startandEndDates = getStartandEndDates(2);
+			List<Account> listAccounts = listAccounts();
+			for (Account account : listAccounts) {
+				String accountName = account.getAccountName();
+				System.out.println("Account is:" + accountName);
 
-			System.out.println(startandEndDates[1] + "startandEndDates"
-					+ startandEndDates[0]);
-			
-			java.util.Date formattedDate = getFormattedDate(startandEndDates[1]);
-			System.out.println(formattedDate);
+				String name = account.getName();
+				String[] accountIds = name.split("/");
+				String googleAccountId = accountIds[1];
 
-			/*
-			 * java.util.Date formattedDate = getFormattedDate("2016-12-12");
-			 * 
-			 * List<String[]> listofDates = getListofWeeks(); for (int i = 0; i
-			 * < listofDates.size(); i++) { String[] dates = listofDates.get(i);
-			 * System.out.println(dates[1] + "==============" + dates[0]);
-			 * getStartandEndDates }
-			 * 
-			 * List<Account> listAccounts = listAccounts(); Account
-			 * findBusinessAccount = findBusinessAccount(listAccounts);
-			 * System.out.println("===================insights" +
-			 * findBusinessAccount.getAccountName());
-			 * getReportInsights(findBusinessAccount);
-			 */
+				String clientId = "";
+
+				if (googleAccountId.equalsIgnoreCase("101497916131701210690")) {
+
+					System.out.println("fetch locations");
+					// List<Location> listLocations = listLocations(account);
+
+					// System.out.println(listLocations.size());
+					String nameOfAcc = account.getName();
+					// createLocation(nameOfAcc);
+					List<Location> listLocationsUpdate = listLocations(account);
+					System.out.println(listLocationsUpdate.size());
+					int i = 0;
+					List<String> stateList = new ArrayList<String>();
+
+					
+			/*		stateList.add("AB");
+					stateList.add("AK");
+					stateList.add("AL");
+					stateList.add("AR");
+					stateList.add("AZ");
+					stateList.add("BC");
+					stateList.add("CA");
+					stateList.add("CO");
+					stateList.add("CT");
+					stateList.add("DC");
+					stateList.add("DE");
+					stateList.add("FL");
+					
+					stateList.add("GA");
+					stateList.add("HI");
+					stateList.add("IA");
+					stateList.add("ID");
+					stateList.add("IL");
+					stateList.add("IN");
+					stateList.add("KS");
+					stateList.add("KY");
+					stateList.add("LA");
+					stateList.add("MA");
+					stateList.add("MB");
+					stateList.add("MD");
+					
+					
+					stateList.add("ME");
+					stateList.add("MI");
+					stateList.add("MN");
+					stateList.add("MO");
+					stateList.add("MS");
+					stateList.add("MT");*/
+				/*	
+					stateList.add("NB");
+					stateList.add("NC");
+					stateList.add("ND");
+					stateList.add("NE");
+					stateList.add("NH");
+					stateList.add("NJ");
+	
+					stateList.add("NL");
+					stateList.add("NM");
+					stateList.add("NS");
+					stateList.add("NV");
+					stateList.add("NY");
+					
+					stateList.add("OH");
+					stateList.add("OK");
+					stateList.add("ON");
+					stateList.add("OR");
+					stateList.add("PA");
+					stateList.add("PE");
+	
+					stateList.add("RI");
+					stateList.add("SC");
+					stateList.add("SD");
+					stateList.add("SK");
+					stateList.add("TN");
+					
+					stateList.add("TX");
+					stateList.add("UT");
+					stateList.add("UA");
+					stateList.add("VT");
+					stateList.add("WA");
+					stateList.add("WI");*/
+					
+					stateList.add("WV");
+					stateList.add("WY");
+
+
+					for (Location location : listLocationsUpdate) {
+						String administrativeArea = location.getAddress()
+								.getAdministrativeArea();
+						// System.out.println(administrativeArea);
+						if (stateList.contains(administrativeArea)) {
+
+							String gmbLocation = location.getName();
+							System.out.println(gmbLocation);
+							// createLocation(accountName);
+							List listReviews = listReviews(location.getName());
+							if(listReviews!=null) {
+
+								com.business.common.util.Reviews reviews = new com.business.common.util.Reviews();
+								reviews.setReviews(listReviews);
+								reviews.setState(administrativeArea);
+								reviews.setStoreCode(location.getStoreCode());
+								allReviews.add(reviews);
+								System.out.println(listReviews.size());
+							}
+						}
+
+					}
+
+				}
+
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+
+		String excelFilePath = "C:\\lbl\\LibertyTax_Reviews_1.xls";
+
+		try {
+			System.out.println("writing to file");
+			writeExcel(allReviews, excelFilePath);
+			System.out.println("done");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public static void writeExcel(
+			List<com.business.common.util.Reviews> allReviews,
+			String excelFilePath) throws IOException {
+		Workbook workbook = new HSSFWorkbook();
+		Sheet sheet = workbook.createSheet();
+
+		int rowCount = 0;
+		for (int i = 0; i < allReviews.size(); i++) {
+			com.business.common.util.Reviews review = allReviews.get(i);
+			List<Review> reviews2 = review.getReviews();
+			if(reviews2!=null) {
+			String state = review.getState();
+			String storeCode = review.getStoreCode();
+			for (Review reviewData : reviews2) {
+				org.apache.poi.ss.usermodel.Row row = sheet
+						.createRow(++rowCount);
+				writeReview(reviewData, storeCode, state, row);
+			}
+			}
+		}
+
+		try (FileOutputStream outputStream = new FileOutputStream(excelFilePath)) {
+			workbook.write(outputStream);
+		}
+	}
+
+	private static void writeReview(Review review, String store, String state,
+			org.apache.poi.ss.usermodel.Row row) {
+		org.apache.poi.ss.usermodel.Cell cell = row.createCell(1);
+		cell.setCellValue(store);
+
+		cell = row.createCell(2);
+		cell.setCellValue(state);
+
+		cell = row.createCell(3);
+		cell.setCellValue(review.getReviewId());
+
+		cell = row.createCell(4);
+		cell.setCellValue(review.getReviewer().getDisplayName());
+
+		cell = row.createCell(5);
+		cell.setCellValue(review.getStarRating());
+
+		cell = row.createCell(6);
+		cell.setCellValue(review.getComment());
+
+		cell = row.createCell(7);
+		cell.setCellValue(review.getCreateTime());
+
+		cell = row.createCell(8);
+		cell.setCellValue(review.getUpdateTime());
+
+		cell = row.createCell(9);
+		if (review.getReviewReply() != null) {
+			cell.setCellValue(review.getReviewReply().getComment());
+		} else {
+			cell.setCellValue("");
 		}
 
 	}
@@ -1272,23 +1237,29 @@ public class GMBClient {
 		Calendar calendar2 = Calendar.getInstance();
 		calendar2.setTime(calendar2.getTime());
 		calendar2.add(Calendar.DATE, -4);
+		calendar2.set(Calendar.MILLISECOND, 0);
+		calendar2.set(Calendar.SECOND, 0);
+		calendar2.set(Calendar.MINUTE, 01);
+		calendar2.set(Calendar.HOUR, 00);
 		String endDate = formatter.format(calendar2.getTime());
 
 		dates[1] = endDate;
 
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(calendar2.getTime());
+		calendar.set(Calendar.MILLISECOND, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MINUTE, 00);
+		calendar.set(Calendar.HOUR, 00);
 		calendar.add(Calendar.DATE, -daysToLess);
 
 		String startDate = formatter.format(calendar.getTime());
 		dates[0] = startDate;
 
-		// System.out.println(dates[0] + "===="+ dates[1]);
+		System.out.println(dates[0] + "====" + dates[1]);
 
 		return dates;
 	}
-	
-	
 
 	public static List<String[]> getListofDates(int daysToLess) {
 		SimpleDateFormat formatter = new SimpleDateFormat(
@@ -1375,12 +1346,106 @@ public class GMBClient {
 			date = new SimpleDateFormat("yyyy-MM-dd").parse(dateValue);
 			Calendar cal = Calendar.getInstance();
 			cal.setTime(date);
-			cal.add(Calendar.HOUR, 5);
+			cal.set(Calendar.HOUR, 0);
 			date = cal.getTime();
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
 		return date;
+	}
+
+	public static String[] getStartandEndDates(String type) {
+		SimpleDateFormat formatter = new SimpleDateFormat(
+				"yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'");
+
+		String pattern = "MM/dd/yyyy";
+		java.util.Date start = null;
+		java.util.Date end = null;
+		SimpleDateFormat format = new SimpleDateFormat(pattern);
+		if (type.equalsIgnoreCase("range")) {
+			try {
+				start = format.parse(startDate);
+				if (endDate == null || endDate.length() == 0) {
+					end = format.parse(startDate);
+				} else {
+					end = format.parse(endDate);
+				}
+
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+		} else {
+
+			try {
+				Calendar cal = Calendar.getInstance();
+				cal.add(Calendar.DATE, -4);
+				SimpleDateFormat format1 = new SimpleDateFormat("MM/dd/yyyy");
+				String endDate = format1.format(cal.getTime());
+				end = format.parse(endDate);
+
+				Calendar calStart = Calendar.getInstance();
+				calStart.setTime(end);
+				calStart.add(Calendar.DATE, -2);
+				String startDate = format1.format(cal.getTime());
+				start = format.parse(startDate);
+
+			} catch (Exception e) {
+				// TODO: handle exception
+			}
+
+		}
+
+		String[] dates = new String[2];
+
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(start);
+		calendar.set(Calendar.MILLISECOND, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.HOUR, 00);
+		String startDate = formatter.format(calendar.getTime());
+
+		Calendar calendar2 = Calendar.getInstance();
+		calendar2.setTime(end);
+		calendar2.set(Calendar.MILLISECOND, 0);
+		calendar2.set(Calendar.MINUTE, 01);
+		calendar2.set(Calendar.HOUR, 24);
+
+		if (endDate == null || endDate.length() == 0) {
+			calendar2.set(Calendar.MINUTE, 00);
+			calendar2.set(Calendar.HOUR, 1);
+			calendar2.add(Calendar.HOUR, 24);
+		}
+
+		String endDate = formatter.format(calendar2.getTime());
+
+		dates[0] = startDate;
+
+		dates[1] = endDate;
+
+		System.out.println(dates[0] + "====" + dates[1]);
+
+		return dates;
+	}
+
+	public static List<java.util.Date> getListOfDates(java.util.Date startDate,
+			java.util.Date endDate) {
+		List<java.util.Date> datesInRange = new ArrayList<java.util.Date>();
+		Calendar calendar = new GregorianCalendar();
+		calendar.setTime(startDate);
+
+		Calendar endCalendar = new GregorianCalendar();
+		endCalendar.setTime(endDate);
+
+		while (calendar.before(endCalendar)) {
+			java.util.Date result = calendar.getTime();
+			datesInRange.add(result);
+			calendar.add(Calendar.DATE, 1);
+		}
+
+		datesInRange.add(endDate);
+
+		return datesInRange;
 	}
 
 }

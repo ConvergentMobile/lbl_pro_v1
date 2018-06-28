@@ -74,10 +74,19 @@ public class MailTemplateUtil {
 			String[] mails = new String[string.size()];
 	        System.out.println("TLSEmail Start");
 	        Properties props = new Properties();
-	        props.put("mail.smtp.host", "smtp.gmail.com"); //SMTP Host
+/*	        props.put("mail.smtp.host", "smtp.gmail.com"); //SMTP Host
 	        props.put("mail.smtp.port", "587"); //TLS Port
 	        props.put("mail.smtp.auth", "true"); //enable authentication
 	        props.put("mail.smtp.starttls.enable", "true"); //enable STARTTLS
+	        props.put("mail.smtp.socketFactory.port", "465");
+	        props.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
+	        
+			Properties props = new Properties();*/
+			props.put("mail.smtp.host", LBLConstants.MAIL_HOST);
+			props.put("mail.smtp.socketFactory.port", LBLConstants.MAIL_PORT);
+			props.put("mail.smtp.socketFactory.class", LBLConstants.MAIL_CLASS);
+			props.put("mail.smtp.auth", LBLConstants.MAIL_AUTH);
+			props.put("mail.smtp.port", LBLConstants.MAIL_PORT);
 
 	            //create Authenticator object to pass in Session.getInstance argument
 	        Authenticator auth = new Authenticator() {
@@ -99,8 +108,6 @@ public class MailTemplateUtil {
 
 			message.setRecipients(RecipientType.TO, toAddress);
 	       
-
-			logger.info("Mail Check 2");
 
 	        message.setSubject(reportName);
 	        message.setText("test");
@@ -124,20 +131,13 @@ public class MailTemplateUtil {
 	        //6) set the multiplart object to the message object  
 	        message.setContent(multipart );  
 
-	        logger.info("Mail Check 3");
-
 	        Transport.send(message);
 	        logger.info("Mail Sent");
 	    }catch(Exception ex){
-	    	logger.info("Mail fail");
+	    	logger.info("Mail sending is failed");
 	    	logger.info(ex);
 	    } 
 		logger.info("sendMailWithReceipt : end");
-	}
-
-	private static String getEmailFromBrands(String brandName) {
-		System.out.println(businessService);
-		return null;
 	}
 
 	private static String readTemplate(String reservationTemplatePath) throws IOException {

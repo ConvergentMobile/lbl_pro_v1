@@ -2,7 +2,7 @@ package com.business.common.exception;
 
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  *         It Throws CustomException
  * 

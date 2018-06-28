@@ -14,7 +14,7 @@ import com.business.web.bean.UploadBusinessBean;
 
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  */
 
@@ -25,10 +25,11 @@ public class AddressValidationUtill {
 	public static void main(String[] args) {
 		
 		UploadBusinessBean uploadBean = new UploadBusinessBean();
-		uploadBean.setLocationAddress("Indiana State Route 933");
-		uploadBean.setLocationCity("South Bend");
-		uploadBean.setLocationState("NV");
-		uploadBean.setLocationState("46637");
+		uploadBean.setLocationAddress("633 N Main St");
+		uploadBean.setLocationCity("Providence");
+		uploadBean.setLocationState("RI");
+		uploadBean.setLocationState("02904");
+		uploadBean.setCountryCode("US");
 		validateAddressWithSS(uploadBean);
 	}
 

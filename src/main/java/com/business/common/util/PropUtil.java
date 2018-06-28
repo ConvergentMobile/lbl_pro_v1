@@ -4,7 +4,7 @@ import java.util.ResourceBundle;
 
 /**
  * 
- * @author Vasanth
+ * @author lbl_dev
  * 
  */
 
@@ -23,5 +23,11 @@ public class PropUtil {
 	public static final ResourceBundle WHITE_SPARK=ResourceBundle.getBundle("whitespark");
 	
 	public static final ResourceBundle Google_Key=ResourceBundle.getBundle("google");
+	
+	public static final ResourceBundle BING_BUNDLE = ResourceBundle.getBundle("bing");
+	
+	public static final ResourceBundle GMB_BUNDLE = ResourceBundle.getBundle("gmb");
+	
+	public static final ResourceBundle PDF_BUNDLE = ResourceBundle.getBundle("pdf");
 	
 }

@@ -8,7 +8,7 @@ import javax.persistence.Table;
 
 /**
  * 
- * @author Vasanth POJO bean which creates table with the available fields in
+ * @author lbl_dev POJO bean which creates table with the available fields in
  *         the database table on server load-up.
  * 
  */
